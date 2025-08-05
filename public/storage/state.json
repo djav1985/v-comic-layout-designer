@@ -1,0 +1,28 @@
+{
+    "images": [
+        "Screenshot 2025-06-06 130533.jpg",
+        "Screenshot 2025-06-06 130555.jpg",
+        "Screenshot 2025-06-14 201357.jpg"
+    ],
+    "pages": [
+        {
+            "layout": "cover",
+            "slots": {
+                "1": "Screenshot 2025-06-14 201357.jpg"
+            },
+            "transforms": {
+                "1": {
+                    "scale": "1",
+                    "translateX": "0",
+                    "translateY": "0"
+                }
+            }
+        },
+        {
+            "layout": "cover",
+            "slots": [],
+            "transforms": []
+        }
+    ],
+    "pageCount": 2
+}

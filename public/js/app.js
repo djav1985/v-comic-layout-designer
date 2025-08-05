@@ -102,6 +102,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderLayout(container, layoutName, pageIndex, slots = {}, transforms = {}) {
+        // Debug: log template and name
+        console.log('Rendering layout:', layoutName, layoutTemplates[layoutName]);
+        // If template is undefined, show error
+        if (!layoutTemplates[layoutName]) {
+            container.innerHTML = `<div style='color:red'>Layout template not found: ${layoutName}</div>`;
+            return;
+        }
+        // Inject HTML, handling possible escaping
         container.innerHTML = layoutTemplates[layoutName];
         ensureLayoutStyle(layoutName);
         container.querySelectorAll('.panel').forEach(panel => {
@@ -157,6 +165,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function createPage(data) {
         const page = document.createElement('div');
         page.className = 'page';
+        // Add delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'delete-page-btn';
+        deleteBtn.textContent = '🗑 Delete Page';
+        deleteBtn.style.float = 'right';
+        deleteBtn.style.marginLeft = '8px';
+        page.appendChild(deleteBtn);
+
         const select = document.createElement('select');
         layouts.forEach(l => {
             const opt = document.createElement('option');
@@ -183,6 +200,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!data) {
             savePagesState();
         }
+
+        // Delete page logic
+        deleteBtn.addEventListener('click', () => {
+            returnImagesFromPage(container);
+            page.remove();
+            savePagesState();
+        });
     }
 
     document.getElementById('addPage').addEventListener('click', () => createPage());
@@ -203,13 +227,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateImages(list) {
         imageList.innerHTML = '';
-        list.forEach(name => {
+        let row;
+        list.forEach((name, i) => {
+            if (i % 3 === 0) {
+                row = document.createElement('div');
+                row.className = 'image-row';
+                imageList.appendChild(row);
+            }
+            const wrapper = document.createElement('div');
+            wrapper.className = 'image-wrapper';
             const img = document.createElement('img');
             img.src = `/uploads/${name}`;
             img.className = 'thumb';
             img.draggable = true;
             img.dataset.name = name;
-            imageList.appendChild(img);
+            wrapper.appendChild(img);
+
+            // Add delete button
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.className = 'delete-image-btn';
+            delBtn.textContent = '🗑';
+            delBtn.title = 'Delete Image';
+            delBtn.style.marginTop = '4px';
+            delBtn.style.display = 'block';
+            delBtn.addEventListener('click', () => {
+                fetch('/delete-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `name=${encodeURIComponent(name)}`
+                })
+                .then(r => r.json())
+                .then(() => {
+                    wrapper.remove();
+                });
+            });
+            wrapper.appendChild(delBtn);
+
+            row.appendChild(wrapper);
         });
     }
 

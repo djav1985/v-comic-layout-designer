@@ -1,9 +1,0 @@
-.layout.three-panel .panel1 {
-    clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
-}
-.layout.three-panel .panel2 {
-    clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 0);
-}
-.layout.three-panel .panel3 {
-    clip-path: polygon(50% 0, 100% 100%, 50% 100%, 50% 0);
-}

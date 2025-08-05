@@ -1,6 +1,0 @@
-.layout.two-panel-horizontal .panel1 {
-    clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
-}
-.layout.two-panel-horizontal .panel2 {
-    clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%);
-}

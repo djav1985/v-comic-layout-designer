@@ -1,7 +1,77 @@
+#uploadForm {
+    border: 2px solid #222;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    padding: 12px;
+    margin-bottom: 18px;
+}
+#imageList {
+    border: 2px solid #222;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    padding: 12px;
+    height: 90%;
+    overflow-y: auto;
+}
+.image-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.image-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 110px;
+}
+.delete-image-btn {
+    background: linear-gradient(90deg, #ffb3b3 0%, #ff6666 100%);
+    color: #fff;
+    font-weight: bold;
+    border-radius: 8px;
+    border: 2px solid #c00;
+    box-shadow: 0 2px 8px rgba(255,0,0,0.10);
+    padding: 4px 10px;
+    font-size: 16px;
+    margin-top: 4px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.delete-image-btn:hover, .delete-image-btn:focus {
+    background: linear-gradient(90deg, #ff6666 0%, #ffb3b3 100%);
+    border-color: #222;
+    box-shadow: 0 4px 16px rgba(255,0,0,0.18);
+}
+/* Delete Page Button Styles */
+.delete-page-btn {
+    background: linear-gradient(90deg, #ffb3b3 0%, #ff6666 100%);
+    color: #fff;
+    font-weight: bold;
+    border-radius: 12px;
+    border: 2px solid #c00;
+    box-shadow: 0 2px 8px rgba(255,0,0,0.10);
+    padding: 8px 18px;
+    font-size: 16px;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    margin-top: 4px;
+    float: right;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.delete-page-btn:hover, .delete-page-btn:focus {
+    background: linear-gradient(90deg, #ff6666 0%, #ffb3b3 100%);
+    border-color: #222;
+    box-shadow: 0 4px 16px rgba(255,0,0,0.18);
+}
+
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
+    background: #f5f3e7;
 }
 
 #container {
@@ -15,6 +85,81 @@ body {
     padding: 10px;
     border-right: 1px solid #ccc;
     overflow-y: auto;
+    height: 98vh;
+}
+
+input, select, textarea, button {
+    font-family: Comic Sans MS, Comic Neue, Arial, sans-serif;
+    font-size: 16px;
+    border: 2px solid #222;
+    border-radius: 6px;
+    background: #fff;
+    color: #222;
+    padding: 8px 12px;
+    margin: 4px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, select:focus, textarea:focus, button:focus {
+    border-color: #e09c2b;
+    box-shadow: 0 0 0 2px #ffe6b0;
+}
+
+button {
+    background: linear-gradient(90deg, #ffe6b0 0%, #ffd966 100%);
+    color: #222;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 12px;
+    border: 3px solid #e09c2b;
+    box-shadow: 0 4px 16px rgba(224,156,43,0.15);
+    padding: 12px 28px;
+    letter-spacing: 1px;
+    font-size: 18px;
+    text-transform: uppercase;
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+
+button:hover, button:focus {
+    background: linear-gradient(90deg, #ffd966 0%, #ffe6b0 100%);
+    border-color: #222;
+    box-shadow: 0 6px 24px rgba(224,156,43,0.25);
+}
+
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background: #fff;
+    border: 2px solid #e09c2b;
+    border-radius: 8px;
+    padding: 10px 36px 10px 12px;
+    font-size: 16px;
+    color: #222;
+    box-shadow: 0 2px 8px rgba(224,156,43,0.10);
+    cursor: pointer;
+    outline: none;
+    position: relative;
+}
+
+select:focus {
+    border-color: #222;
+    box-shadow: 0 0 0 2px #ffe6b0;
+}
+
+select::-ms-expand {
+    display: none;
+}
+
+/* Custom arrow for select */
+select {
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%23222" height="16" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 18px 18px;
 }
 
 #builder {
@@ -30,21 +175,31 @@ body {
 }
 
 .thumb {
-    width: 100px;
+    width: 30%;
     margin: 5px;
     cursor: grab;
+    background: #fff;
 }
 
+
 .page {
-    border: 1px solid #ccc;
-    padding: 10px;
+    padding: 16px;
+    position: relative;
+    background: none;
+    border: none;
+    box-shadow: none;
 }
 
 .layout-container {
     position: relative;
     width: 100%;
     aspect-ratio: 1 / 1.414; /* A4 ratio */
+    background: #fffbe6;
+    border: 2px solid #222;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    overflow: hidden;
 }
+
 
 .layout {
     position: absolute;
@@ -54,8 +209,8 @@ body {
     height: 100%;
 }
 
+
 .panel {
-    border: 1px dashed #999;
     position: absolute;
     top: 0;
     left: 0;
@@ -65,17 +220,21 @@ body {
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    background: rgba(255,255,255,0.85);
 }
 
 .panel:empty::before {
     content: 'Drop image';
     color: #999;
     font-size: 14px;
+    font-family: Comic Sans MS, Comic Neue, Arial, sans-serif;
+    letter-spacing: 1px;
 }
 
 .panel img {
-    max-width: none;
-    max-height: none;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     cursor: move;
     user-select: none;
     transition: transform 0.1s ease-out;
