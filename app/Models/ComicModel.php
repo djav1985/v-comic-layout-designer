@@ -105,6 +105,16 @@ class ComicModel
         return $templates;
     }
 
+    public function getLayoutStyles(): array
+    {
+        $styles = [];
+        foreach ($this->getLayouts() as $name => $file) {
+            $css = $this->layoutDir . '/' . $name . '.css';
+            $styles[$name] = is_file($css) ? file_get_contents($css) : '';
+        }
+        return $styles;
+    }
+
     public function getPages(): array
     {
         return $this->state['pages'] ?? [];
@@ -120,17 +130,31 @@ class ComicModel
     public function renderLayout(string $layout, array $slots): string
     {
         $file = $this->layoutDir . '/' . $layout . '.php';
+        $cssFile = $this->layoutDir . '/' . $layout . '.css';
         if (!is_file($file)) {
             return '';
         }
+
         $html = file_get_contents($file);
-            foreach ($slots as $index => $image) {
-                $src = '/uploads/' . $image;
-            $imgTag = '<img src="' . $src . '" />';
-            $html = str_replace('{{slot' . $index . '}}', $imgTag, $html);
+        $css = is_file($cssFile) ? file_get_contents($cssFile) : '';
+
+        $dom = new \DOMDocument();
+        // suppress errors due to HTML5 tags
+        libxml_use_internal_errors(true);
+        $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        libxml_clear_errors();
+
+        foreach ($slots as $index => $image) {
+            $xpath = new \DOMXPath($dom);
+            $nodes = $xpath->query("//*[@data-slot='" . $index . "']");
+            if ($nodes->length) {
+                $img = $dom->createElement('img');
+                $img->setAttribute('src', '/uploads/' . $image);
+                $nodes->item(0)->appendChild($img);
+            }
         }
-        // remove remaining placeholders
-        $html = preg_replace('/{{slot\d+}}/', '', $html);
-        return '<div class="page">' . $html . '</div>';
+
+        $html = $dom->saveHTML();
+        return '<div class="page"><style>' . $css . '</style>' . $html . '</div>';
     }
 }

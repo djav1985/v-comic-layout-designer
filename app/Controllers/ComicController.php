@@ -18,6 +18,7 @@ class ComicController
         $images = $this->model->getImages();
         $layouts = $this->model->getLayouts();
         $templates = $this->model->getLayoutTemplates();
+        $styles = $this->model->getLayoutStyles();
         $pages = $this->model->getPages();
         include __DIR__ . '/../Views/index.php';
     }
