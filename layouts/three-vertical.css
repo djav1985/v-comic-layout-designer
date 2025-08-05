@@ -1,0 +1,22 @@
+/* three-vertical.css */
+.layout.three-vertical .panel1 {
+    top: 12px;
+    left: 12px;
+    width: calc(33.333% - 16px);
+    height: calc(100% - 24px);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+.layout.three-vertical .panel2 {
+    top: 12px;
+    left: calc(33.333% + 8px);
+    width: calc(33.333% - 16px);
+    height: calc(100% - 24px);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+.layout.three-vertical .panel3 {
+    top: 12px;
+    left: calc(66.666% + 4px);
+    width: calc(33.333% - 16px);
+    height: calc(100% - 24px);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
