@@ -1,0 +1,15 @@
+/* two-vertical-angled.css */
+.layout.two-vertical-angled .panel {
+    width: 100%;
+    height: 50%;
+}
+.layout.two-vertical-angled .panel1 {
+    top: 0;
+    left: 0;
+    clip-path: polygon(6% 0, 100% 0, 100% 100%, 0 100%);
+}
+.layout.two-vertical-angled .panel2 {
+    top: 50%;
+    left: 0;
+    clip-path: polygon(0 0, 100% 0, 94% 100%, 0 100%);
+}
