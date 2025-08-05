@@ -21,6 +21,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const imageList = document.getElementById('imageList');
     let pageCounter = 0;
 
+    function enableImageControls(img) {
+        let scale = 1;
+        let translateX = 0;
+        let translateY = 0;
+
+        function updateTransform() {
+            img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        }
+
+        img.addEventListener('wheel', e => {
+            e.preventDefault();
+            const delta = e.deltaY < 0 ? 0.1 : -0.1;
+            scale = Math.min(3, Math.max(0.5, scale + delta));
+            updateTransform();
+        });
+
+        let dragging = false;
+        let startX, startY;
+        img.addEventListener('mousedown', e => {
+            e.preventDefault();
+            dragging = true;
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+        });
+
+        document.addEventListener('mousemove', e => {
+            if (!dragging) return;
+            translateX = e.clientX - startX;
+            translateY = e.clientY - startY;
+            updateTransform();
+        });
+
+        document.addEventListener('mouseup', () => {
+            dragging = false;
+        });
+    }
+
     function returnImagesFromPage(container) {
         container.querySelectorAll('.panel img').forEach(img => {
             img.className = 'thumb';
@@ -49,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 panel.innerHTML = '';
                 const clone = img.cloneNode();
                 clone.draggable = false;
+                enableImageControls(clone);
                 panel.appendChild(clone);
                 img.remove();
                 const hidden = document.createElement('input');
@@ -64,6 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     panel.innerHTML = '';
                     const clone = img.cloneNode();
                     clone.draggable = false;
+                    enableImageControls(clone);
                     panel.appendChild(clone);
                     img.remove();
                     const hidden = document.createElement('input');
