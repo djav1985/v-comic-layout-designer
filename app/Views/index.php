@@ -13,11 +13,7 @@
             <input type="file" name="images[]" id="imageInput" multiple />
             <button type="submit">Upload</button>
         </form>
-        <div id="imageList">
-            <?php foreach ($images as $img): ?>
-                <img src="/uploads/<?= htmlspecialchars($img) ?>" class="thumb" draggable="true" data-name="<?= htmlspecialchars($img) ?>" />
-            <?php endforeach; ?>
-        </div>
+        <div id="imageList"></div>
     </div>
     <div id="builder">
         <button id="addPage" type="button">Add Page</button>
@@ -30,6 +26,7 @@ const layouts = <?= json_encode(array_keys($layouts)) ?>;
 const layoutTemplates = <?= json_encode($templates) ?>;
 const layoutStyles = <?= json_encode($styles) ?>;
 const savedPages = <?= json_encode($pages) ?>;
+const initialImages = <?= json_encode($images) ?>;
 </script>
 <!-- html2canvas and jsPDF CDN -->
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
