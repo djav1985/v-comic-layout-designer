@@ -1,3 +1,54 @@
+/* Remove border and style file input */
+#imageInput {
+    width: 100%;
+    box-sizing: border-box;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+/* Style the 'Choose files' button */
+#imageInput::-webkit-file-upload-button {
+    background: linear-gradient(90deg, #ffe6b0 0%, #ffd966 100%);
+    color: #222;
+    font-weight: bold;
+    border-radius: 8px;
+    border: 2px solid #e09c2b;
+    box-shadow: none;
+    padding: 8px 18px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+#imageInput::-webkit-file-upload-button:hover,
+#imageInput::-webkit-file-upload-button:focus {
+    background: linear-gradient(90deg, #ffd966 0%, #ffe6b0 100%);
+    border-color: #222;
+    box-shadow: none;
+}
+
+/* Firefox */
+#imageInput::file-selector-button {
+    background: linear-gradient(90deg, #ffe6b0 0%, #ffd966 100%);
+    color: #222;
+    font-weight: bold;
+    border-radius: 8px;
+    border: 2px solid #e09c2b;
+    box-shadow: none;
+    padding: 8px 18px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+#imageInput::file-selector-button:hover,
+#imageInput::file-selector-button:focus {
+    background: linear-gradient(90deg, #ffd966 0%, #ffe6b0 100%);
+    border-color: #222;
+    box-shadow: none;
+}
+
 /* Gutter color picker styled like select */
 .gutter-color-picker {
     appearance: none;
@@ -9,63 +60,76 @@
     padding: 6px 6px 6px 6px;
     width: 40px;
     height: 40px;
-    box-shadow: 0 2px 8px rgba(224,156,43,0.10);
+    box-shadow: 0 2px 8px rgba(224, 156, 43, 0.1);
     cursor: pointer;
     outline: none;
     margin-right: 8px;
     transition: border-color 0.2s, box-shadow 0.2s;
     vertical-align: middle;
 }
+
 .gutter-color-picker:focus {
     border-color: #222;
     box-shadow: 0 0 0 2px #ffe6b0;
 }
+
+/* Align Upload button to the right */
 #uploadForm {
     border: 2px solid #222;
     background: #fff;
     border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     padding: 12px;
     margin-bottom: 18px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
 }
+
 #imageList {
     border: 2px solid #222;
     background: #fff;
     border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     padding: 12px;
     height: 90%;
     overflow-y: auto;
 }
+
 .image-row {
     display: flex;
     gap: 12px;
     margin-bottom: 12px;
 }
+
 .image-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 110px;
 }
+
 .delete-image-btn {
     background: linear-gradient(90deg, #ffb3b3 0%, #ff6666 100%);
     color: #fff;
     font-weight: bold;
     border-radius: 8px;
     border: 2px solid #c00;
-    box-shadow: 0 2px 8px rgba(255,0,0,0.10);
+    box-shadow: 0 2px 8px rgba(255, 0, 0, 0.1);
     padding: 4px 10px;
     font-size: 16px;
     margin-top: 4px;
     cursor: pointer;
     transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
-.delete-image-btn:hover, .delete-image-btn:focus {
+
+.delete-image-btn:hover,
+.delete-image-btn:focus {
     background: linear-gradient(90deg, #ff6666 0%, #ffb3b3 100%);
     border-color: #222;
-    box-shadow: 0 4px 16px rgba(255,0,0,0.18);
+    box-shadow: 0 4px 16px rgba(255, 0, 0, 0.18);
 }
+
 /* Delete Page Button Styles */
 .delete-page-btn {
     background: linear-gradient(90deg, #ffb3b3 0%, #ff6666 100%);
@@ -73,7 +137,7 @@
     font-weight: bold;
     border-radius: 12px;
     border: 2px solid #c00;
-    box-shadow: 0 2px 8px rgba(255,0,0,0.10);
+    box-shadow: 0 2px 8px rgba(255, 0, 0, 0.1);
     padding: 8px 18px;
     font-size: 16px;
     letter-spacing: 1px;
@@ -83,10 +147,12 @@
     cursor: pointer;
     transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
-.delete-page-btn:hover, .delete-page-btn:focus {
+
+.delete-page-btn:hover,
+.delete-page-btn:focus {
     background: linear-gradient(90deg, #ff6666 0%, #ffb3b3 100%);
     border-color: #222;
-    box-shadow: 0 4px 16px rgba(255,0,0,0.18);
+    box-shadow: 0 4px 16px rgba(255, 0, 0, 0.18);
 }
 
 body {
@@ -110,7 +176,10 @@ body {
     height: 98vh;
 }
 
-input, select, textarea, button {
+input,
+select,
+textarea,
+button {
     font-family: Comic Sans MS, Comic Neue, Arial, sans-serif;
     font-size: 16px;
     border: 2px solid #222;
@@ -119,12 +188,15 @@ input, select, textarea, button {
     color: #222;
     padding: 8px 12px;
     margin: 4px 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-input:focus, select:focus, textarea:focus, button:focus {
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
     border-color: #e09c2b;
     box-shadow: 0 0 0 2px #ffe6b0;
 }
@@ -136,7 +208,7 @@ button {
     cursor: pointer;
     border-radius: 12px;
     border: 3px solid #e09c2b;
-    box-shadow: 0 4px 16px rgba(224,156,43,0.15);
+    box-shadow: 0 4px 16px rgba(224, 156, 43, 0.15);
     padding: 12px 28px;
     letter-spacing: 1px;
     font-size: 18px;
@@ -145,10 +217,11 @@ button {
     outline: none;
 }
 
-button:hover, button:focus {
+button:hover,
+button:focus {
     background: linear-gradient(90deg, #ffd966 0%, #ffe6b0 100%);
     border-color: #222;
-    box-shadow: 0 6px 24px rgba(224,156,43,0.25);
+    box-shadow: 0 6px 24px rgba(224, 156, 43, 0.25);
 }
 
 select {
@@ -161,7 +234,7 @@ select {
     padding: 10px 36px 10px 12px;
     font-size: 16px;
     color: #222;
-    box-shadow: 0 2px 8px rgba(224,156,43,0.10);
+    box-shadow: 0 2px 8px rgba(224, 156, 43, 0.1);
     cursor: pointer;
     outline: none;
     position: relative;
@@ -203,28 +276,28 @@ select {
     background: #fff;
 }
 
-
 .page {
     padding: 16px;
     position: relative;
     background: #fff;
     border: 2px solid #222;
     border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     margin: 8px;
 }
 
 .layout-container {
     position: relative;
-    width: 528px; /* 5.5in * 96dpi */
-    height: 816px; /* 8.5in * 96dpi */
+    width: 528px;
+    /* 5.5in * 96dpi */
+    height: 816px;
+    /* 8.5in * 96dpi */
     background: #fffbe6;
     border: 2px solid #222;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
     overflow: hidden;
     margin: auto;
 }
-
 
 .layout {
     position: absolute;
@@ -233,7 +306,6 @@ select {
     width: 100%;
     height: 100%;
 }
-
 
 .panel {
     position: absolute;
@@ -245,11 +317,11 @@ select {
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background: rgba(255,255,255,0.85);
+    background: rgba(255, 255, 255, 0.85);
 }
 
 .panel:empty::before {
-    content: 'Drop image';
+    content: "Drop image";
     color: #999;
     font-size: 14px;
     font-family: Comic Sans MS, Comic Neue, Arial, sans-serif;
