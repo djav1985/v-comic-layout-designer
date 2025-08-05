@@ -10,7 +10,7 @@
 <div id="container">
     <div id="images">
         <form id="uploadForm" enctype="multipart/form-data">
-            <input type="file" name="image" id="imageInput" />
+            <input type="file" name="images[]" id="imageInput" multiple />
             <button type="submit">Upload</button>
         </form>
         <div id="imageList">

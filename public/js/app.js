@@ -264,10 +264,16 @@ window.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('uploadForm').addEventListener('submit', e => {
         e.preventDefault();
-        const formData = new FormData(e.target);
+        const input = document.getElementById('imageInput');
+        if (!input.files.length) return;
+        const formData = new FormData();
+        Array.from(input.files).forEach(file => formData.append('images[]', file));
         fetch('/upload', {method: 'POST', body: formData})
             .then(r => r.json())
-            .then(updateImages);
+            .then(updateImages)
+            .finally(() => {
+                input.value = '';
+            });
     });
 
     function updateImages(list) {
