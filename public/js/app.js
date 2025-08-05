@@ -1,5 +1,8 @@
+window.addEventListener('DOMContentLoaded', () => {
+    const imageList = document.getElementById('imageList');
+    let pageCounter = 0;
+
     function savePagesState() {
-        // Collect page state from DOM
         const pages = [];
         document.querySelectorAll('#pages > .page').forEach(pageDiv => {
             const layout = pageDiv.querySelector('select').value;
@@ -21,33 +24,59 @@
             });
             pages.push({ layout, gutterColor, slots, transforms });
         });
+
+        const currentPagesDiv = document.getElementById('pages');
+
         fetch('/save-pages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ pages, pageCount: pages.length })
         })
-        .then(() => {
-            // After saving, reload savedPages from server and re-render
-            fetch('/get-pages')
-                .then(r => r.json())
+        .then(res => {
+            if (!res.ok) throw new Error('Save request failed');
+            return fetch('/get-pages')
+                .then(r => {
+                    if (!r.ok) throw new Error('Load request failed');
+                    return r.json();
+                })
                 .then(data => {
-                    window.savedPages = data.pages;
-                    // Clear and re-render all pages
-                    const pagesDiv = document.getElementById('pages');
-                    pagesDiv.innerHTML = '';
-                    if (Array.isArray(window.savedPages) && window.savedPages.length) {
-                        window.savedPages.forEach(p => createPage(p));
-                    } else {
-                        createPage();
+                    if (!data || !Array.isArray(data.pages)) {
+                        throw new Error('Invalid page data');
                     }
-                    // Re-render image list
+
+                    const newPagesDiv = document.createElement('div');
+                    newPagesDiv.id = 'pages';
+                    const prevCounter = pageCounter;
+                    const prevSaved = window.savedPages;
+                    pageCounter = 0;
+                    try {
+                        window.savedPages = data.pages;
+                        if (window.savedPages.length) {
+                            window.savedPages.forEach(p => createPage(p, newPagesDiv));
+                        } else {
+                            createPage(undefined, newPagesDiv);
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        alert('Failed to render pages');
+                        pageCounter = prevCounter;
+                        window.savedPages = prevSaved;
+                        return;
+                    }
+
+                    currentPagesDiv.replaceWith(newPagesDiv);
                     updateImages(typeof initialImages !== 'undefined' ? initialImages : [], window.savedPages);
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Failed to load pages');
                 });
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Failed to save pages');
         });
     }
-window.addEventListener('DOMContentLoaded', () => {
-    const imageList = document.getElementById('imageList');
-    let pageCounter = 0;
 
     // Load all images before restoring any pages
     updateImages(typeof initialImages !== 'undefined' ? initialImages : [], []);
@@ -234,7 +263,7 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function createPage(data) {
+    function createPage(data, pagesContainer = document.getElementById('pages')) {
         const page = document.createElement('div');
         page.className = 'page';
         // Add delete button
@@ -258,11 +287,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
         // Gutter color picker
         const gutterColor = document.createElement('input');
-    gutterColor.type = 'color';
-    gutterColor.value = (data && data.gutterColor) ? data.gutterColor : '#cccccc';
-    gutterColor.title = 'Gutter Color';
-    gutterColor.name = `pages[${pageCounter}][gutterColor]`;
-    gutterColor.className = 'gutter-color-picker';
+        gutterColor.type = 'color';
+        gutterColor.value = (data && data.gutterColor) ? data.gutterColor : '#cccccc';
+        gutterColor.title = 'Gutter Color';
+        gutterColor.className = 'gutter-color-picker';
 
         // Label for color picker
         const gutterLabel = document.createElement('label');
@@ -280,7 +308,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const container = document.createElement('div');
         container.className = 'layout-container';
         page.appendChild(container);
-        document.getElementById('pages').appendChild(page);
+        pagesContainer.appendChild(page);
         const index = pageCounter++;
         select.name = `pages[${index}][layout]`;
         gutterColor.name = `pages[${index}][gutterColor]`;
