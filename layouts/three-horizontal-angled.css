@@ -1,0 +1,18 @@
+/* three-horizontal-angled.css */
+.layout.three-horizontal-angled .panel {
+    width: calc(100% - 24px);
+    height: calc(33.333% - 18px);
+    left: 12px;
+}
+.layout.three-horizontal-angled .panel1 {
+    top: 12px;
+    clip-path: polygon(0 0, 100% 0, 100% 94%, 0 100%);
+}
+.layout.three-horizontal-angled .panel2 {
+    top: calc(33.333% + 6px);
+    clip-path: polygon(0 6%, 100% 0, 100% 94%, 0 100%);
+}
+.layout.three-horizontal-angled .panel3 {
+    top: calc(66.666% + 6px);
+    clip-path: polygon(0 6%, 100% 0, 100% 100%, 0 100%);
+}
