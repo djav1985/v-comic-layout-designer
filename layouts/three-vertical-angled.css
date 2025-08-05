@@ -1,0 +1,18 @@
+/* three-vertical-angled.css */
+.layout.three-vertical-angled .panel {
+    top: 12px;
+    height: calc(100% - 24px);
+    width: calc(33.333% - 16px);
+}
+.layout.three-vertical-angled .panel1 {
+    left: 12px;
+    clip-path: polygon(0 0, 100% 0, 94% 100%, 0 100%);
+}
+.layout.three-vertical-angled .panel2 {
+    left: calc(33.333% + 8px);
+    clip-path: polygon(6% 0, 100% 0, 94% 100%, 0 100%);
+}
+.layout.three-vertical-angled .panel3 {
+    left: calc(66.666% + 4px);
+    clip-path: polygon(6% 0, 100% 0, 100% 100%, 0 100%);
+}
