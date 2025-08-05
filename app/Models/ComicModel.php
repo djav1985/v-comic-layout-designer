@@ -85,6 +85,12 @@ class ComicModel
         if (is_file($path)) {
             unlink($path);
         }
+        // Remove from state and persist
+        $this->state['images'] = array_values(array_filter(
+            $this->state['images'],
+            fn($img) => $img !== $name
+        ));
+        $this->saveState();
     }
 
     public function getLayouts(): array

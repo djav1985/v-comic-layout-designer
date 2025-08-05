@@ -319,6 +319,8 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Initialize with any images provided by the server
+    updateImages(typeof initialImages !== 'undefined' ? initialImages : []);
 
     // Removed comicForm submit handler since the form no longer exists
 
