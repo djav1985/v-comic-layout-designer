@@ -14,6 +14,7 @@ class Router
             $r->addRoute('POST', '/upload', ['ComicController', 'handleUpload']);
             $r->addRoute('POST', '/delete-image', ['ComicController', 'deleteImage']);
             $r->addRoute('POST', '/save-pages', ['ComicController', 'savePages']);
+            $r->addRoute('GET', '/get-pages', ['ComicController', 'getPages']);
         });
     }
 }
