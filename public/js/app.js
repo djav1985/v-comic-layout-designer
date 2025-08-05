@@ -8,7 +8,7 @@
             const slots = {};
             const transforms = {};
             pageDiv.querySelectorAll('.panel').forEach(panel => {
-                const slot = panel.getAttribute('data-slot');
+                const slot = String(panel.getAttribute('data-slot'));
                 const img = panel.querySelector('img');
                 if (img) {
                     slots[slot] = img.dataset.name;
@@ -48,6 +48,9 @@
 window.addEventListener('DOMContentLoaded', () => {
     const imageList = document.getElementById('imageList');
     let pageCounter = 0;
+
+    // Load all images before restoring any pages
+    updateImages(typeof initialImages !== 'undefined' ? initialImages : [], []);
 
     function enableImageControls(img, hiddenInput, initial = {}) {
         let scale = parseFloat(initial.scale || 1);
@@ -383,9 +386,6 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    // Initialize with any images provided by the server and savedPages
-    updateImages(typeof initialImages !== 'undefined' ? initialImages : [], savedPages);
 
     // Removed comicForm submit handler since the form no longer exists
 
