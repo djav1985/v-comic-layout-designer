@@ -228,20 +228,26 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderLayout(container, layoutName, pageIndex, slots = {}, transforms = {}) {
-        // Debug: log template and name
-        console.log('Rendering layout:', layoutName, layoutTemplates[layoutName]);
+        console.log(`Rendering layout: ${layoutName} for page ${pageIndex}`);
+        console.log('Available templates:', Object.keys(layoutTemplates));
+        
         // If template is undefined, show error
         if (!layoutTemplates[layoutName]) {
             container.innerHTML = `<div style='color:red'>Layout template not found: ${layoutName}</div>`;
+            console.error(`Layout template not found: ${layoutName}`);
             return;
         }
+        
         // Inject HTML, handling possible escaping
         container.innerHTML = layoutTemplates[layoutName];
         ensureLayoutStyle(layoutName);
         
-        // Set gutter color on .layout div
+        // Set proper class name and gutter color on .layout div
         const layoutDiv = container.querySelector('.layout');
         if (layoutDiv) {
+            // Add the specific layout class name for CSS targeting
+            layoutDiv.classList.add(layoutName);
+            
             // Find gutter color from parent page
             let gutterColor = '#cccccc';
             const pageDiv = container.closest('.page');
@@ -250,6 +256,9 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (colorInput) gutterColor = colorInput.value;
             }
             layoutDiv.style.background = gutterColor;
+            console.log(`Set layout background to: ${gutterColor} and added class: ${layoutName}`);
+        } else {
+            console.warn(`No .layout div found in template: ${layoutName}`);
         }
         
         container.querySelectorAll('.panel').forEach(panel => {
@@ -389,8 +398,21 @@ window.addEventListener('DOMContentLoaded', () => {
         }
         
         select.addEventListener('change', () => {
+            console.log(`Layout changed to: ${select.value} for page index: ${index}`);
             returnImagesFromPage(container);
             renderLayout(container, select.value, index);
+            
+            // Force immediate visual update and class application
+            setTimeout(() => {
+                const layoutDiv = container.querySelector('.layout');
+                if (layoutDiv) {
+                    // Ensure the layout class is properly applied
+                    layoutDiv.classList.remove(...layouts); // Remove all layout classes
+                    layoutDiv.classList.add(select.value); // Add the selected layout class
+                    console.log(`After layout change - background: ${layoutDiv.style.background}, classes: ${layoutDiv.className}`);
+                }
+            }, 100);
+            
             savePagesState(true); // Rebuild UI for layout changes
         });
         
@@ -426,10 +448,19 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Initialize pages and then load images
     if (Array.isArray(savedPages) && savedPages.length) {
-        savedPages.forEach(p => createPage(p));
+        console.log('Loading saved pages:', savedPages);
+        savedPages.forEach((p, index) => {
+            console.log(`Creating page ${index + 1} with layout: ${p.layout}`);
+            createPage(p);
+        });
     } else {
+        console.log('Creating new default page');
         createPage();
     }
+    
+    // Debug: Log available layouts and templates
+    console.log('Available layouts:', layouts);
+    console.log('Available templates:', Object.keys(layoutTemplates || {}));
     
     // Load images AFTER pages are created so assigned images are properly filtered
     setTimeout(() => {
@@ -548,32 +579,176 @@ window.addEventListener('DOMContentLoaded', () => {
     const exportBtn = document.getElementById('exportPdf');
     if (exportBtn) {
         exportBtn.addEventListener('click', async () => {
-            const { jsPDF } = window.jspdf;
-            // Use .layout divs for export
-            const layouts = Array.from(document.querySelectorAll('.layout'));
-            if (layouts.length === 0) return alert('No pages to export!');
+            try {
+                // Show export progress
+                showSaveIndicator('Preparing export...', '#2196F3');
+                exportBtn.disabled = true;
+                exportBtn.textContent = 'Generating PDF...';
 
-            // PDF page size: 11x8.5in landscape = 792x612pt
-            const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: [792, 612] });
+                // First, ensure current state is saved and DOM is updated
+                await new Promise((resolve) => {
+                    console.log('Starting export preparation...');
+                    
+                    // Save current state and force UI refresh if needed
+                    if (isUpdatingFromServer) {
+                        console.log('Waiting for server update to complete...');
+                        // Wait for any ongoing updates to complete
+                        setTimeout(() => {
+                            savePagesState(false);
+                            setTimeout(resolve, 1000);
+                        }, 1000);
+                    } else {
+                        console.log('Saving current state...');
+                        savePagesState(false);
+                        setTimeout(resolve, 1000);
+                    }
+                });
 
-            for (let i = 0; i < layouts.length; i += 2) {
-                // Render first page
-                const canvas1 = await html2canvas(layouts[i], { scale: 2 });
-                const img1 = canvas1.toDataURL('image/png');
-                // Render second page if exists
-                let img2 = null;
-                if (layouts[i + 1]) {
-                    const canvas2 = await html2canvas(layouts[i + 1], { scale: 2 });
-                    img2 = canvas2.toDataURL('image/png');
+                // Get .layout elements (children of layout-container)
+                const layouts = Array.from(document.querySelectorAll('.layout'));
+                if (layouts.length === 0) {
+                    alert('No pages to export!');
+                    return;
                 }
-                // Each image fills exactly half: 396x612pt
-                pdf.addImage(img1, 'PNG', 0, 0, 396, 612);
-                if (img2) {
-                    pdf.addImage(img2, 'PNG', 396, 0, 396, 612);
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: [792, 612] });
+
+                for (let i = 0; i < layouts.length; i += 2) {
+                    showSaveIndicator(`Rendering page ${Math.floor(i/2) + 1}/${Math.ceil(layouts.length/2)}...`, '#2196F3');
+                    
+                    const layout1 = layouts[i];
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    // Capture first layout
+                    const canvas1 = await html2canvas(layout1, { 
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: null,
+                        logging: false,
+                        width: layout1.offsetWidth,
+                        height: layout1.offsetHeight
+                    });
+                    
+                    if (canvas1.width === 0 || canvas1.height === 0) {
+                        throw new Error(`Canvas ${i + 1} has zero dimensions`);
+                    }
+                    
+                    const img1 = canvas1.toDataURL('image/png', 1.0);
+                    
+                    // Capture second layout if exists
+                    let img2 = null;
+                    if (layouts[i + 1]) {
+                        const layout2 = layouts[i + 1];
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        
+                        const canvas2 = await html2canvas(layout2, { 
+                            scale: 2,
+                            useCORS: true,
+                            allowTaint: true,
+                            backgroundColor: null,
+                            logging: false,
+                            width: layout2.offsetWidth,
+                            height: layout2.offsetHeight
+                        });
+                        
+                        if (canvas2.width === 0 || canvas2.height === 0) {
+                            throw new Error(`Canvas ${i + 2} has zero dimensions`);
+                        }
+                        
+                        img2 = canvas2.toDataURL('image/png', 1.0);
+                    }
+                    
+                    pdf.addImage(img1, 'PNG', 0, 0, 396, 612);
+                    if (img2) {
+                        pdf.addImage(img2, 'PNG', 396, 0, 396, 612);
+                    }
+                    
+                    if (i + 2 < layouts.length) {
+                        pdf.addPage([792, 612], 'landscape');
+                    }
                 }
-                if (i + 2 < layouts.length) pdf.addPage([792, 612], 'landscape');
+                
+                // Create unique filename with timestamp
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+                const filename = `comic-layout-${timestamp}.pdf`;
+                
+                showSaveIndicator('Saving PDF...', '#2196F3');
+                pdf.save(filename);
+                showSaveIndicator('PDF exported successfully! ✓', '#4CAF50');
+                
+            } catch (error) {
+                console.error('PDF export failed:', error);
+                showSaveIndicator('PDF export failed ✗', '#f44336');
+                alert(`Failed to export PDF: ${error.message}`);
+            } finally {
+                // Reset button
+                exportBtn.disabled = false;
+                exportBtn.textContent = 'Export PDF';
             }
-            pdf.save('comic-layout.pdf');
+        });
+    }
+
+    // Export Images functionality
+    const exportImagesBtn = document.getElementById('exportImages');
+    if (exportImagesBtn) {
+        exportImagesBtn.addEventListener('click', async () => {
+            try {
+                showSaveIndicator('Preparing export...', '#2196F3');
+                exportImagesBtn.disabled = true;
+                exportImagesBtn.textContent = 'Generating Images...';
+
+                const layouts = Array.from(document.querySelectorAll('.layout'));
+                if (layouts.length === 0) {
+                    alert('No pages to export!');
+                    return;
+                }
+
+                for (let i = 0; i < layouts.length; i++) {
+                    showSaveIndicator(`Rendering page ${i + 1}/${layouts.length}...`, '#2196F3');
+                    
+                    const layout = layouts[i];
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    const canvas = await html2canvas(layout, { 
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: null,
+                        logging: false,
+                        width: layout.offsetWidth,
+                        height: layout.offsetHeight
+                    });
+                    
+                    if (canvas.width === 0 || canvas.height === 0) {
+                        throw new Error(`Canvas ${i + 1} has zero dimensions`);
+                    }
+                    
+                    // Convert to blob and download
+                    canvas.toBlob((blob) => {
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `comic-page-${i + 1}.png`;
+                        link.click();
+                        URL.revokeObjectURL(url);
+                    }, 'image/png', 1.0);
+                    
+                    // Small delay between downloads
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                }
+                
+                showSaveIndicator('Images exported successfully! ✓', '#4CAF50');
+                
+            } catch (error) {
+                console.error('Image export failed:', error);
+                showSaveIndicator('Image export failed ✗', '#f44336');
+                alert(`Failed to export images: ${error.message}`);
+            } finally {
+                exportImagesBtn.disabled = false;
+                exportImagesBtn.textContent = 'Export Images';
+            }
         });
     }
 
@@ -593,6 +768,30 @@ window.addEventListener('DOMContentLoaded', () => {
             savePagesState(true);
         }
         
+        // Ctrl+E or Cmd+E to export PDF
+        if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+            e.preventDefault();
+            const exportBtn = document.getElementById('exportPdf');
+            if (exportBtn && !exportBtn.disabled) {
+                exportBtn.click();
+            }
+        }
+        
+        // Ctrl+I or Cmd+I to export Images
+        if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+            e.preventDefault();
+            const exportImagesBtn = document.getElementById('exportImages');
+            if (exportImagesBtn && !exportImagesBtn.disabled) {
+                exportImagesBtn.click();
+            }
+        }
+        
+        // Ctrl+D or Cmd+D to debug layouts (capture individual screenshots)
+        if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+            e.preventDefault();
+            debugLayouts();
+        }
+        
         // Escape to cancel any ongoing operations 
         if (e.key === 'Escape') {
             document.querySelectorAll('.panel.drag-over').forEach(panel => {
@@ -600,4 +799,47 @@ window.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
+
+    // Debug function to capture individual layout screenshots
+    async function debugLayouts() {
+        const layoutContainers = Array.from(document.querySelectorAll('.layout-container'));
+        console.log('Debugging layout containers...');
+        
+        for (let i = 0; i < layoutContainers.length; i++) {
+            const container = layoutContainers[i];
+            console.log(`Capturing layout container ${i + 1}:`, container);
+            console.log(`  - Size: ${container.offsetWidth}x${container.offsetHeight}`);
+            console.log(`  - Background: ${container.style.background}`);
+            
+            const layout = container.querySelector('.layout');
+            if (layout) {
+                console.log(`  - Layout background: ${layout.style.background}`);
+                console.log(`  - Panel count: ${layout.querySelectorAll('.panel').length}`);
+            }
+            
+            try {
+                const canvas = await html2canvas(container, {
+                    scale: 2,
+                    backgroundColor: '#fffbe6',
+                    logging: true,
+                    useCORS: true,
+                    allowTaint: true
+                });
+                
+                // Convert to blob and create download link
+                canvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `layout-container-${i + 1}-debug.png`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                });
+                
+                console.log(`Layout container ${i + 1} captured successfully (${canvas.width}x${canvas.height})`);
+            } catch (error) {
+                console.error(`Failed to capture layout container ${i + 1}:`, error);
+            }
+        }
+    }
 });

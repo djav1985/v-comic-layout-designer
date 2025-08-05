@@ -9,12 +9,11 @@ class Router
     public static function getDispatcher()
     {
         return simpleDispatcher(function(RouteCollector $r) {
-            $r->addRoute('GET', '/', ['ComicController', 'handleRequest']);
-            $r->addRoute('POST', '/submit', ['ComicController', 'handleSubmission']);
-            $r->addRoute('POST', '/upload', ['ComicController', 'handleUpload']);
-            $r->addRoute('POST', '/delete-image', ['ComicController', 'deleteImage']);
-            $r->addRoute('POST', '/save-pages', ['ComicController', 'savePages']);
-            $r->addRoute('GET', '/get-pages', ['ComicController', 'getPages']);
+            $r->addRoute('GET', '/', ['HomeController', 'index']);
+            $r->addRoute('POST', '/upload', ['UploadController', 'upload']);
+            $r->addRoute('POST', '/delete-image', ['ImageController', 'delete']);
+            $r->addRoute('POST', '/save-pages', ['PageController', 'save']);
+            $r->addRoute('GET', '/get-pages', ['PageController', 'get']);
         });
     }
 

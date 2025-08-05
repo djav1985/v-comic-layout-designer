@@ -21,11 +21,12 @@
         <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 10px;">
             <button id="addPage" type="button">Add Page</button>
             <small style="color: #666; font-style: italic;">
-                💡 Tips: Ctrl+S to save, Ctrl+N for new page, scroll wheel to zoom images
+                💡 Tips: Ctrl+S to save, Ctrl+N for new page, Ctrl+E to export PDF, Ctrl+I to export images, Ctrl+D to debug layouts, scroll wheel to zoom images
             </small>
         </div>
         <div id="pages"></div>
         <button id="exportPdf" type="button" style="margin-top:16px;">Export PDF</button>
+        <button id="exportImages" type="button" style="margin-top:16px; margin-left:10px;">Export Images</button>
     </div>
 </div>
 <script>

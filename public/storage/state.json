@@ -1,23 +1,167 @@
 {
     "images": [
-        "Screenshot 2025-06-06 130555.jpg",
-        "Screenshot 2025-06-14 201357.jpg"
+        "0277c483-3266-403c-b22c-21216143722d.png",
+        "35c4e33c-4fb6-4df8-9259-d97cc24b4858.png",
+        "37ec0a4b-b0fd-48a8-b890-a02cd21a2308.png",
+        "59a9a4c4-639a-482a-bbe6-d67b78bccef4.png",
+        "5cf5b3cd-8689-4776-956f-f4dbb40fd771.png",
+        "6fcc6eba-0cc2-49eb-a605-8c354bb62cf4.png",
+        "722800d4-87ea-4f10-994d-078204cd7eb4.png",
+        "9d734bb0-dd5d-49a9-a958-b5a408153a67.png",
+        "ChatGPT Image Aug 5, 2025, 03_53_03 AM.png",
+        "ChatGPT Image Aug 5, 2025, 03_55_54 AM.png",
+        "ChatGPT Image Aug 5, 2025, 03_58_38 AM.png",
+        "b50be0bc-80fe-4cdd-9f21-f6e71fa2d4a0.png",
+        "e2c42b89-49d0-4bc0-839a-31ca272cbe20.png",
+        "fc71126a-b933-4ba0-89f6-5bdfa3c322b0.png",
+        "file_0000000042a4622fb065e45b120b322e.png",
+        "file_00000000c79461fbad1d39dabe0da95c.png"
     ],
     "pages": [
         {
             "layout": "cover",
-            "gutterColor": "#5167a9",
+            "gutterColor": "#000000",
             "slots": {
-                "1": "Screenshot 2025-06-06 130555.jpg"
+                "1": "file_0000000042a4622fb065e45b120b322e.png"
             },
             "transforms": {
                 "1": {
-                    "scale": "1.5000000000000004",
+                    "scale": "1.1",
+                    "translateX": "0",
+                    "translateY": "0"
+                }
+            }
+        },
+        {
+            "layout": "two-horizontal",
+            "gutterColor": "#000000",
+            "slots": {
+                "1": "file_00000000c79461fbad1d39dabe0da95c.png",
+                "2": "0277c483-3266-403c-b22c-21216143722d.png"
+            },
+            "transforms": {
+                "1": {
+                    "scale": "1.2000000000000002",
+                    "translateX": "-5",
+                    "translateY": "-6"
+                },
+                "2": {
+                    "scale": "1.2000000000000002",
+                    "translateX": "0",
+                    "translateY": "0"
+                }
+            }
+        },
+        {
+            "layout": "two-vertical-angled-top-one-horizontal-bottom",
+            "gutterColor": "#000000",
+            "slots": {
+                "1": "fc71126a-b933-4ba0-89f6-5bdfa3c322b0.png",
+                "2": "722800d4-87ea-4f10-994d-078204cd7eb4.png",
+                "3": "6fcc6eba-0cc2-49eb-a605-8c354bb62cf4.png"
+            },
+            "transforms": {
+                "1": {
+                    "scale": "1.1",
+                    "translateX": "0",
+                    "translateY": "0"
+                },
+                "2": {
+                    "scale": "1.1",
+                    "translateX": "-2",
+                    "translateY": "-11"
+                },
+                "3": {
+                    "scale": "1.2000000000000002",
+                    "translateX": "0",
+                    "translateY": "0"
+                }
+            }
+        },
+        {
+            "layout": "three-horizontal-angled",
+            "gutterColor": "#000000",
+            "slots": {
+                "1": "35c4e33c-4fb6-4df8-9259-d97cc24b4858.png",
+                "2": "37ec0a4b-b0fd-48a8-b890-a02cd21a2308.png",
+                "3": "e2c42b89-49d0-4bc0-839a-31ca272cbe20.png"
+            },
+            "transforms": {
+                "1": {
+                    "scale": "2.000000000000001",
+                    "translateX": "-1",
+                    "translateY": "119"
+                },
+                "2": {
+                    "scale": "1.4000000000000004",
+                    "translateX": "0",
+                    "translateY": "49"
+                },
+                "3": {
+                    "scale": "1.4000000000000004",
+                    "translateX": "2",
+                    "translateY": "43"
+                }
+            }
+        },
+        {
+            "layout": "four-grid",
+            "gutterColor": "#000000",
+            "slots": {
+                "1": "b50be0bc-80fe-4cdd-9f21-f6e71fa2d4a0.png",
+                "2": "59a9a4c4-639a-482a-bbe6-d67b78bccef4.png",
+                "3": "5cf5b3cd-8689-4776-956f-f4dbb40fd771.png",
+                "4": "9d734bb0-dd5d-49a9-a958-b5a408153a67.png"
+            },
+            "transforms": {
+                "1": {
+                    "scale": "1.1",
+                    "translateX": "0",
+                    "translateY": "0"
+                },
+                "2": {
+                    "scale": "1.1",
+                    "translateX": "0",
+                    "translateY": "0"
+                },
+                "3": {
+                    "scale": "1.1",
+                    "translateX": "0",
+                    "translateY": "0"
+                },
+                "4": {
+                    "scale": "1.1",
+                    "translateX": "0",
+                    "translateY": "0"
+                }
+            }
+        },
+        {
+            "layout": "one-horizontal-top-two-vertical-bottom",
+            "gutterColor": "#000000",
+            "slots": {
+                "1": "ChatGPT Image Aug 5, 2025, 03_58_38 AM.png",
+                "2": "ChatGPT Image Aug 5, 2025, 03_53_03 AM.png",
+                "3": "ChatGPT Image Aug 5, 2025, 03_55_54 AM.png"
+            },
+            "transforms": {
+                "1": {
+                    "scale": "1.2000000000000002",
+                    "translateX": "0",
+                    "translateY": "0"
+                },
+                "2": {
+                    "scale": "1.1",
+                    "translateX": "0",
+                    "translateY": "0"
+                },
+                "3": {
+                    "scale": "1.1",
                     "translateX": "0",
                     "translateY": "0"
                 }
             }
         }
     ],
-    "pageCount": 1
+    "pageCount": 6
 }

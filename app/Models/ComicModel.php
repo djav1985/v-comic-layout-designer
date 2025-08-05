@@ -132,49 +132,4 @@ class ComicModel
         $this->state['pageCount'] = count($pages);
         $this->saveState();
     }
-
-    public function renderLayout(string $layout, array $slots, array $transforms = []): string
-    {
-        $file = $this->layoutDir . '/' . $layout . '.php';
-        $cssFile = $this->layoutDir . '/' . $layout . '.css';
-        if (!is_file($file)) {
-            return '';
-        }
-
-        $html = file_get_contents($file);
-        $css = is_file($cssFile) ? file_get_contents($cssFile) : '';
-
-        $dom = new \DOMDocument();
-        // suppress errors due to HTML5 tags
-        libxml_use_internal_errors(true);
-        $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-        libxml_clear_errors();
-
-        foreach ($slots as $index => $image) {
-            $xpath = new \DOMXPath($dom);
-            $nodes = $xpath->query("//*[@data-slot='" . $index . "']");
-            if ($nodes->length) {
-                $img = $dom->createElement('img');
-                // Use full URL for Dompdf
-                $host = $_SERVER['HTTP_HOST'] ?? 'localhost6';
-                $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-                $imgUrl = $protocol . '://' . $host . '/uploads/' . $image;
-                $img->setAttribute('src', $imgUrl);
-                if (isset($transforms[$index])) {
-                    $t = $transforms[$index];
-                    $scale = $t['scale'] ?? 1;
-                    $tx = $t['translateX'] ?? 0;
-                    $ty = $t['translateY'] ?? 0;
-                    $img->setAttribute('style', 'transform: translate(' . $tx . 'px, ' . $ty . 'px) scale(' . $scale . ');');
-                }
-                $nodes->item(0)->appendChild($img);
-            }
-        }
-
-    $html = $dom->saveHTML();
-    // Remove any page-breaks from inner HTML
-    $html = str_replace('page-break-after:always;', '', $html);
-    // Only outer wrapper gets page-break
-    return '<div class="page" style="width:100%;height:100%;background:none;page-break-after:always;overflow:hidden;position:relative;"><style>' . $css . '</style>' . $html . '</div>';
-    }
 }
