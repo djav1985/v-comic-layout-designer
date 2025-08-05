@@ -73,8 +73,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    function ensureLayoutStyle(name) {
+        if (document.getElementById('style-' + name)) return;
+        const style = document.createElement('style');
+        style.id = 'style-' + name;
+        style.textContent = layoutStyles[name] || '';
+        document.head.appendChild(style);
+    }
+
     function renderLayout(container, layoutName, pageIndex, slots = {}) {
         container.innerHTML = layoutTemplates[layoutName];
+        ensureLayoutStyle(layoutName);
         container.querySelectorAll('.panel').forEach(panel => {
             const slot = panel.getAttribute('data-slot');
             panel.addEventListener('dragover', e => e.preventDefault());

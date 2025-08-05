@@ -30,6 +30,7 @@
 <script>
 const layouts = <?= json_encode(array_keys($layouts)) ?>;
 const layoutTemplates = <?= json_encode($templates) ?>;
+const layoutStyles = <?= json_encode($styles) ?>;
 const savedPages = <?= json_encode($pages) ?>;
 </script>
 <script src="/js/app.js"></script>
