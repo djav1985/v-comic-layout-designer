@@ -6,24 +6,32 @@
     height: calc(50% - 18px);
     clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
 }
+/* Bottom left panel with equal gutter */
+/* Bottom left panel with equal gutter */
 .layout.one-horizontal-top-three-vertical-bottom .panel2 {
     top: calc(50% + 6px);
     left: 12px;
-    width: calc(33.333% - 18px);
+    width: calc(33.333% - 16px);
     height: calc(50% - 18px);
     clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
 }
+/* Bottom center panel with equal gutter */
+/* Bottom center panel with equal gutter */
 .layout.one-horizontal-top-three-vertical-bottom .panel3 {
     top: calc(50% + 6px);
-    left: calc(33.333% + 6px);
-    width: calc(33.333% - 18px);
+    left: calc(33.333% + 12px);
+    width: calc(33.333% - 16px);
     height: calc(50% - 18px);
     clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
 }
+/* Bottom right panel with equal gutter */
+/* Bottom right panel with equal gutter */
+/* Bottom right panel with correct right gutter */
+/* Bottom right panel with left and right gutter */
 .layout.one-horizontal-top-three-vertical-bottom .panel4 {
     top: calc(50% + 6px);
-    left: calc(66.666% + 6px);
-    width: calc(33.333% - 18px);
+    left: calc(66.666% + 12px);
+    width: calc(33.333% - 24px);
     height: calc(50% - 18px);
     clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
 }

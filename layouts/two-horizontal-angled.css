@@ -1,14 +1,20 @@
 /* two-horizontal-angled.css */
+/* Outer gutter for both panels */
+/* Pixel-based outer gutter for both panels */
 .layout.two-horizontal-angled .panel {
     left: 12px;
     width: calc(100% - 24px);
     height: calc(50% - 18px);
 }
+/* Top panel: diagonal bottom edge, pixel gutter */
+/* Top panel: diagonal bottom edge, smaller angled gutter */
 .layout.two-horizontal-angled .panel1 {
     top: 12px;
-    clip-path: polygon(0 6%, 100% 0, 100% 100%, 0 100%);
+    clip-path: polygon(0 0, 100% 0, 100% 97%, 0 100%);
 }
+/* Bottom panel: matching diagonal top edge, pixel gutter */
+/* Bottom panel: matching diagonal top edge, smaller angled gutter */
 .layout.two-horizontal-angled .panel2 {
     top: calc(50% + 6px);
-    clip-path: polygon(0 0, 100% 0, 100% 94%, 0 100%);
+    clip-path: polygon(0 3%, 100% 0, 100% 100%, 0 100%);
 }
