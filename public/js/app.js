@@ -1,7 +1,7 @@
     function savePagesState() {
         // Collect page state from DOM
         const pages = [];
-        document.querySelectorAll('#pages > .page').forEach((pageDiv, i) => {
+        document.querySelectorAll('#pages > .page').forEach(pageDiv => {
             const layout = pageDiv.querySelector('select').value;
             const slots = {};
             pageDiv.querySelectorAll('.panel').forEach(panel => {
@@ -14,12 +14,21 @@
         fetch('/save-pages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pages })
+            body: JSON.stringify({ pages, pageCount: pages.length })
         });
     }
 document.addEventListener('DOMContentLoaded', () => {
     const imageList = document.getElementById('imageList');
     let pageCounter = 0;
+
+    function returnImagesFromPage(container) {
+        container.querySelectorAll('.panel img').forEach(img => {
+            img.className = 'thumb';
+            img.draggable = true;
+            imageList.appendChild(img);
+        });
+        container.querySelectorAll('input[type="hidden"]').forEach(i => i.remove());
+    }
 
     imageList.addEventListener('dragstart', e => {
         if (e.target.classList.contains('thumb')) {
@@ -27,9 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    function renderLayout(container, layoutName, pageIndex) {
+    function renderLayout(container, layoutName, pageIndex, slots = {}) {
         container.innerHTML = layoutTemplates[layoutName];
         container.querySelectorAll('.panel').forEach(panel => {
+            const slot = panel.getAttribute('data-slot');
             panel.addEventListener('dragover', e => e.preventDefault());
             panel.addEventListener('drop', e => {
                 e.preventDefault();
@@ -41,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 clone.draggable = false;
                 panel.appendChild(clone);
                 img.remove();
-                const slot = panel.getAttribute('data-slot');
                 const hidden = document.createElement('input');
                 hidden.type = 'hidden';
                 hidden.name = `pages[${pageIndex}][slots][${slot}]`;
@@ -49,10 +58,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 container.appendChild(hidden);
                 savePagesState();
             });
+            if (slots[slot]) {
+                const img = imageList.querySelector(`img[data-name="${slots[slot]}"]`);
+                if (img) {
+                    panel.innerHTML = '';
+                    const clone = img.cloneNode();
+                    clone.draggable = false;
+                    panel.appendChild(clone);
+                    img.remove();
+                    const hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = `pages[${pageIndex}][slots][${slot}]`;
+                    hidden.value = slots[slot];
+                    container.appendChild(hidden);
+                }
+            }
         });
     }
 
-    function createPage() {
+    function createPage(data) {
         const page = document.createElement('div');
         page.className = 'page';
         const select = document.createElement('select');
@@ -69,16 +93,27 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('pages').appendChild(page);
         const index = pageCounter++;
         select.name = `pages[${index}][layout]`;
+        if (data && data.layout) {
+            select.value = data.layout;
+        }
         select.addEventListener('change', () => {
+            returnImagesFromPage(container);
             renderLayout(container, select.value, index);
             savePagesState();
         });
-        renderLayout(container, select.value, index);
-        savePagesState();
+        renderLayout(container, select.value, index, data ? data.slots : {});
+        if (!data) {
+            savePagesState();
+        }
     }
 
-    document.getElementById('addPage').addEventListener('click', createPage);
-    createPage();
+    document.getElementById('addPage').addEventListener('click', () => createPage());
+
+    if (Array.isArray(savedPages) && savedPages.length) {
+        savedPages.forEach(p => createPage(p));
+    } else {
+        createPage();
+    }
 
     document.getElementById('uploadForm').addEventListener('submit', e => {
         e.preventDefault();

@@ -9,7 +9,8 @@ class ComicModel
     private string $stateFile;
     private array $state = [
         'images' => [],
-        'pages' => []
+        'pages' => [],
+        'pageCount' => 0
     ];
 
     public function __construct()
@@ -112,6 +113,7 @@ class ComicModel
     public function setPages(array $pages): void
     {
         $this->state['pages'] = $pages;
+        $this->state['pageCount'] = count($pages);
         $this->saveState();
     }
 
