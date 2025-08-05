@@ -27,7 +27,7 @@
             body: JSON.stringify({ pages, pageCount: pages.length })
         });
     }
-document.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', () => {
     const imageList = document.getElementById('imageList');
     let pageCounter = 0;
 
@@ -114,6 +114,18 @@ document.addEventListener('DOMContentLoaded', () => {
         // Inject HTML, handling possible escaping
         container.innerHTML = layoutTemplates[layoutName];
         ensureLayoutStyle(layoutName);
+        // Set gutter color on .layout div
+        const layoutDiv = container.querySelector('.layout');
+        if (layoutDiv) {
+            // Find gutter color from parent page
+            let gutterColor = '#cccccc';
+            const pageDiv = container.closest('.page');
+            if (pageDiv) {
+                const colorInput = pageDiv.querySelector('input[type="color"]');
+                if (colorInput) gutterColor = colorInput.value;
+            }
+            layoutDiv.style.background = gutterColor;
+        }
         container.querySelectorAll('.panel').forEach(panel => {
             const slot = panel.getAttribute('data-slot');
             panel.addEventListener('dragover', e => e.preventDefault());
@@ -301,15 +313,39 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    document.getElementById('comicForm').addEventListener('submit', e => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        fetch('/submit', {method:'POST', body: formData})
-            .then(r => r.json())
-            .then(res => {
-                if (res.file) {
-                    window.open(`/generated/${res.file}`, '_blank');
+
+    // Removed comicForm submit handler since the form no longer exists
+
+    // Export PDF (Client-side)
+    const exportBtn = document.getElementById('exportPdf');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', async () => {
+            const { jsPDF } = window.jspdf;
+            // Use .layout divs for export
+            const layouts = Array.from(document.querySelectorAll('.layout'));
+            if (layouts.length === 0) return alert('No pages to export!');
+
+            // PDF page size: 11x8.5in landscape = 792x612pt
+            const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: [792, 612] });
+
+            for (let i = 0; i < layouts.length; i += 2) {
+                // Render first page
+                const canvas1 = await html2canvas(layouts[i], { scale: 2 });
+                const img1 = canvas1.toDataURL('image/png');
+                // Render second page if exists
+                let img2 = null;
+                if (layouts[i + 1]) {
+                    const canvas2 = await html2canvas(layouts[i + 1], { scale: 2 });
+                    img2 = canvas2.toDataURL('image/png');
                 }
-            });
-    });
+                // Each image fills exactly half: 396x612pt
+                pdf.addImage(img1, 'PNG', 0, 0, 396, 612);
+                if (img2) {
+                    pdf.addImage(img2, 'PNG', 396, 0, 396, 612);
+                }
+                if (i + 2 < layouts.length) pdf.addPage([792, 612], 'landscape');
+            }
+            pdf.save('comic-layout.pdf');
+        });
+    }
 });

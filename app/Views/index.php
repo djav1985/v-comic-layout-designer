@@ -21,10 +21,8 @@
     </div>
     <div id="builder">
         <button id="addPage" type="button">Add Page</button>
-        <form id="comicForm" method="post" action="/submit">
-            <div id="pages"></div>
-            <button id="generate" type="submit">Generate PDF</button>
-        </form>
+        <div id="pages"></div>
+        <button id="exportPdf" type="button" style="margin-top:16px;">Export PDF</button>
     </div>
 </div>
 <script>
@@ -33,6 +31,9 @@ const layoutTemplates = <?= json_encode($templates) ?>;
 const layoutStyles = <?= json_encode($styles) ?>;
 const savedPages = <?= json_encode($pages) ?>;
 </script>
+<!-- html2canvas and jsPDF CDN -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="/js/app.js"></script>
 </body>
 </html>

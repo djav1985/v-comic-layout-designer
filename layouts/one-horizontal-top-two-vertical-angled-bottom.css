@@ -1,0 +1,24 @@
+/* one-horizontal-top-two-vertical-angled-bottom.css */
+.layout.one-horizontal-top-two-vertical-angled-bottom .panel1 {
+    top: 12px;
+    left: 12px;
+    width: calc(100% - 24px);
+    height: calc(50% - 18px);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+.layout.one-horizontal-top-two-vertical-angled-bottom .panel2 {
+    top: calc(50% + 6px);
+    left: 12px;
+    width: calc(50% - 12px);
+    height: calc(50% - 18px);
+    /* Standard gutter and steeper diagonal */
+    clip-path: polygon(0 0, 100% 0, 94% 100%, 0 100%);
+}
+.layout.one-horizontal-top-two-vertical-angled-bottom .panel3 {
+    top: calc(50% + 6px);
+    left: calc(50% + 0px);
+    width: calc(50% - 12px);
+    height: calc(50% - 18px);
+    /* Standard gutter and steeper diagonal */
+    clip-path: polygon(6% 0, 100% 0, 100% 100%, 0 100%);
+}
