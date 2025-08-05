@@ -1,8 +1,60 @@
 window.addEventListener('DOMContentLoaded', () => {
     const imageList = document.getElementById('imageList');
     let pageCounter = 0;
+    let saveTimeout = null;
+    let isUpdatingFromServer = false;
+    let saveIndicator = null;
 
-    function savePagesState() {
+    // Create save indicator
+    function createSaveIndicator() {
+        if (!saveIndicator) {
+            saveIndicator = document.createElement('div');
+            saveIndicator.id = 'saveIndicator';
+            saveIndicator.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #4CAF50;
+                color: white;
+                padding: 10px 20px;
+                border-radius: 5px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                z-index: 1000;
+                font-size: 14px;
+                font-weight: bold;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                pointer-events: none;
+            `;
+            document.body.appendChild(saveIndicator);
+        }
+        return saveIndicator;
+    }
+
+    function showSaveIndicator(message, color = '#4CAF50') {
+        const indicator = createSaveIndicator();
+        indicator.textContent = message;
+        indicator.style.background = color;
+        indicator.style.opacity = '1';
+        setTimeout(() => {
+            indicator.style.opacity = '0';
+        }, 2000);
+    }
+
+    // Debounced save function to prevent excessive server calls
+    function debouncedSave() {
+        if (saveTimeout) {
+            clearTimeout(saveTimeout);
+        }
+        showSaveIndicator('Saving...', '#FF9800');
+        saveTimeout = setTimeout(() => {
+            savePagesState(false); // false = don't rebuild UI
+        }, 500); // Wait 500ms after last change before saving
+    }
+
+    function savePagesState(rebuildUI = true) {
+        if (isUpdatingFromServer) return; // Prevent recursive updates
+        
         const pages = [];
         document.querySelectorAll('#pages > .page').forEach(pageDiv => {
             const layout = pageDiv.querySelector('select').value;
@@ -25,8 +77,7 @@ window.addEventListener('DOMContentLoaded', () => {
             pages.push({ layout, gutterColor, slots, transforms });
         });
 
-        const currentPagesDiv = document.getElementById('pages');
-
+        // Save to server in background
         fetch('/save-pages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -34,66 +85,83 @@ window.addEventListener('DOMContentLoaded', () => {
         })
         .then(res => {
             if (!res.ok) throw new Error('Save request failed');
-            return fetch('/get-pages')
-                .then(r => {
-                    if (!r.ok) throw new Error('Load request failed');
-                    return r.json();
-                })
-                .then(data => {
-                    if (!data || !Array.isArray(data.pages)) {
-                        throw new Error('Invalid page data');
-                    }
-
-                    const newPagesDiv = document.createElement('div');
-                    newPagesDiv.id = 'pages';
-                    const prevCounter = pageCounter;
-                    const prevSaved = window.savedPages;
-                    pageCounter = 0;
-                    try {
-                        window.savedPages = data.pages;
-                        if (window.savedPages.length) {
-                            window.savedPages.forEach(p => createPage(p, newPagesDiv));
-                        } else {
-                            createPage(undefined, newPagesDiv);
+            showSaveIndicator('Saved ✓', '#4CAF50');
+            // Only rebuild UI if explicitly requested (like adding/deleting pages)
+            if (rebuildUI) {
+                return fetch('/get-pages')
+                    .then(r => {
+                        if (!r.ok) throw new Error('Load request failed');
+                        return r.json();
+                    })
+                    .then(data => {
+                        if (!data || !Array.isArray(data.pages)) {
+                            throw new Error('Invalid page data');
                         }
-                    } catch (err) {
-                        console.error(err);
-                        alert('Failed to render pages');
-                        pageCounter = prevCounter;
-                        window.savedPages = prevSaved;
-                        return;
-                    }
-
-                    currentPagesDiv.replaceWith(newPagesDiv);
-                    updateImages(typeof initialImages !== 'undefined' ? initialImages : [], window.savedPages);
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert('Failed to load pages');
-                });
+                        rebuildPagesUI(data.pages);
+                    });
+            }
         })
         .catch(err => {
             console.error(err);
-            alert('Failed to save pages');
+            showSaveIndicator('Save failed ✗', '#f44336');
+            if (rebuildUI) {
+                alert('Failed to save pages');
+            }
         });
     }
 
-    // Load all images before restoring any pages
-    updateImages(typeof initialImages !== 'undefined' ? initialImages : [], []);
+    function rebuildPagesUI(pages) {
+        isUpdatingFromServer = true;
+        const currentPagesDiv = document.getElementById('pages');
+        const newPagesDiv = document.createElement('div');
+        newPagesDiv.id = 'pages';
+        const prevCounter = pageCounter;
+        pageCounter = 0;
+        
+        try {
+            window.savedPages = pages;
+            if (pages.length) {
+                pages.forEach(p => createPage(p, newPagesDiv));
+            } else {
+                createPage(undefined, newPagesDiv);
+            }
+            currentPagesDiv.replaceWith(newPagesDiv);
+            
+            // Update images after DOM is ready, using current DOM state for accuracy
+            setTimeout(() => {
+                updateImages(typeof initialImages !== 'undefined' ? initialImages : []);
+            }, 0);
+            
+        } catch (err) {
+            console.error(err);
+            alert('Failed to render pages');
+            pageCounter = prevCounter;
+        } finally {
+            isUpdatingFromServer = false;
+        }
+    }
+
+    // Don't load images initially - wait until after pages are restored
 
     function enableImageControls(img, hiddenInput, initial = {}) {
         let scale = parseFloat(initial.scale || 1);
         let translateX = parseFloat(initial.translateX || 0);
         let translateY = parseFloat(initial.translateY || 0);
+        let rafId = null;
 
         function updateTransform() {
-            img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-            img.dataset.scale = scale;
-            img.dataset.translateX = translateX;
-            img.dataset.translateY = translateY;
-            if (hiddenInput) {
-                hiddenInput.value = JSON.stringify({ scale, translateX, translateY });
-            }
+            if (rafId) return; // Prevent multiple simultaneous updates
+            
+            rafId = requestAnimationFrame(() => {
+                img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+                img.dataset.scale = scale;
+                img.dataset.translateX = translateX;
+                img.dataset.translateY = translateY;
+                if (hiddenInput) {
+                    hiddenInput.value = JSON.stringify({ scale, translateX, translateY });
+                }
+                rafId = null;
+            });
         }
 
         img.addEventListener('wheel', e => {
@@ -101,7 +169,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const delta = e.deltaY < 0 ? 0.1 : -0.1;
             scale = Math.min(3, Math.max(0.5, scale + delta));
             updateTransform();
-            savePagesState();
+            debouncedSave(); // Use debounced save for live scaling
         });
 
         let dragging = false;
@@ -111,19 +179,21 @@ window.addEventListener('DOMContentLoaded', () => {
             dragging = true;
             startX = e.clientX - translateX;
             startY = e.clientY - translateY;
+            img.style.cursor = 'grabbing';
         });
 
         document.addEventListener('mousemove', e => {
             if (!dragging) return;
             translateX = e.clientX - startX;
             translateY = e.clientY - startY;
-            updateTransform();
+            updateTransform(); // Live update transform with RAF optimization
         });
 
         document.addEventListener('mouseup', () => {
             if (dragging) {
                 dragging = false;
-                savePagesState();
+                img.style.cursor = 'move';
+                debouncedSave(); // Save after drag ends
             }
         });
 
@@ -131,12 +201,16 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     function returnImagesFromPage(container) {
-        container.querySelectorAll('.panel img').forEach(img => {
-            img.className = 'thumb';
-            img.draggable = true;
-            imageList.appendChild(img);
-        });
+        // Remove any hidden inputs associated with this container
         container.querySelectorAll('input[type="hidden"]').forEach(i => i.remove());
+        // Clear all panels
+        container.querySelectorAll('.panel').forEach(panel => {
+            panel.innerHTML = '';
+        });
+        // Refresh the image list to show returned images
+        setTimeout(() => {
+            updateImages(typeof initialImages !== 'undefined' ? initialImages : []);
+        }, 0);
     }
 
     imageList.addEventListener('dragstart', e => {
@@ -164,6 +238,7 @@ window.addEventListener('DOMContentLoaded', () => {
         // Inject HTML, handling possible escaping
         container.innerHTML = layoutTemplates[layoutName];
         ensureLayoutStyle(layoutName);
+        
         // Set gutter color on .layout div
         const layoutDiv = container.querySelector('.layout');
         if (layoutDiv) {
@@ -176,14 +251,27 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             layoutDiv.style.background = gutterColor;
         }
+        
         container.querySelectorAll('.panel').forEach(panel => {
             const slot = panel.getAttribute('data-slot');
-            panel.addEventListener('dragover', e => e.preventDefault());
+            
+            panel.addEventListener('dragover', e => {
+                e.preventDefault();
+                panel.classList.add('drag-over');
+            });
+            
+            panel.addEventListener('dragleave', e => {
+                panel.classList.remove('drag-over');
+            });
+            
             panel.addEventListener('drop', e => {
                 e.preventDefault();
+                panel.classList.remove('drag-over');
+                
                 const name = e.dataTransfer.getData('text/plain');
                 const img = imageList.querySelector(`img[data-name="${name}"]`);
                 if (!img) return;
+                
                 // Remove the entire image-wrapper for the new image
                 const wrapper = img.closest('.image-wrapper');
                 if (wrapper) wrapper.remove();
@@ -192,34 +280,15 @@ window.addEventListener('DOMContentLoaded', () => {
                 const oldImg = panel.querySelector('img');
                 if (oldImg) {
                     const oldName = oldImg.dataset.name;
-                    // Create a new wrapper for the old image
-                    const oldWrapper = document.createElement('div');
-                    oldWrapper.className = 'image-wrapper';
-                    const oldThumb = oldImg.cloneNode();
-                    oldThumb.className = 'thumb';
-                    oldThumb.draggable = true;
-                    oldWrapper.appendChild(oldThumb);
-                    // Add delete button
-                    const delBtn = document.createElement('button');
-                    delBtn.type = 'button';
-                    delBtn.className = 'delete-image-btn';
-                    delBtn.textContent = '🗑';
-                    delBtn.title = 'Delete Image';
-                    delBtn.style.marginTop = '4px';
-                    delBtn.style.display = 'block';
-                    delBtn.addEventListener('click', () => {
-                        fetch('/delete-image', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                            body: `name=${encodeURIComponent(oldName)}`
-                        })
-                        .then(r => r.json())
-                        .then(() => {
-                            oldWrapper.remove();
-                        });
-                    });
-                    oldWrapper.appendChild(delBtn);
-                    imageList.appendChild(oldWrapper);
+                    // Remove old image's hidden inputs
+                    const hiddenInputs = container.querySelectorAll(`input[value="${oldName}"]`);
+                    hiddenInputs.forEach(input => input.remove());
+                    
+                    // Return image to list by refreshing the image list
+                    // This ensures proper state management
+                    setTimeout(() => {
+                        updateImages(typeof initialImages !== 'undefined' ? initialImages : []);
+                    }, 0);
                 }
 
                 panel.innerHTML = '';
@@ -236,29 +305,32 @@ window.addEventListener('DOMContentLoaded', () => {
                 hidden.name = `pages[${pageIndex}][slots][${slot}]`;
                 hidden.value = name;
                 container.appendChild(hidden);
-                savePagesState();
+                debouncedSave(); // Use debounced save for drag & drop
             });
+            
             if (slots[slot]) {
-                const img = imageList.querySelector(`img[data-name="${slots[slot]}"]`);
-                if (img) {
-                    panel.innerHTML = '';
-                    const clone = img.cloneNode();
-                    clone.draggable = false;
-                    const transformInput = document.createElement('input');
-                    transformInput.type = 'hidden';
-                    transformInput.name = `pages[${pageIndex}][transforms][${slot}]`;
-                    const initial = transforms[slot] || {};
-                    transformInput.value = JSON.stringify(initial);
-                    container.appendChild(transformInput);
-                    enableImageControls(clone, transformInput, initial);
-                    panel.appendChild(clone);
-                    img.remove();
-                    const hidden = document.createElement('input');
-                    hidden.type = 'hidden';
-                    hidden.name = `pages[${pageIndex}][slots][${slot}]`;
-                    hidden.value = slots[slot];
-                    container.appendChild(hidden);
-                }
+                // For page restoration, don't try to find image in imageList since it was filtered out by PHP
+                // Instead, create the image element directly
+                const imageName = slots[slot];
+                const clone = document.createElement('img');
+                clone.src = `/uploads/${imageName}`;
+                clone.draggable = false;
+                clone.dataset.name = imageName;
+                
+                const transformInput = document.createElement('input');
+                transformInput.type = 'hidden';
+                transformInput.name = `pages[${pageIndex}][transforms][${slot}]`;
+                const initial = transforms[slot] || {};
+                transformInput.value = JSON.stringify(initial);
+                container.appendChild(transformInput);
+                enableImageControls(clone, transformInput, initial);
+                panel.appendChild(clone);
+                
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = `pages[${pageIndex}][slots][${slot}]`;
+                hidden.value = imageName;
+                container.appendChild(hidden);
             }
         });
     }
@@ -315,38 +387,54 @@ window.addEventListener('DOMContentLoaded', () => {
         if (data && data.layout) {
             select.value = data.layout;
         }
+        
         select.addEventListener('change', () => {
             returnImagesFromPage(container);
             renderLayout(container, select.value, index);
-            savePagesState();
+            savePagesState(true); // Rebuild UI for layout changes
         });
+        
         gutterColor.addEventListener('input', () => {
             // Live update gutter color in layout container
-            container.style.background = gutterColor.value;
-            savePagesState();
+            const layoutDiv = container.querySelector('.layout');
+            if (layoutDiv) {
+                layoutDiv.style.background = gutterColor.value;
+            }
+            debouncedSave(); // Use debounced save for color changes
         });
+        
         // Set initial gutter color on render
         container.style.background = gutterColor.value;
         renderLayout(container, select.value, index, data ? data.slots : {}, data ? data.transforms : {});
         if (!data) {
-            savePagesState();
+            debouncedSave(); // Use debounced save for new pages
         }
 
         // Delete page logic
         deleteBtn.addEventListener('click', () => {
             returnImagesFromPage(container);
             page.remove();
-            savePagesState();
+            savePagesState(true); // Rebuild UI when deleting pages
         });
     }
 
-    document.getElementById('addPage').addEventListener('click', () => createPage());
+    document.getElementById('addPage').addEventListener('click', () => {
+        createPage();
+        // Adding a page requires UI rebuild to maintain proper indexing
+        savePagesState(true);
+    });
 
+    // Initialize pages and then load images
     if (Array.isArray(savedPages) && savedPages.length) {
         savedPages.forEach(p => createPage(p));
     } else {
         createPage();
     }
+    
+    // Load images AFTER pages are created so assigned images are properly filtered
+    setTimeout(() => {
+        updateImages(typeof initialImages !== 'undefined' ? initialImages : []);
+    }, 100);
 
     document.getElementById('uploadForm').addEventListener('submit', e => {
         e.preventDefault();
@@ -356,7 +444,14 @@ window.addEventListener('DOMContentLoaded', () => {
         Array.from(input.files).forEach(file => formData.append('images[]', file));
         fetch('/upload', {method: 'POST', body: formData})
             .then(r => r.json())
-            .then(updateImages)
+            .then(imageList => {
+                // Update the global image list
+                if (typeof initialImages !== 'undefined') {
+                    initialImages.length = 0;
+                    initialImages.push(...imageList);
+                }
+                updateImages(imageList);
+            })
             .finally(() => {
                 input.value = '';
             });
@@ -364,6 +459,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
     function getAssignedImages(pages) {
         const assigned = new Set();
+        
+        // Get currently assigned images from the DOM (most accurate)
+        document.querySelectorAll('#pages .panel img').forEach(img => {
+            if (img.dataset.name) {
+                assigned.add(img.dataset.name);
+            }
+        });
+        
+        // Also check the pages data as fallback
         if (Array.isArray(pages)) {
             pages.forEach(page => {
                 if (page.slots) {
@@ -373,12 +477,18 @@ window.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+        
         return assigned;
     }
 
-    function updateImages(list, pages) {
+    function updateImages(list, pages = null) {
+        // If no pages provided, use current DOM state
+        const currentPages = pages || getCurrentPageState();
+        const assigned = getAssignedImages(currentPages);
+        
+        // Clear image list
         imageList.innerHTML = '';
-        const assigned = getAssignedImages(pages);
+        
         list.forEach(name => {
             if (!assigned.has(name)) {
                 const wrapper = document.createElement('div');
@@ -415,6 +525,23 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Helper function to get current page state from DOM
+    function getCurrentPageState() {
+        const pages = [];
+        document.querySelectorAll('#pages > .page').forEach(pageDiv => {
+            const slots = {};
+            pageDiv.querySelectorAll('.panel').forEach(panel => {
+                const slot = String(panel.getAttribute('data-slot'));
+                const img = panel.querySelector('img');
+                if (img) {
+                    slots[slot] = img.dataset.name;
+                }
+            });
+            pages.push({ slots });
+        });
+        return pages;
+    }
+
     // Removed comicForm submit handler since the form no longer exists
 
     // Export PDF (Client-side)
@@ -449,4 +576,28 @@ window.addEventListener('DOMContentLoaded', () => {
             pdf.save('comic-layout.pdf');
         });
     }
+
+    // Keyboard shortcuts for better UX
+    document.addEventListener('keydown', (e) => {
+        // Ctrl+S or Cmd+S to save
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            showSaveIndicator('Manual save...', '#2196F3');
+            savePagesState(false);
+        }
+        
+        // Ctrl+N or Cmd+N to add new page
+        if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            e.preventDefault();
+            createPage();
+            savePagesState(true);
+        }
+        
+        // Escape to cancel any ongoing operations 
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.panel.drag-over').forEach(panel => {
+                panel.classList.remove('drag-over');
+            });
+        }
+    });
 });

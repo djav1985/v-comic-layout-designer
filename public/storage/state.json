@@ -1,22 +1,23 @@
 {
     "images": [
-        "Screenshot 2025-06-06 130533.jpg",
         "Screenshot 2025-06-06 130555.jpg",
         "Screenshot 2025-06-14 201357.jpg"
     ],
     "pages": [
         {
-            "layout": "two-vertical-top-one-horizontal-bottom",
-            "gutterColor": "#d24646",
-            "slots": [],
-            "transforms": []
-        },
-        {
             "layout": "cover",
-            "gutterColor": "#cccccc",
-            "slots": [],
-            "transforms": []
+            "gutterColor": "#5167a9",
+            "slots": {
+                "1": "Screenshot 2025-06-06 130555.jpg"
+            },
+            "transforms": {
+                "1": {
+                    "scale": "1.5000000000000004",
+                    "translateX": "0",
+                    "translateY": "0"
+                }
+            }
         }
     ],
-    "pageCount": 2
+    "pageCount": 1
 }

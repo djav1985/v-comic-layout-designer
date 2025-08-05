@@ -14,27 +14,16 @@
             <button type="submit">Upload</button>
         </form>
         <div id="imageList">
-            <?php
-            // Collect all images assigned to panels in saved pages
-            $assigned = [];
-            if (!empty($pages)) {
-                foreach ($pages as $page) {
-                    if (!empty($page['slots'])) {
-                        foreach ($page['slots'] as $imgName) {
-                            $assigned[] = $imgName;
-                        }
-                    }
-                }
-            }
-            foreach ($images as $img):
-                if (!in_array($img, $assigned)):
-            ?>
-                <img src="/uploads/<?= htmlspecialchars($img) ?>" class="thumb" draggable="true" data-name="<?= htmlspecialchars($img) ?>" />
-            <?php endif; endforeach; ?>
+            <!-- Images will be loaded by JavaScript -->
         </div>
     </div>
     <div id="builder">
-        <button id="addPage" type="button">Add Page</button>
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 10px;">
+            <button id="addPage" type="button">Add Page</button>
+            <small style="color: #666; font-style: italic;">
+                💡 Tips: Ctrl+S to save, Ctrl+N for new page, scroll wheel to zoom images
+            </small>
+        </div>
         <div id="pages"></div>
         <button id="exportPdf" type="button" style="margin-top:16px;">Export PDF</button>
     </div>
