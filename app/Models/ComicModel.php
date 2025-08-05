@@ -127,7 +127,7 @@ class ComicModel
         $this->saveState();
     }
 
-    public function renderLayout(string $layout, array $slots): string
+    public function renderLayout(string $layout, array $slots, array $transforms = []): string
     {
         $file = $this->layoutDir . '/' . $layout . '.php';
         $cssFile = $this->layoutDir . '/' . $layout . '.css';
@@ -150,6 +150,13 @@ class ComicModel
             if ($nodes->length) {
                 $img = $dom->createElement('img');
                 $img->setAttribute('src', '/uploads/' . $image);
+                if (isset($transforms[$index])) {
+                    $t = $transforms[$index];
+                    $scale = $t['scale'] ?? 1;
+                    $tx = $t['translateX'] ?? 0;
+                    $ty = $t['translateY'] ?? 0;
+                    $img->setAttribute('style', 'transform: translate(' . $tx . 'px, ' . $ty . 'px) scale(' . $scale . ');');
+                }
                 $nodes->item(0)->appendChild($img);
             }
         }

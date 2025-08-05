@@ -64,7 +64,15 @@ class ComicController
         foreach ($pages as $page) {
             $layout = $page['layout'] ?? '';
             $slots = $page['slots'] ?? [];
-            $html .= $this->model->renderLayout($layout, $slots);
+            $transforms = [];
+            if (!empty($page['transforms']) && is_array($page['transforms'])) {
+                foreach ($page['transforms'] as $slot => $json) {
+                    if (is_string($json)) {
+                        $transforms[$slot] = json_decode($json, true) ?? [];
+                    }
+                }
+            }
+            $html .= $this->model->renderLayout($layout, $slots, $transforms);
         }
         $dompdf = new Dompdf(['isRemoteEnabled' => true]);
         $dompdf->loadHtml($html);

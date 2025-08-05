@@ -4,12 +4,20 @@
         document.querySelectorAll('#pages > .page').forEach(pageDiv => {
             const layout = pageDiv.querySelector('select').value;
             const slots = {};
+            const transforms = {};
             pageDiv.querySelectorAll('.panel').forEach(panel => {
                 const slot = panel.getAttribute('data-slot');
                 const img = panel.querySelector('img');
-                if (img) slots[slot] = img.dataset.name;
+                if (img) {
+                    slots[slot] = img.dataset.name;
+                    transforms[slot] = {
+                        scale: img.dataset.scale || 1,
+                        translateX: img.dataset.translateX || 0,
+                        translateY: img.dataset.translateY || 0
+                    };
+                }
             });
-            pages.push({ layout, slots });
+            pages.push({ layout, slots, transforms });
         });
         fetch('/save-pages', {
             method: 'POST',
@@ -21,13 +29,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const imageList = document.getElementById('imageList');
     let pageCounter = 0;
 
-    function enableImageControls(img) {
-        let scale = 1;
-        let translateX = 0;
-        let translateY = 0;
+    function enableImageControls(img, hiddenInput, initial = {}) {
+        let scale = parseFloat(initial.scale || 1);
+        let translateX = parseFloat(initial.translateX || 0);
+        let translateY = parseFloat(initial.translateY || 0);
 
         function updateTransform() {
             img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+            img.dataset.scale = scale;
+            img.dataset.translateX = translateX;
+            img.dataset.translateY = translateY;
+            if (hiddenInput) {
+                hiddenInput.value = JSON.stringify({ scale, translateX, translateY });
+            }
         }
 
         img.addEventListener('wheel', e => {
@@ -35,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const delta = e.deltaY < 0 ? 0.1 : -0.1;
             scale = Math.min(3, Math.max(0.5, scale + delta));
             updateTransform();
+            savePagesState();
         });
 
         let dragging = false;
@@ -54,8 +69,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         document.addEventListener('mouseup', () => {
-            dragging = false;
+            if (dragging) {
+                dragging = false;
+                savePagesState();
+            }
         });
+
+        updateTransform();
     }
 
     function returnImagesFromPage(container) {
@@ -81,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.head.appendChild(style);
     }
 
-    function renderLayout(container, layoutName, pageIndex, slots = {}) {
+    function renderLayout(container, layoutName, pageIndex, slots = {}, transforms = {}) {
         container.innerHTML = layoutTemplates[layoutName];
         ensureLayoutStyle(layoutName);
         container.querySelectorAll('.panel').forEach(panel => {
@@ -95,7 +115,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 panel.innerHTML = '';
                 const clone = img.cloneNode();
                 clone.draggable = false;
-                enableImageControls(clone);
+                const transformInput = document.createElement('input');
+                transformInput.type = 'hidden';
+                transformInput.name = `pages[${pageIndex}][transforms][${slot}]`;
+                container.appendChild(transformInput);
+                enableImageControls(clone, transformInput);
                 panel.appendChild(clone);
                 img.remove();
                 const hidden = document.createElement('input');
@@ -111,7 +135,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     panel.innerHTML = '';
                     const clone = img.cloneNode();
                     clone.draggable = false;
-                    enableImageControls(clone);
+                    const transformInput = document.createElement('input');
+                    transformInput.type = 'hidden';
+                    transformInput.name = `pages[${pageIndex}][transforms][${slot}]`;
+                    const initial = transforms[slot] || {};
+                    transformInput.value = JSON.stringify(initial);
+                    container.appendChild(transformInput);
+                    enableImageControls(clone, transformInput, initial);
                     panel.appendChild(clone);
                     img.remove();
                     const hidden = document.createElement('input');
@@ -149,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderLayout(container, select.value, index);
             savePagesState();
         });
-        renderLayout(container, select.value, index, data ? data.slots : {});
+        renderLayout(container, select.value, index, data ? data.slots : {}, data ? data.transforms : {});
         if (!data) {
             savePagesState();
         }
