@@ -149,7 +149,11 @@ class ComicModel
             $nodes = $xpath->query("//*[@data-slot='" . $index . "']");
             if ($nodes->length) {
                 $img = $dom->createElement('img');
-                $img->setAttribute('src', '/uploads/' . $image);
+                // Use full URL for Dompdf
+                $host = $_SERVER['HTTP_HOST'] ?? 'localhost6';
+                $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                $imgUrl = $protocol . '://' . $host . '/uploads/' . $image;
+                $img->setAttribute('src', $imgUrl);
                 if (isset($transforms[$index])) {
                     $t = $transforms[$index];
                     $scale = $t['scale'] ?? 1;
@@ -161,7 +165,10 @@ class ComicModel
             }
         }
 
-        $html = $dom->saveHTML();
-        return '<div class="page"><style>' . $css . '</style>' . $html . '</div>';
+    $html = $dom->saveHTML();
+    // Remove any page-breaks from inner HTML
+    $html = str_replace('page-break-after:always;', '', $html);
+    // Only outer wrapper gets page-break
+    return '<div class="page" style="width:100%;height:100%;background:none;page-break-after:always;overflow:hidden;position:relative;"><style>' . $css . '</style>' . $html . '</div>';
     }
 }

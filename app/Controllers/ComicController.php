@@ -2,7 +2,7 @@
 namespace App\Controllers;
 
 use App\Models\ComicModel;
-use Dompdf\Dompdf;
+use Mpdf\Mpdf;
 
 class ComicController
 {
@@ -65,6 +65,7 @@ class ComicController
             $layout = $page['layout'] ?? '';
             $slots = $page['slots'] ?? [];
             $transforms = [];
+            $gutterColor = $page['gutterColor'] ?? '#fffbe6';
             if (!empty($page['transforms']) && is_array($page['transforms'])) {
                 foreach ($page['transforms'] as $slot => $json) {
                     if (is_string($json)) {
@@ -72,18 +73,19 @@ class ComicController
                     }
                 }
             }
+            // Render the entire layout as a single page, with gutter color and page break
+            $html .= '<div style="background:' . htmlspecialchars($gutterColor) . '; width:100%; height:100%; page-break-after:always; overflow:hidden; position:relative;">';
             $html .= $this->model->renderLayout($layout, $slots, $transforms);
+            $html .= '</div>';
         }
-        $dompdf = new Dompdf(['isRemoteEnabled' => true]);
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4');
-        $dompdf->render();
+        $mpdf = new Mpdf(['format' => 'A4']);
+        $mpdf->WriteHTML($html);
         $filename = 'comic-' . time() . '.pdf';
         $path = __DIR__ . '/../../public/generated/' . $filename;
         if (!is_dir(dirname($path))) {
             mkdir(dirname($path), 0777, true);
         }
-        file_put_contents($path, $dompdf->output());
+        $mpdf->Output($path, 'F');
         // Save last generatedDir to state
         $this->model->generatedDir = dirname($path);
         $this->model->saveState();

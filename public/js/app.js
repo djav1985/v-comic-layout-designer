@@ -3,6 +3,8 @@
         const pages = [];
         document.querySelectorAll('#pages > .page').forEach(pageDiv => {
             const layout = pageDiv.querySelector('select').value;
+            const gutterColorInput = pageDiv.querySelector('input[type="color"]');
+            const gutterColor = gutterColorInput ? gutterColorInput.value : '#cccccc';
             const slots = {};
             const transforms = {};
             pageDiv.querySelectorAll('.panel').forEach(panel => {
@@ -17,7 +19,7 @@
                     };
                 }
             });
-            pages.push({ layout, slots, transforms });
+            pages.push({ layout, gutterColor, slots, transforms });
         });
         fetch('/save-pages', {
             method: 'POST',
@@ -174,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteBtn.style.marginLeft = '8px';
         page.appendChild(deleteBtn);
 
+        // Layout selector
         const select = document.createElement('select');
         layouts.forEach(l => {
             const opt = document.createElement('option');
@@ -181,13 +184,36 @@ document.addEventListener('DOMContentLoaded', () => {
             opt.textContent = l;
             select.appendChild(opt);
         });
+        select.style.marginRight = '8px';
+
+        // Gutter color picker
+        const gutterColor = document.createElement('input');
+    gutterColor.type = 'color';
+    gutterColor.value = (data && data.gutterColor) ? data.gutterColor : '#cccccc';
+    gutterColor.title = 'Gutter Color';
+    gutterColor.name = `pages[${pageCounter}][gutterColor]`;
+    gutterColor.className = 'gutter-color-picker';
+
+        // Label for color picker
+        const gutterLabel = document.createElement('label');
+        gutterLabel.textContent = 'Gutter Color: ';
+        gutterLabel.appendChild(gutterColor);
+        gutterLabel.style.marginRight = '8px';
+
+        const controlsDiv = document.createElement('div');
+        controlsDiv.style.display = 'flex';
+        controlsDiv.style.alignItems = 'center';
+        controlsDiv.appendChild(select);
+        controlsDiv.appendChild(gutterLabel);
+        page.appendChild(controlsDiv);
+
         const container = document.createElement('div');
         container.className = 'layout-container';
-        page.appendChild(select);
         page.appendChild(container);
         document.getElementById('pages').appendChild(page);
         const index = pageCounter++;
         select.name = `pages[${index}][layout]`;
+        gutterColor.name = `pages[${index}][gutterColor]`;
         if (data && data.layout) {
             select.value = data.layout;
         }
@@ -196,6 +222,13 @@ document.addEventListener('DOMContentLoaded', () => {
             renderLayout(container, select.value, index);
             savePagesState();
         });
+        gutterColor.addEventListener('input', () => {
+            // Live update gutter color in layout container
+            container.style.background = gutterColor.value;
+            savePagesState();
+        });
+        // Set initial gutter color on render
+        container.style.background = gutterColor.value;
         renderLayout(container, select.value, index, data ? data.slots : {}, data ? data.transforms : {});
         if (!data) {
             savePagesState();
@@ -275,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(r => r.json())
             .then(res => {
                 if (res.file) {
-                    window.open(`/storage/generated/${res.file}`, '_blank');
+                    window.open(`/generated/${res.file}`, '_blank');
                 }
             });
     });

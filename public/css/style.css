@@ -1,3 +1,25 @@
+/* Gutter color picker styled like select */
+.gutter-color-picker {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background: #fff;
+    border: 2px solid #e09c2b;
+    border-radius: 8px;
+    padding: 6px 6px 6px 6px;
+    width: 40px;
+    height: 40px;
+    box-shadow: 0 2px 8px rgba(224,156,43,0.10);
+    cursor: pointer;
+    outline: none;
+    margin-right: 8px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    vertical-align: middle;
+}
+.gutter-color-picker:focus {
+    border-color: #222;
+    box-shadow: 0 0 0 2px #ffe6b0;
+}
 #uploadForm {
     border: 2px solid #222;
     background: #fff;

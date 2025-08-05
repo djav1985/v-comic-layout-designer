@@ -6,23 +6,25 @@
     ],
     "pages": [
         {
-            "layout": "cover",
+            "layout": "two-horizontal",
+            "gutterColor": "#d24646",
             "slots": {
-                "1": "Screenshot 2025-06-14 201357.jpg"
+                "1": "Screenshot 2025-06-06 130533.jpg",
+                "2": "Screenshot 2025-06-14 201357.jpg"
             },
             "transforms": {
                 "1": {
-                    "scale": "1",
+                    "scale": "1.3000000000000003",
+                    "translateX": "0",
+                    "translateY": "0"
+                },
+                "2": {
+                    "scale": "0.7000000000000001",
                     "translateX": "0",
                     "translateY": "0"
                 }
             }
-        },
-        {
-            "layout": "cover",
-            "slots": [],
-            "transforms": []
         }
     ],
-    "pageCount": 2
+    "pageCount": 1
 }
