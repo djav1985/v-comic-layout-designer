@@ -5,7 +5,6 @@ class ComicModel
 {
     public string $uploadDir;
     public string $layoutDir;
-    public string $generatedDir;
     private string $stateFile;
     private array $state = [
         'images' => [],
@@ -17,7 +16,6 @@ class ComicModel
     {
         $this->uploadDir = __DIR__ . '/../../public/uploads';
         $this->layoutDir = __DIR__ . '/../../layouts';
-        $this->generatedDir = __DIR__ . '/../../public/generated';
         $this->stateFile = __DIR__ . '/../../public/storage/state.json';
         if (!is_dir($this->uploadDir)) {
             mkdir($this->uploadDir, 0777, true);

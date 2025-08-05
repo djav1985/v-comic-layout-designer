@@ -14,4 +14,4 @@ A simple MVC PHP application that lets you drag and drop uploaded images into pr
    ```
 3. Open `http://localhost:8000` in your browser.
 
-Uploaded images are stored in `uploads/` and generated PDFs appear in `storage/generated/`.
+Uploaded images are stored in `uploads/`.
