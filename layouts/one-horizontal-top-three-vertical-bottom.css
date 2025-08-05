@@ -1,0 +1,29 @@
+/* one-horizontal-top-three-vertical-bottom.css */
+.layout.one-horizontal-top-three-vertical-bottom .panel1 {
+    top: 12px;
+    left: 12px;
+    width: calc(100% - 24px);
+    height: calc(50% - 18px);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+.layout.one-horizontal-top-three-vertical-bottom .panel2 {
+    top: calc(50% + 6px);
+    left: 12px;
+    width: calc(33.333% - 18px);
+    height: calc(50% - 18px);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+.layout.one-horizontal-top-three-vertical-bottom .panel3 {
+    top: calc(50% + 6px);
+    left: calc(33.333% + 6px);
+    width: calc(33.333% - 18px);
+    height: calc(50% - 18px);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+.layout.one-horizontal-top-three-vertical-bottom .panel4 {
+    top: calc(50% + 6px);
+    left: calc(66.666% + 6px);
+    width: calc(33.333% - 18px);
+    height: calc(50% - 18px);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
