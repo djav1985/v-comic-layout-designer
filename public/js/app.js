@@ -25,6 +25,24 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ pages, pageCount: pages.length })
+        })
+        .then(() => {
+            // After saving, reload savedPages from server and re-render
+            fetch('/get-pages')
+                .then(r => r.json())
+                .then(data => {
+                    window.savedPages = data.pages;
+                    // Clear and re-render all pages
+                    const pagesDiv = document.getElementById('pages');
+                    pagesDiv.innerHTML = '';
+                    if (Array.isArray(window.savedPages) && window.savedPages.length) {
+                        window.savedPages.forEach(p => createPage(p));
+                    } else {
+                        createPage();
+                    }
+                    // Re-render image list
+                    updateImages(typeof initialImages !== 'undefined' ? initialImages : [], window.savedPages);
+                });
         });
     }
 window.addEventListener('DOMContentLoaded', () => {
@@ -134,6 +152,44 @@ window.addEventListener('DOMContentLoaded', () => {
                 const name = e.dataTransfer.getData('text/plain');
                 const img = imageList.querySelector(`img[data-name="${name}"]`);
                 if (!img) return;
+                // Remove the entire image-wrapper for the new image
+                const wrapper = img.closest('.image-wrapper');
+                if (wrapper) wrapper.remove();
+
+                // If panel already has an image, return it to imageList
+                const oldImg = panel.querySelector('img');
+                if (oldImg) {
+                    const oldName = oldImg.dataset.name;
+                    // Create a new wrapper for the old image
+                    const oldWrapper = document.createElement('div');
+                    oldWrapper.className = 'image-wrapper';
+                    const oldThumb = oldImg.cloneNode();
+                    oldThumb.className = 'thumb';
+                    oldThumb.draggable = true;
+                    oldWrapper.appendChild(oldThumb);
+                    // Add delete button
+                    const delBtn = document.createElement('button');
+                    delBtn.type = 'button';
+                    delBtn.className = 'delete-image-btn';
+                    delBtn.textContent = '🗑';
+                    delBtn.title = 'Delete Image';
+                    delBtn.style.marginTop = '4px';
+                    delBtn.style.display = 'block';
+                    delBtn.addEventListener('click', () => {
+                        fetch('/delete-image', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: `name=${encodeURIComponent(oldName)}`
+                        })
+                        .then(r => r.json())
+                        .then(() => {
+                            oldWrapper.remove();
+                        });
+                    });
+                    oldWrapper.appendChild(delBtn);
+                    imageList.appendChild(oldWrapper);
+                }
+
                 panel.innerHTML = '';
                 const clone = img.cloneNode();
                 clone.draggable = false;
@@ -143,7 +199,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 container.appendChild(transformInput);
                 enableImageControls(clone, transformInput);
                 panel.appendChild(clone);
-                img.remove();
                 const hidden = document.createElement('input');
                 hidden.type = 'hidden';
                 hidden.name = `pages[${pageIndex}][slots][${slot}]`;
@@ -276,51 +331,61 @@ window.addEventListener('DOMContentLoaded', () => {
             });
     });
 
-    function updateImages(list) {
-        imageList.innerHTML = '';
-        let row;
-        list.forEach((name, i) => {
-            if (i % 3 === 0) {
-                row = document.createElement('div');
-                row.className = 'image-row';
-                imageList.appendChild(row);
-            }
-            const wrapper = document.createElement('div');
-            wrapper.className = 'image-wrapper';
-            const img = document.createElement('img');
-            img.src = `/uploads/${name}`;
-            img.className = 'thumb';
-            img.draggable = true;
-            img.dataset.name = name;
-            wrapper.appendChild(img);
-
-            // Add delete button
-            const delBtn = document.createElement('button');
-            delBtn.type = 'button';
-            delBtn.className = 'delete-image-btn';
-            delBtn.textContent = '🗑';
-            delBtn.title = 'Delete Image';
-            delBtn.style.marginTop = '4px';
-            delBtn.style.display = 'block';
-            delBtn.addEventListener('click', () => {
-                fetch('/delete-image', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `name=${encodeURIComponent(name)}`
-                })
-                .then(r => r.json())
-                .then(() => {
-                    wrapper.remove();
-                });
+    function getAssignedImages(pages) {
+        const assigned = new Set();
+        if (Array.isArray(pages)) {
+            pages.forEach(page => {
+                if (page.slots) {
+                    Object.values(page.slots).forEach(imgName => {
+                        if (imgName) assigned.add(imgName);
+                    });
+                }
             });
-            wrapper.appendChild(delBtn);
+        }
+        return assigned;
+    }
 
-            row.appendChild(wrapper);
+    function updateImages(list, pages) {
+        imageList.innerHTML = '';
+        const assigned = getAssignedImages(pages);
+        list.forEach(name => {
+            if (!assigned.has(name)) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'image-wrapper';
+                const img = document.createElement('img');
+                img.src = `/uploads/${name}`;
+                img.className = 'thumb';
+                img.draggable = true;
+                img.dataset.name = name;
+
+                // Add delete button
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.className = 'delete-image-btn';
+                delBtn.textContent = '🗑';
+                delBtn.title = 'Delete Image';
+                delBtn.style.marginTop = '4px';
+                delBtn.style.display = 'block';
+                delBtn.addEventListener('click', () => {
+                    fetch('/delete-image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `name=${encodeURIComponent(name)}`
+                    })
+                    .then(r => r.json())
+                    .then(() => {
+                        wrapper.remove();
+                    });
+                });
+                wrapper.appendChild(img);
+                wrapper.appendChild(delBtn);
+                imageList.appendChild(wrapper);
+            }
         });
     }
 
-    // Initialize with any images provided by the server
-    updateImages(typeof initialImages !== 'undefined' ? initialImages : []);
+    // Initialize with any images provided by the server and savedPages
+    updateImages(typeof initialImages !== 'undefined' ? initialImages : [], savedPages);
 
     // Removed comicForm submit handler since the form no longer exists
 
