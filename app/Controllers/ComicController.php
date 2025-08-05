@@ -22,13 +22,28 @@ class ComicController
         include __DIR__ . '/../Views/index.php';
     }
 
+    public function savePages(): void
+    {
+    $input = file_get_contents('php://input');
+    $data = json_decode($input, true);
+    $pages = $data['pages'] ?? [];
+    $this->model->setPages($pages);
+    header('Content-Type: application/json');
+    echo json_encode(['status' => 'ok']);
+    }
+
     public function handleUpload(): void
     {
-        if (!empty($_FILES['image']['tmp_name'])) {
-            $this->model->saveUpload($_FILES['image']);
-        }
         header('Content-Type: application/json');
-        echo json_encode($this->model->getImages());
+        try {
+            if (!empty($_FILES['image']['tmp_name'])) {
+                $this->model->saveUpload($_FILES['image']);
+            }
+            echo json_encode($this->model->getImages());
+        } catch (\Exception $e) {
+            http_response_code(400);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
     }
 
     public function deleteImage(): void
@@ -55,11 +70,14 @@ class ComicController
         $dompdf->setPaper('A4');
         $dompdf->render();
         $filename = 'comic-' . time() . '.pdf';
-        $path = __DIR__ . '/../../storage/generated/' . $filename;
+        $path = __DIR__ . '/../../public/generated/' . $filename;
         if (!is_dir(dirname($path))) {
             mkdir(dirname($path), 0777, true);
         }
         file_put_contents($path, $dompdf->output());
+        // Save last generatedDir to state
+        $this->model->generatedDir = dirname($path);
+        $this->model->saveState();
         header('Content-Type: application/json');
         echo json_encode(['file' => $filename]);
     }

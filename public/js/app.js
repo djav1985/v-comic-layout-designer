@@ -1,3 +1,22 @@
+    function savePagesState() {
+        // Collect page state from DOM
+        const pages = [];
+        document.querySelectorAll('#pages > .page').forEach((pageDiv, i) => {
+            const layout = pageDiv.querySelector('select').value;
+            const slots = {};
+            pageDiv.querySelectorAll('.panel').forEach(panel => {
+                const slot = panel.getAttribute('data-slot');
+                const img = panel.querySelector('img');
+                if (img) slots[slot] = img.dataset.name;
+            });
+            pages.push({ layout, slots });
+        });
+        fetch('/save-pages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pages })
+        });
+    }
 document.addEventListener('DOMContentLoaded', () => {
     const imageList = document.getElementById('imageList');
     let pageCounter = 0;
@@ -28,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 hidden.name = `pages[${pageIndex}][slots][${slot}]`;
                 hidden.value = name;
                 container.appendChild(hidden);
+                savePagesState();
             });
         });
     }
@@ -49,8 +69,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('pages').appendChild(page);
         const index = pageCounter++;
         select.name = `pages[${index}][layout]`;
-        select.addEventListener('change', () => renderLayout(container, select.value, index));
+        select.addEventListener('change', () => {
+            renderLayout(container, select.value, index);
+            savePagesState();
+        });
         renderLayout(container, select.value, index);
+        savePagesState();
     }
 
     document.getElementById('addPage').addEventListener('click', createPage);
