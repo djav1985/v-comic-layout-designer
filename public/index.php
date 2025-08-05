@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/../vendor/autoload.php';
 
-use App\Core\App;
+use App\Core\Router;
 
-App::run();
+Router::run();
