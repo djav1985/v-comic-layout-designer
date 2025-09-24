@@ -38,6 +38,8 @@ Uploaded images are stored in `public/uploads/`. Generated exports live in `publ
 
 The refreshed UI introduces a glassmorphism-inspired surface layered over a deep gradient backdrop. Responsive cards separate the asset library from the workspace, while updated typography and spacing improve readability across screen sizes. Buttons and controls now share a consistent accent color palette, and empty states provide clear guidance for first-time users.
 
+The latest pass widens the overall shell and expands the workspace grid so the live canvas has more breathing room on large displays without sacrificing the responsive behavior on smaller screens.
+
 ## Notes
 
 * Exported PDFs and PNGs keep the diagonal panel edges found in the angled layouts. The exporter re-applies each layout's `clip-path` geometry after html2canvas renders the page so the gutters stay crisp in the output files.
