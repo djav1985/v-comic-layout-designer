@@ -1,4 +1,5 @@
 * text=auto
 *.php text eol=lf
+app/Models/ComicModel.php -text
 *.js text eol=lf
 *.css text eol=lf
