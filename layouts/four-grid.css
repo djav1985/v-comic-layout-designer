@@ -3,7 +3,6 @@
     left: 12px;
     width: calc(50% - 18px);
     height: calc(50% - 18px);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
 }
 
 .layout.four-grid .panel2 {
@@ -11,7 +10,6 @@
     left: calc(50% + 6px);
     width: calc(50% - 18px);
     height: calc(50% - 18px);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
 }
 
 .layout.four-grid .panel3 {
@@ -19,7 +17,6 @@
     left: 12px;
     width: calc(50% - 18px);
     height: calc(50% - 18px);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
 }
 
 .layout.four-grid .panel4 {
@@ -27,5 +24,4 @@
     left: calc(50% + 6px);
     width: calc(50% - 18px);
     height: calc(50% - 18px);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
 }

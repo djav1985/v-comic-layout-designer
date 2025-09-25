@@ -6,12 +6,10 @@
     left: 12px;
     width: calc(100% - 24px);
     height: calc(50% - 18px);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
 }
 .layout.two-horizontal .panel2 {
     top: calc(50% + 6px);
     left: 12px;
     width: calc(100% - 24px);
     height: calc(50% - 18px);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
 }

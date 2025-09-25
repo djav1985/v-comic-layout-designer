@@ -6,16 +6,6 @@ window.addEventListener("DOMContentLoaded", () => {
   let saveIndicator = null;
   let lastSyncedSignature = null;
   let pageStreamSource = null;
-  const clipPathRuleCache = new Map();
-  const CSS_RULE_TYPES = window.CSSRule
-    ? {
-        STYLE: window.CSSRule.STYLE_RULE,
-        MEDIA: window.CSSRule.MEDIA_RULE,
-      }
-    : {
-        STYLE: 1,
-        MEDIA: 4,
-      };
   const PDF_PAGE_WIDTH = 792;
   const PDF_PAGE_HEIGHT = 612;
   const PDF_COLUMN_WIDTH = PDF_PAGE_WIDTH / 2;
@@ -258,132 +248,6 @@ window.addEventListener("DOMContentLoaded", () => {
     document.head.appendChild(style);
   }
 
-  function collectClipPathRules(ruleList, target) {
-    if (!ruleList || !target) return;
-    Array.from(ruleList).forEach((rule) => {
-      if (!rule) return;
-      if (
-        rule.type === CSS_RULE_TYPES.STYLE &&
-        rule.style &&
-        (rule.style.getPropertyValue("clip-path") ||
-          rule.style.getPropertyValue("-webkit-clip-path"))
-      ) {
-        const clipPath =
-          rule.style.getPropertyValue("clip-path") ||
-          rule.style.getPropertyValue("-webkit-clip-path");
-        if (clipPath && clipPath !== "none") {
-          const selectors = (rule.selectorText || "")
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean);
-          selectors.forEach((selector) => {
-            target.push({ selector, clipPath: clipPath.trim() });
-          });
-        }
-      } else if (rule.type === CSS_RULE_TYPES.MEDIA && rule.cssRules) {
-        collectClipPathRules(rule.cssRules, target);
-      }
-    });
-  }
-
-  function getClipPathRules(layoutName) {
-    if (!layoutName) return [];
-    if (clipPathRuleCache.has(layoutName)) {
-      return clipPathRuleCache.get(layoutName);
-    }
-    const results = [];
-    const styleEl = document.getElementById("style-" + layoutName);
-    if (styleEl && styleEl.sheet) {
-      try {
-        collectClipPathRules(styleEl.sheet.cssRules, results);
-      } catch (err) {
-        console.warn(
-          "Unable to read clip-path rules for layout:",
-          layoutName,
-          err,
-        );
-      }
-    }
-    clipPathRuleCache.set(layoutName, results);
-    return results;
-  }
-
-  function applyClipPathDataAttributes(layoutElement, layoutName) {
-    if (!layoutElement) return;
-    const rules = getClipPathRules(layoutName);
-    if (!rules.length) return;
-    rules.forEach(({ selector, clipPath }) => {
-      if (!selector || !clipPath) return;
-      try {
-        const scope = layoutElement.ownerDocument || document;
-        scope.querySelectorAll(selector).forEach((el) => {
-          if (layoutElement.contains(el) || el === layoutElement) {
-            el.dataset.clipPath = clipPath;
-          }
-        });
-      } catch (err) {
-        console.warn(
-          "Failed to apply cached clip-path selector:",
-          selector,
-          "for layout",
-          layoutName,
-          err,
-        );
-      }
-    });
-  }
-
-  function getClipPathFromRules(layoutName, element) {
-    if (!layoutName || !element) return null;
-    const rules = getClipPathRules(layoutName);
-    for (const { selector, clipPath } of rules) {
-      if (!selector || !clipPath) continue;
-      try {
-        if (element.matches(selector)) {
-          return clipPath;
-        }
-      } catch (err) {
-        // Ignore selectors that querySelector cannot evaluate
-      }
-    }
-    return null;
-  }
-
-  function applyClipPath(ctx, element, canvasWidth, canvasHeight) {
-    const style = window.getComputedStyle(element);
-    const clipSource =
-      element.dataset.clipPolygon ||
-      element.dataset.clipPath ||
-      style.clipPath ||
-      style.webkitClipPath;
-
-    if (!clipSource || clipSource === "none") return;
-
-    const polygonMatch = clipSource.match(/polygon\(([^)]+)\)/i);
-    if (!polygonMatch) return;
-
-    const points = polygonMatch[1].split(",").map(pt => pt.trim());
-    if (points.length < 3) return;
-
-    ctx.beginPath();
-
-    points.forEach((pt, i) => {
-      const [xStr, yStr] = pt.split(/\s+/);
-      let x = xStr.endsWith("%")
-        ? (parseFloat(xStr) / 100) * canvasWidth
-        : parseFloat(xStr);
-      let y = yStr.endsWith("%")
-        ? (parseFloat(yStr) / 100) * canvasHeight
-        : parseFloat(yStr);
-
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-
-    ctx.closePath();
-    ctx.clip();
-  }
-
   function addCanvasToPdf(pdf, canvas, imgData, columnIndex) {
     if (!pdf || !canvas || !imgData) return;
     const originalWidth = canvas.width;
@@ -400,118 +264,6 @@ window.addEventListener("DOMContentLoaded", () => {
       (PDF_COLUMN_WIDTH - renderWidth) / 2;
     const offsetY = (PDF_PAGE_HEIGHT - renderHeight) / 2;
     pdf.addImage(imgData, "PNG", offsetX, offsetY, renderWidth, renderHeight);
-  }
-
-  function parseClipPathCoordinate(raw) {
-    if (!raw) return null;
-    const trimmed = raw.trim();
-    if (trimmed.endsWith("%")) {
-      return { value: parseFloat(trimmed.slice(0, -1)), unit: "%" };
-    }
-    if (trimmed.endsWith("px")) {
-      return { value: parseFloat(trimmed.slice(0, -2)), unit: "px" };
-    }
-    const parsed = parseFloat(trimmed);
-    if (Number.isFinite(parsed)) {
-      return { value: parsed, unit: "px" };
-    }
-    return null;
-  }
-
-  function parseClipPathPolygon(clipPath) {
-    if (!clipPath || clipPath === "none") return null;
-    const match = clipPath.match(/^polygon\((.+)\)$/i);
-    if (!match) return null;
-    const parts = match[1].split(",");
-    const points = [];
-    for (const part of parts) {
-      const [xRaw, yRaw] = part.trim().split(/\s+/);
-      if (!xRaw || !yRaw) return null;
-      const x = parseClipPathCoordinate(xRaw);
-      const y = parseClipPathCoordinate(yRaw);
-      if (!x || !y) return null;
-      points.push([x, y]);
-    }
-    return points.length ? points : null;
-  }
-
-  function convertClipValue(coord, size) {
-    if (!coord) return 0;
-    if (coord.unit === "%") {
-      return (coord.value / 100) * size;
-    }
-    return coord.value;
-  }
-
-  function isAxisAlignedRectangle(points, width, height) {
-    if (!points.length) return true;
-    const approx = (a, b) => Math.abs(a - b) < 0.5;
-    return points.every(
-      ([x, y]) =>
-        (approx(x, 0) || approx(x, width)) &&
-        (approx(y, 0) || approx(y, height)),
-    );
-  }
-
-  function applyClipPathsToCanvas(layout, canvas) {
-    if (!layout || !canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const layoutRect = layout.getBoundingClientRect();
-    if (!layoutRect.width || !layoutRect.height) return;
-
-    const scaleX = canvas.width / layoutRect.width;
-    const scaleY = canvas.height / layoutRect.height;
-    const computedLayoutStyle = window.getComputedStyle(layout);
-    let gutterColor = computedLayoutStyle.backgroundColor;
-    if (
-      !gutterColor ||
-      gutterColor === "transparent" ||
-      gutterColor === "rgba(0, 0, 0, 0)"
-    ) {
-      gutterColor = "#ffffff";
-    }
-
-    layout.querySelectorAll(".panel").forEach((panel) => {
-      const panelRect = panel.getBoundingClientRect();
-      const panelWidth = panelRect.width;
-      const panelHeight = panelRect.height;
-      if (!panelWidth || !panelHeight) return;
-
-      const canvasWidth = Math.round(panelWidth * scaleX);
-      const canvasHeight = Math.round(panelHeight * scaleY);
-      if (canvasWidth <= 0 || canvasHeight <= 0) return;
-
-      const offsetX = Math.round((panelRect.left - layoutRect.left) * scaleX);
-      const offsetY = Math.round((panelRect.top - layoutRect.top) * scaleY);
-
-      try {
-        const imageData = ctx.getImageData(
-          offsetX,
-          offsetY,
-          canvasWidth,
-          canvasHeight,
-        );
-        const tempCanvas = document.createElement("canvas");
-        tempCanvas.width = canvasWidth;
-        tempCanvas.height = canvasHeight;
-        const tempCtx = tempCanvas.getContext("2d");
-        if (!tempCtx) return;
-
-        tempCtx.putImageData(imageData, 0, 0);
-
-        ctx.save();
-        ctx.fillStyle = gutterColor;
-        ctx.fillRect(offsetX, offsetY, canvasWidth, canvasHeight);
-        ctx.translate(offsetX, offsetY);
-        applyClipPath(ctx, panel, canvasWidth, canvasHeight);
-        ctx.drawImage(tempCanvas, 0, 0);
-        ctx.restore();
-      } catch (error) {
-        console.warn("Failed to apply clip-path for panel export:", error);
-      }
-    });
   }
 
   function renderLayout(
@@ -541,7 +293,6 @@ window.addEventListener("DOMContentLoaded", () => {
       // Add the specific layout class name for CSS targeting
       layoutDiv.classList.add(layoutName);
       layoutDiv.dataset.layoutName = layoutName;
-      applyClipPathDataAttributes(layoutDiv, layoutName);
 
       // Find gutter color from parent page
       let gutterColor = DEFAULT_GUTTER_COLOR;
@@ -559,21 +310,6 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     container.querySelectorAll(".panel").forEach((panel) => {
-      const computed = window.getComputedStyle(panel);
-      const resolvedClip =
-        (computed.clipPath && computed.clipPath !== "none"
-          ? computed.clipPath
-          : null) ||
-        (computed.webkitClipPath && computed.webkitClipPath !== "none"
-          ? computed.webkitClipPath
-          : null);
-      if (resolvedClip) {
-        panel.dataset.clipPath = resolvedClip;
-        if (!panel.dataset.clipPolygon && resolvedClip.startsWith("polygon")) {
-          panel.dataset.clipPolygon = resolvedClip;
-        }
-      }
-
       const slot = panel.getAttribute("data-slot");
 
       panel.addEventListener("dragover", (e) => {
@@ -748,7 +484,6 @@ window.addEventListener("DOMContentLoaded", () => {
           layoutDiv.classList.remove(...layouts); // Remove all layout classes
           layoutDiv.classList.add(select.value); // Add the selected layout class
           layoutDiv.dataset.layoutName = select.value;
-          applyClipPathDataAttributes(layoutDiv, select.value);
           console.log(
             `After layout change - background: ${layoutDiv.style.background}, classes: ${layoutDiv.className}`,
           );
@@ -1112,8 +847,6 @@ window.addEventListener("DOMContentLoaded", () => {
             height: layout1.offsetHeight,
           });
 
-          applyClipPathsToCanvas(layout1, canvas1);
-
           if (canvas1.width === 0 || canvas1.height === 0) {
             throw new Error(`Canvas ${i + 1} has zero dimensions`);
           }
@@ -1136,8 +869,6 @@ window.addEventListener("DOMContentLoaded", () => {
               width: layout2.offsetWidth,
               height: layout2.offsetHeight,
             });
-
-            applyClipPathsToCanvas(layout2, canvas2);
 
             if (canvas2.width === 0 || canvas2.height === 0) {
               throw new Error(`Canvas ${i + 2} has zero dimensions`);
@@ -1232,8 +963,6 @@ window.addEventListener("DOMContentLoaded", () => {
             width: layout.offsetWidth,
             height: layout.offsetHeight,
           });
-
-          applyClipPathsToCanvas(layout, canvas);
 
           if (canvas.width === 0 || canvas.height === 0) {
             throw new Error(`Canvas ${i + 1} has zero dimensions`);
@@ -1348,10 +1077,6 @@ window.addEventListener("DOMContentLoaded", () => {
           useCORS: true,
           allowTaint: true,
         });
-
-        if (layout) {
-          applyClipPathsToCanvas(layout, canvas);
-        }
 
         // Convert to blob and create download link
         canvas.toBlob((blob) => {
