@@ -52,8 +52,8 @@ class PageController
     {
         $this->releaseSessionLock();
 
-        ignore_user_abort(true);
-        set_time_limit(0);
+        ignore_user_abort(false);
+        set_time_limit(30);
 
         header('Content-Type: text/event-stream');
         header('Cache-Control: no-cache');
@@ -61,6 +61,8 @@ class PageController
         header('X-Accel-Buffering: no');
 
         $lastModified = null;
+        $maxIterations = 25; // Limit iterations to prevent infinite blocking
+        $iterations = 0;
 
         echo "retry: 5000\n\n";
         @ob_flush();
@@ -69,7 +71,7 @@ class PageController
         $this->emitState($this->model->refreshStateFromDisk());
         $lastModified = $this->model->getLastModified();
 
-        while (!connection_aborted()) {
+        while (!connection_aborted() && $iterations < $maxIterations) {
             $currentModified = $this->model->getLastModified();
             if ($currentModified !== $lastModified) {
                 $lastModified = $currentModified;
@@ -78,8 +80,15 @@ class PageController
             if (connection_aborted()) {
                 break;
             }
+            $iterations++;
             sleep(1);
         }
+        
+        // Send a final keep-alive message before closing
+        echo "event: keepalive\n";
+        echo "data: connection_timeout\n\n";
+        @ob_flush();
+        flush();
     }
 
     private function releaseSessionLock(): void

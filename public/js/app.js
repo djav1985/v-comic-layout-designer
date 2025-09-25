@@ -786,6 +786,13 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function cleanupEventSource() {
+    if (pageStreamSource) {
+      pageStreamSource.close();
+      pageStreamSource = null;
+    }
+  }
+
   function subscribeToStateStream() {
     if (!window.EventSource) {
       console.warn("EventSource is not supported in this browser; live sync disabled.");
@@ -836,6 +843,23 @@ window.addEventListener("DOMContentLoaded", () => {
 
     pageStreamSource.addEventListener("error", (event) => {
       console.error("Page stream connection error", event);
+      // Clean up and attempt to reconnect after a delay
+      cleanupEventSource();
+      setTimeout(() => {
+        if (document.visibilityState !== "hidden") {
+          subscribeToStateStream();
+        }
+      }, 5000);
+    });
+
+    pageStreamSource.addEventListener("keepalive", (event) => {
+      console.log("EventSource connection timed out, reconnecting...");
+      cleanupEventSource();
+      setTimeout(() => {
+        if (document.visibilityState !== "hidden") {
+          subscribeToStateStream();
+        }
+      }, 1000);
     });
   }
 
@@ -843,10 +867,15 @@ window.addEventListener("DOMContentLoaded", () => {
     subscribeToStateStream();
   });
 
-  window.addEventListener("beforeunload", () => {
-    if (pageStreamSource) {
-      pageStreamSource.close();
-      pageStreamSource = null;
+  // Multiple cleanup event listeners to ensure EventSource is properly closed
+  window.addEventListener("beforeunload", cleanupEventSource);
+  window.addEventListener("pagehide", cleanupEventSource);
+  window.addEventListener("unload", cleanupEventSource);
+  
+  // Also cleanup on visibility change to handle some edge cases
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      cleanupEventSource();
     }
   });
 
