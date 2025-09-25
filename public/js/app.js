@@ -1104,7 +1104,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
             let renderWidth = slotWidth;
             let renderHeight = renderWidth * aspectRatio;
-
             if (renderHeight > pageHeight) {
               renderHeight = pageHeight;
               renderWidth = renderHeight / aspectRatio;
