@@ -45,3 +45,5 @@ The latest pass sets the application shell to a centered 90% width and now adapt
 * Exported PDFs and PNGs now reliably keep the diagonal panel edges found in the angled layouts. The exporter reads the layout-specific CSS rules to cache each panel's clip-path (including vendor-prefixed values) and reapplies the geometry after html2canvas renders the page so the gutters stay crisp in the output files.
 * PDF exports respect the natural aspect ratio of each canvas when placing two pages per sheet, preventing the subtle horizontal squeeze that previously appeared in the generated documents.
 * Workspace page previews once again adhere to the original 5.5" × 8.5" canvas ratio so panels fill the vertical space and no longer clip along the outer edges in live view or exported assets.
+* Saved layouts are fetched from the server on start-up, so refreshing the browser immediately restores your most recent state from `public/storage/state.json`.
+* Shared PDF page constants prevent duplicate variable declarations, silencing the `pageWidth` console error during exports.

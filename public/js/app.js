@@ -773,26 +773,47 @@ window.addEventListener("DOMContentLoaded", () => {
     savePagesState(true);
   });
 
-  // Initialize pages and then load images
-  if (Array.isArray(savedPages) && savedPages.length) {
-    console.log("Loading saved pages:", savedPages);
-    savedPages.forEach((p, index) => {
-      console.log(`Creating page ${index + 1} with layout: ${p.layout}`);
-      createPage(p);
-    });
-  } else {
-    console.log("Creating new default page");
-    createPage();
+  async function initializePages() {
+    const embeddedPages =
+      Array.isArray(savedPages) && savedPages.length ? savedPages : [];
+
+    try {
+      const response = await fetch("/get-pages", {
+        headers: { Accept: "application/json" },
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to load pages (status ${response.status})`);
+      }
+
+      const data = await response.json();
+      if (data && Array.isArray(data.pages) && data.pages.length) {
+        console.log("Loaded pages from server state:", data.pages);
+        rebuildPagesUI(data.pages);
+        return;
+      }
+
+      console.log("Server returned no pages; using embedded state if available.");
+    } catch (error) {
+      console.warn("Falling back to embedded page state:", error);
+    }
+
+    if (embeddedPages.length) {
+      console.log("Loading embedded saved pages:", embeddedPages);
+      rebuildPagesUI(embeddedPages);
+    } else {
+      console.log("No saved pages found; creating default page.");
+      rebuildPagesUI([]);
+    }
   }
+
+  initializePages();
 
   // Debug: Log available layouts and templates
   console.log("Available layouts:", layouts);
   console.log("Available templates:", Object.keys(layoutTemplates || {}));
 
   // Load images AFTER pages are created so assigned images are properly filtered
-  setTimeout(() => {
-    updateImages(typeof initialImages !== "undefined" ? initialImages : []);
-  }, 100);
+  // (rebuildPagesUI triggers this once the DOM is ready).
 
   document.getElementById("uploadForm").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -1018,22 +1039,10 @@ window.addEventListener("DOMContentLoaded", () => {
 
             img2 = canvas2.toDataURL("image/png", 1.0);
           }
-          const pageWidth = 792;
-          const pageHeight = 612;
+          const pageWidth = PDF_PAGE_WIDTH;
+          const pageHeight = PDF_PAGE_HEIGHT;
           const layoutsPerPage = 2;
-          const slotWidth = pageWidth / layoutsPerPage;
-          const layoutAspectRatio = 8.5 / 11;
-          let slotHeight = slotWidth / layoutAspectRatio;
-
-          if (slotHeight > pageHeight) {
-            slotHeight = pageHeight;
-          }
-
-          const verticalOffset = Math.max((pageHeight - slotHeight) / 2, 0);
-          const pageWidth = 792;
-          const pageHeight = 612;
-          const layoutsPerPage = 2;
-          const slotWidth = pageWidth / layoutsPerPage;
+          const slotWidth = PDF_COLUMN_WIDTH;
           const layoutAspectRatio = 8.5 / 11;
           let slotHeight = slotWidth / layoutAspectRatio;
 
@@ -1049,7 +1058,7 @@ window.addEventListener("DOMContentLoaded", () => {
           }
 
           if (i + 2 < layouts.length) {
-            pdf.addPage([792, 612], "landscape");
+            pdf.addPage([PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT], "landscape");
           }
         }
 
