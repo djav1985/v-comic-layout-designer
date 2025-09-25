@@ -1,11 +1,13 @@
 <?php
 namespace App\Models;
 
+use App\Core\Database;
+
 class ComicModel
 {
     public string $uploadDir;
     public string $layoutDir;
-    private string $stateFile;
+    private Database $db;
     private array $state = [
         'images' => [],
         'pages' => [],
@@ -16,30 +18,23 @@ class ComicModel
     {
         $this->uploadDir = __DIR__ . '/../../public/uploads';
         $this->layoutDir = __DIR__ . '/../../layouts';
-        $this->stateFile = __DIR__ . '/../../public/storage/state.json';
+        $this->db = new Database();
+        
         if (!is_dir($this->uploadDir)) {
             mkdir($this->uploadDir, 0777, true);
         }
-        if (!is_dir(dirname($this->stateFile))) {
-            mkdir(dirname($this->stateFile), 0777, true);
-        }
+        
         $this->loadState();
     }
 
     private function loadState(): void
     {
-        if (is_file($this->stateFile)) {
-            $json = file_get_contents($this->stateFile);
-            $state = json_decode($json, true);
-            if (is_array($state)) {
-                $this->state = $state;
-            }
-        }
+        $this->state = $this->db->getState();
     }
 
     public function saveState(): void
     {
-        file_put_contents($this->stateFile, json_encode($this->state, JSON_PRETTY_PRINT));
+        $this->db->setState($this->state);
     }
 
     public function refreshStateFromDisk(): array
@@ -50,7 +45,7 @@ class ComicModel
 
     public function getStateFilePath(): string
     {
-        return $this->stateFile;
+        return $this->db->getDbPath();
     }
 
     public function getStateSnapshot(): array
@@ -145,5 +140,10 @@ class ComicModel
         $this->state['pages'] = $pages;
         $this->state['pageCount'] = count($pages);
         $this->saveState();
+    }
+
+    public function getLastModified(): int
+    {
+        return $this->db->getLastModified();
     }
 }
