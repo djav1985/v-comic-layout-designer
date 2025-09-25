@@ -11,3 +11,5 @@
 - Preserve diagonal panel shapes in exported images and PDFs by parsing each layout's CSS rules, caching vendor-prefixed clip-paths, and reapplying them after html2canvas renders the page.
 - Keep exported PDF spreads true to their original proportions so two-up pages are no longer subtly squeezed horizontally on each sheet.
 - Restore the classic 5.5" × 8.5" workspace aspect ratio so on-screen previews and exported files fill vertically without trimming the bottom or right-hand panels.
+- Eliminate duplicate PDF export constants that triggered a `pageWidth` redeclaration error in the browser console.
+- Reload saved spreads directly from the persisted state file so previously authored pages render immediately after refresh.
