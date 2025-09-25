@@ -470,8 +470,8 @@ button.ghost:focus {
 
 .layout-container {
     position: relative;
-    width: min(100%, 528px);
-    max-width: 528px;
+    width: min(100%, 650px);
+    max-width: 650px;
     aspect-ratio: 1 / 1.545;
     margin: 0 auto;
     overflow: hidden;
