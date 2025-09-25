@@ -4,6 +4,20 @@ window.addEventListener("DOMContentLoaded", () => {
   let saveTimeout = null;
   let isUpdatingFromServer = false;
   let saveIndicator = null;
+  const clipPathRuleCache = new Map();
+  const overlayMaskCache = new Map();
+  const CSS_RULE_TYPES = window.CSSRule
+    ? {
+        STYLE: window.CSSRule.STYLE_RULE,
+        MEDIA: window.CSSRule.MEDIA_RULE,
+      }
+    : {
+        STYLE: 1,
+        MEDIA: 4,
+      };
+  const PDF_PAGE_WIDTH = 792;
+  const PDF_PAGE_HEIGHT = 612;
+  const PDF_COLUMN_WIDTH = PDF_PAGE_WIDTH / 2;
 
   // Create save indicator
   function createSaveIndicator() {
@@ -220,12 +234,194 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  function sanitizeLayoutName(name) {
+    return (name || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9\-]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .trim() || "layout";
+  }
+
   function ensureLayoutStyle(name) {
     if (document.getElementById("style-" + name)) return;
     const style = document.createElement("style");
     style.id = "style-" + name;
     style.textContent = layoutStyles[name] || "";
     document.head.appendChild(style);
+  }
+
+  function collectClipPathRules(ruleList, target) {
+    if (!ruleList || !target) return;
+    Array.from(ruleList).forEach((rule) => {
+      if (!rule) return;
+      if (
+        rule.type === CSS_RULE_TYPES.STYLE &&
+        rule.style &&
+        (rule.style.getPropertyValue("clip-path") ||
+          rule.style.getPropertyValue("-webkit-clip-path"))
+      ) {
+        const clipPath =
+          rule.style.getPropertyValue("clip-path") ||
+          rule.style.getPropertyValue("-webkit-clip-path");
+        if (clipPath && clipPath !== "none") {
+          const selectors = (rule.selectorText || "")
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+          selectors.forEach((selector) => {
+            target.push({ selector, clipPath: clipPath.trim() });
+          });
+        }
+      } else if (rule.type === CSS_RULE_TYPES.MEDIA && rule.cssRules) {
+        collectClipPathRules(rule.cssRules, target);
+      }
+    });
+  }
+
+  function getClipPathRules(layoutName) {
+    if (!layoutName) return [];
+    if (clipPathRuleCache.has(layoutName)) {
+      return clipPathRuleCache.get(layoutName);
+    }
+    const results = [];
+    const styleEl = document.getElementById("style-" + layoutName);
+    if (styleEl && styleEl.sheet) {
+      try {
+        collectClipPathRules(styleEl.sheet.cssRules, results);
+      } catch (err) {
+        console.warn(
+          "Unable to read clip-path rules for layout:",
+          layoutName,
+          err,
+        );
+      }
+    }
+    clipPathRuleCache.set(layoutName, results);
+    return results;
+  }
+
+  function applyClipPathDataAttributes(layoutElement, layoutName) {
+    if (!layoutElement) return;
+    const rules = getClipPathRules(layoutName);
+    if (!rules.length) return;
+    rules.forEach(({ selector, clipPath }) => {
+      if (!selector || !clipPath) return;
+      try {
+        const scope = layoutElement.ownerDocument || document;
+        scope.querySelectorAll(selector).forEach((el) => {
+          if (layoutElement.contains(el) || el === layoutElement) {
+            el.dataset.clipPath = clipPath;
+          }
+        });
+      } catch (err) {
+        console.warn(
+          "Failed to apply cached clip-path selector:",
+          selector,
+          "for layout",
+          layoutName,
+          err,
+        );
+      }
+    });
+  }
+
+  function createLayoutSandbox(layoutName) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "layout-container";
+    wrapper.style.position = "absolute";
+    wrapper.style.left = "-99999px";
+    wrapper.style.top = "0";
+    wrapper.style.width = `${LAYOUT_SANDBOX_WIDTH}px`;
+    wrapper.style.height = `${LAYOUT_SANDBOX_HEIGHT}px`;
+    wrapper.style.pointerEvents = "none";
+    wrapper.style.opacity = "0";
+    wrapper.style.zIndex = "-1";
+    wrapper.innerHTML = layoutTemplates[layoutName] || "";
+    document.body.appendChild(wrapper);
+
+    ensureLayoutStyle(layoutName);
+
+    const layout = wrapper.querySelector(".layout");
+    if (layout) {
+      layout.classList.add(layoutName);
+      layout.dataset.layoutName = layoutName;
+      applyClipPathDataAttributes(layout, layoutName);
+      layout.querySelectorAll(".panel").forEach((panel) => {
+        const computed = window.getComputedStyle(panel);
+        const resolvedClip =
+          (panel.dataset.clipPath && panel.dataset.clipPath !== "none"
+            ? panel.dataset.clipPath
+            : null) ||
+          (computed.clipPath && computed.clipPath !== "none"
+            ? computed.clipPath
+            : null) ||
+          (computed.webkitClipPath && computed.webkitClipPath !== "none"
+            ? computed.webkitClipPath
+            : null) ||
+          getClipPathFromRules(layoutName, panel);
+        if (resolvedClip) {
+          panel.dataset.clipPath = resolvedClip;
+        }
+      });
+    }
+
+    return { wrapper, layout };
+  }
+
+  function cleanupLayoutSandbox(wrapper) {
+    if (wrapper && wrapper.parentNode) {
+      wrapper.parentNode.removeChild(wrapper);
+    }
+  }
+
+  function loadImageFromBlob(blob) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(blob);
+      const image = new Image();
+      image.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve(image);
+      };
+      image.onerror = (err) => {
+        URL.revokeObjectURL(url);
+        reject(err);
+      };
+      image.src = url;
+    });
+  }
+
+  function getClipPathFromRules(layoutName, element) {
+    if (!layoutName || !element) return null;
+    const rules = getClipPathRules(layoutName);
+    for (const { selector, clipPath } of rules) {
+      if (!selector || !clipPath) continue;
+      try {
+        if (element.matches(selector)) {
+          return clipPath;
+        }
+      } catch (err) {
+        // Ignore selectors that querySelector cannot evaluate
+      }
+    }
+    return null;
+  }
+
+  function addCanvasToPdf(pdf, canvas, imgData, columnIndex) {
+    if (!pdf || !canvas || !imgData) return;
+    const originalWidth = canvas.width;
+    const originalHeight = canvas.height;
+    if (!originalWidth || !originalHeight) return;
+    const scale = Math.min(
+      PDF_COLUMN_WIDTH / originalWidth,
+      PDF_PAGE_HEIGHT / originalHeight,
+    );
+    const renderWidth = originalWidth * scale;
+    const renderHeight = originalHeight * scale;
+    const offsetX =
+      columnIndex * PDF_COLUMN_WIDTH +
+      (PDF_COLUMN_WIDTH - renderWidth) / 2;
+    const offsetY = (PDF_PAGE_HEIGHT - renderHeight) / 2;
+    pdf.addImage(imgData, "PNG", offsetX, offsetY, renderWidth, renderHeight);
   }
 
   function parseClipPathCoordinate(raw) {
@@ -279,6 +475,171 @@ window.addEventListener("DOMContentLoaded", () => {
     );
   }
 
+  function generateOverlayCanvas(layout, layoutName) {
+    if (!layout) return null;
+    const rect = layout.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(rect.width * LAYOUT_OVERLAY_SCALE);
+    canvas.height = Math.round(rect.height * LAYOUT_OVERLAY_SCALE);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    layout.querySelectorAll(".panel").forEach((panel) => {
+      const panelRect = panel.getBoundingClientRect();
+      if (!panelRect.width || !panelRect.height) {
+        return;
+      }
+
+      const offsetX = Math.round((panelRect.left - rect.left) * LAYOUT_OVERLAY_SCALE);
+      const offsetY = Math.round((panelRect.top - rect.top) * LAYOUT_OVERLAY_SCALE);
+      const width = Math.round(panelRect.width * LAYOUT_OVERLAY_SCALE);
+      const height = Math.round(panelRect.height * LAYOUT_OVERLAY_SCALE);
+
+      const clipPath =
+        (panel.dataset.clipPath && panel.dataset.clipPath !== "none"
+          ? panel.dataset.clipPath
+          : null) || getClipPathFromRules(layoutName, panel);
+
+      ctx.save();
+      ctx.translate(offsetX, offsetY);
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.beginPath();
+
+      let drewPath = false;
+      if (clipPath) {
+        const polygon = parseClipPathPolygon(clipPath);
+        if (polygon && polygon.length) {
+          polygon.forEach(([xCoord, yCoord], index) => {
+            const px = convertClipValue(xCoord, panelRect.width) * LAYOUT_OVERLAY_SCALE;
+            const py = convertClipValue(yCoord, panelRect.height) * LAYOUT_OVERLAY_SCALE;
+            if (index === 0) {
+              ctx.moveTo(px, py);
+            } else {
+              ctx.lineTo(px, py);
+            }
+          });
+          ctx.closePath();
+          drewPath = true;
+        }
+      }
+
+      if (!drewPath) {
+        ctx.rect(0, 0, width, height);
+      }
+
+      ctx.fill();
+      ctx.restore();
+      ctx.globalCompositeOperation = "source-over";
+    });
+
+    return canvas;
+  }
+
+  async function buildOverlayMask(layoutName) {
+    const { wrapper, layout } = createLayoutSandbox(layoutName);
+    try {
+      if (!layout) {
+        throw new Error(`Missing template markup for layout: ${layoutName}`);
+      }
+      const canvas = generateOverlayCanvas(layout, layoutName);
+      if (!canvas) {
+        throw new Error(`Failed to create overlay canvas for ${layoutName}`);
+      }
+      const dataUrl = canvas.toDataURL("image/png");
+      const entry = {
+        canvas,
+        width: canvas.width,
+        height: canvas.height,
+        dataUrl,
+        safeName: sanitizeLayoutName(layoutName),
+      };
+      overlayMaskCache.set(layoutName, entry);
+      return entry;
+    } finally {
+      cleanupLayoutSandbox(wrapper);
+    }
+  }
+
+  async function loadOverlayMask(layoutName) {
+    if (!layoutName) return null;
+    if (overlayMaskCache.has(layoutName)) {
+      return overlayMaskCache.get(layoutName);
+    }
+
+    const safeName = sanitizeLayoutName(layoutName);
+    try {
+      const response = await fetch(`/overlays/${safeName}.png`, {
+        cache: "no-store",
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        const image = await loadImageFromBlob(blob);
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth || image.width;
+        canvas.height = image.naturalHeight || image.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(image, 0, 0);
+        const entry = {
+          canvas,
+          width: canvas.width,
+          height: canvas.height,
+          safeName,
+        };
+        overlayMaskCache.set(layoutName, entry);
+        return entry;
+      }
+    } catch (error) {
+      console.warn(`Overlay fetch failed for ${layoutName}:`, error);
+    }
+
+    try {
+      return await buildOverlayMask(layoutName);
+    } catch (error) {
+      console.warn(`Overlay build failed for ${layoutName}:`, error);
+      return null;
+    }
+  }
+
+  async function applyTemplateOverlay(layout, canvas) {
+    if (!layout || !canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const layoutName = layout.dataset ? layout.dataset.layoutName : null;
+    if (!layoutName) return;
+
+    const mask = await loadOverlayMask(layoutName);
+    if (!mask || !mask.canvas) return;
+
+    const tinted = document.createElement("canvas");
+    tinted.width = canvas.width;
+    tinted.height = canvas.height;
+    const tintCtx = tinted.getContext("2d");
+    if (!tintCtx) return;
+
+    const computed = window.getComputedStyle(layout);
+    let gutterColor = computed.backgroundColor;
+    if (
+      !gutterColor ||
+      gutterColor === "transparent" ||
+      gutterColor === "rgba(0, 0, 0, 0)"
+    ) {
+      gutterColor = "#ffffff";
+    }
+
+    tintCtx.fillStyle = gutterColor;
+    tintCtx.fillRect(0, 0, tinted.width, tinted.height);
+    tintCtx.globalCompositeOperation = "destination-in";
+    tintCtx.drawImage(mask.canvas, 0, 0, tinted.width, tinted.height);
+    tintCtx.globalCompositeOperation = "source-over";
+
+    ctx.drawImage(tinted, 0, 0, canvas.width, canvas.height);
+  }
+
   function applyClipPathsToCanvas(layout, canvas) {
     if (!layout || !canvas) return;
     const ctx = canvas.getContext("2d");
@@ -299,9 +660,23 @@ window.addEventListener("DOMContentLoaded", () => {
       gutterColor = "#ffffff";
     }
 
+    const layoutName = layout.dataset ? layout.dataset.layoutName : null;
     layout.querySelectorAll(".panel").forEach((panel) => {
       const panelStyle = window.getComputedStyle(panel);
-      const clipPath = panelStyle.clipPath;
+      const clipPath =
+        (panel.dataset.clipPath && panel.dataset.clipPath !== "none"
+          ? panel.dataset.clipPath
+          : null) ||
+        (panelStyle.clipPath && panelStyle.clipPath !== "none"
+          ? panelStyle.clipPath
+          : null) ||
+        (panelStyle.webkitClipPath && panelStyle.webkitClipPath !== "none"
+          ? panelStyle.webkitClipPath
+          : null) ||
+        (layoutName ? getClipPathFromRules(layoutName, panel) : null);
+      if (!clipPath || clipPath === "none") {
+        return;
+      }
       const polygon = parseClipPathPolygon(clipPath);
       if (!polygon) return;
 
@@ -402,6 +777,8 @@ window.addEventListener("DOMContentLoaded", () => {
     if (layoutDiv) {
       // Add the specific layout class name for CSS targeting
       layoutDiv.classList.add(layoutName);
+      layoutDiv.dataset.layoutName = layoutName;
+      applyClipPathDataAttributes(layoutDiv, layoutName);
 
       // Find gutter color from parent page
       let gutterColor = "#cccccc";
@@ -419,6 +796,18 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     container.querySelectorAll(".panel").forEach((panel) => {
+      const computed = window.getComputedStyle(panel);
+      const resolvedClip =
+        (computed.clipPath && computed.clipPath !== "none"
+          ? computed.clipPath
+          : null) ||
+        (computed.webkitClipPath && computed.webkitClipPath !== "none"
+          ? computed.webkitClipPath
+          : null);
+      if (resolvedClip) {
+        panel.dataset.clipPath = resolvedClip;
+      }
+
       const slot = panel.getAttribute("data-slot");
 
       panel.addEventListener("dragover", (e) => {
@@ -512,10 +901,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const deleteBtn = document.createElement("button");
     deleteBtn.type = "button";
     deleteBtn.className = "delete-page-btn";
-    deleteBtn.textContent = "🗑 Delete Page";
-    deleteBtn.style.float = "right";
-    deleteBtn.style.marginLeft = "8px";
-    page.appendChild(deleteBtn);
+    deleteBtn.innerHTML = '<span aria-hidden="true">✕</span> Remove Page';
 
     // Layout selector
     const select = document.createElement("select");
@@ -525,7 +911,6 @@ window.addEventListener("DOMContentLoaded", () => {
       opt.textContent = l;
       select.appendChild(opt);
     });
-    select.style.marginRight = "8px";
 
     // Gutter color picker
     const gutterColor = document.createElement("input");
@@ -534,17 +919,25 @@ window.addEventListener("DOMContentLoaded", () => {
     gutterColor.title = "Gutter Color";
     gutterColor.className = "gutter-color-picker";
 
-    // Label for color picker
-    const gutterLabel = document.createElement("label");
-    gutterLabel.textContent = "Gutter Color: ";
-    gutterLabel.appendChild(gutterColor);
-    gutterLabel.style.marginRight = "8px";
+    const layoutGroup = document.createElement("label");
+    layoutGroup.className = "input-group";
+    layoutGroup.innerHTML = "<span>Layout</span>";
+    layoutGroup.appendChild(select);
+
+    const gutterGroup = document.createElement("label");
+    gutterGroup.className = "input-group";
+    gutterGroup.innerHTML = "<span>Gutter</span>";
+    gutterGroup.appendChild(gutterColor);
+
+    const meta = document.createElement("div");
+    meta.className = "page-meta";
+    meta.appendChild(layoutGroup);
+    meta.appendChild(gutterGroup);
 
     const controlsDiv = document.createElement("div");
-    controlsDiv.style.display = "flex";
-    controlsDiv.style.alignItems = "center";
-    controlsDiv.appendChild(select);
-    controlsDiv.appendChild(gutterLabel);
+    controlsDiv.className = "page-controls";
+    controlsDiv.appendChild(meta);
+    controlsDiv.appendChild(deleteBtn);
     page.appendChild(controlsDiv);
 
     const container = document.createElement("div");
@@ -572,6 +965,8 @@ window.addEventListener("DOMContentLoaded", () => {
           // Ensure the layout class is properly applied
           layoutDiv.classList.remove(...layouts); // Remove all layout classes
           layoutDiv.classList.add(select.value); // Add the selected layout class
+          layoutDiv.dataset.layoutName = select.value;
+          applyClipPathDataAttributes(layoutDiv, select.value);
           console.log(
             `After layout change - background: ${layoutDiv.style.background}, classes: ${layoutDiv.className}`,
           );
@@ -685,6 +1080,17 @@ window.addEventListener("DOMContentLoaded", () => {
     return assigned;
   }
 
+  function createImagePlaceholder() {
+    const placeholder = document.createElement("div");
+    placeholder.className = "empty-state";
+    placeholder.dataset.placeholder = "";
+    placeholder.innerHTML = `
+      <span class="icon" aria-hidden="true">🖼️</span>
+      <p>Drop panels into your story by uploading artwork.</p>
+    `;
+    return placeholder;
+  }
+
   function updateImages(list, pages = null) {
     // If no pages provided, use current DOM state
     const currentPages = pages || getCurrentPageState();
@@ -693,6 +1099,7 @@ window.addEventListener("DOMContentLoaded", () => {
     // Clear image list
     imageList.innerHTML = "";
 
+    let appended = 0;
     list.forEach((name) => {
       if (!assigned.has(name)) {
         const wrapper = document.createElement("div");
@@ -707,10 +1114,8 @@ window.addEventListener("DOMContentLoaded", () => {
         const delBtn = document.createElement("button");
         delBtn.type = "button";
         delBtn.className = "delete-image-btn";
-        delBtn.textContent = "🗑";
-        delBtn.title = "Delete Image";
-        delBtn.style.marginTop = "4px";
-        delBtn.style.display = "block";
+        delBtn.innerHTML = '<span aria-hidden="true">✕</span> Remove';
+        delBtn.setAttribute("aria-label", "Delete image");
         delBtn.addEventListener("click", () => {
           fetch("/delete-image", {
             method: "POST",
@@ -720,13 +1125,21 @@ window.addEventListener("DOMContentLoaded", () => {
             .then((r) => r.json())
             .then(() => {
               wrapper.remove();
+              if (!imageList.querySelector(".image-wrapper")) {
+                imageList.appendChild(createImagePlaceholder());
+              }
             });
         });
         wrapper.appendChild(img);
         wrapper.appendChild(delBtn);
         imageList.appendChild(wrapper);
+        appended += 1;
       }
     });
+
+    if (appended === 0) {
+      imageList.appendChild(createImagePlaceholder());
+    }
   }
 
   // Helper function to get current page state from DOM
@@ -747,6 +1160,45 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   // Removed comicForm submit handler since the form no longer exists
+
+  const buildTemplatesBtn = document.getElementById("buildTemplates");
+  if (buildTemplatesBtn) {
+    buildTemplatesBtn.addEventListener("click", async () => {
+      try {
+        showSaveIndicator("Building template overlays...", "#2196F3");
+        buildTemplatesBtn.disabled = true;
+        buildTemplatesBtn.textContent = "Building...";
+
+        const payload = [];
+        for (const layoutName of layouts) {
+          const entry = await buildOverlayMask(layoutName);
+          if (entry && entry.dataUrl) {
+            payload.push({ name: layoutName, dataUrl: entry.dataUrl });
+          }
+        }
+
+        if (payload.length) {
+          const response = await fetch("/build-overlays", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ overlays: payload }),
+          });
+          if (!response.ok) {
+            throw new Error(`Server responded with ${response.status}`);
+          }
+        }
+
+        showSaveIndicator("Template overlays updated ✓", "#4CAF50");
+      } catch (error) {
+        console.error("Failed to build overlays", error);
+        showSaveIndicator("Template build failed ✗", "#f44336");
+        alert(`Failed to build template overlays: ${error.message}`);
+      } finally {
+        buildTemplatesBtn.disabled = false;
+        buildTemplatesBtn.textContent = "Build Templates";
+      }
+    });
+  }
 
   // Export PDF (Client-side)
   const exportBtn = document.getElementById("exportPdf");
@@ -812,6 +1264,7 @@ window.addEventListener("DOMContentLoaded", () => {
           });
 
           applyClipPathsToCanvas(layout1, canvas1);
+          await applyTemplateOverlay(layout1, canvas1);
 
           if (canvas1.width === 0 || canvas1.height === 0) {
             throw new Error(`Canvas ${i + 1} has zero dimensions`);
@@ -821,11 +1274,12 @@ window.addEventListener("DOMContentLoaded", () => {
 
           // Capture second layout if exists
           let img2 = null;
+          let canvas2 = null;
           if (layouts[i + 1]) {
             const layout2 = layouts[i + 1];
             await new Promise((resolve) => setTimeout(resolve, 100));
 
-            const canvas2 = await html2canvas(layout2, {
+            canvas2 = await html2canvas(layout2, {
               scale: 2,
               useCORS: true,
               allowTaint: true,
@@ -836,6 +1290,7 @@ window.addEventListener("DOMContentLoaded", () => {
             });
 
             applyClipPathsToCanvas(layout2, canvas2);
+            await applyTemplateOverlay(layout2, canvas2);
 
             if (canvas2.width === 0 || canvas2.height === 0) {
               throw new Error(`Canvas ${i + 2} has zero dimensions`);
@@ -844,9 +1299,9 @@ window.addEventListener("DOMContentLoaded", () => {
             img2 = canvas2.toDataURL("image/png", 1.0);
           }
 
-          pdf.addImage(img1, "PNG", 0, 0, 396, 612);
-          if (img2) {
-            pdf.addImage(img2, "PNG", 396, 0, 396, 612);
+          addCanvasToPdf(pdf, canvas1, img1, 0);
+          if (img2 && canvas2) {
+            addCanvasToPdf(pdf, canvas2, img2, 1);
           }
 
           if (i + 2 < layouts.length) {
@@ -911,6 +1366,7 @@ window.addEventListener("DOMContentLoaded", () => {
           });
 
           applyClipPathsToCanvas(layout, canvas);
+          await applyTemplateOverlay(layout, canvas);
 
           if (canvas.width === 0 || canvas.height === 0) {
             throw new Error(`Canvas ${i + 1} has zero dimensions`);
@@ -1028,6 +1484,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
         if (layout) {
           applyClipPathsToCanvas(layout, canvas);
+          await applyTemplateOverlay(layout, canvas);
         }
 
         // Convert to blob and create download link
@@ -1049,3 +1506,6 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 });
+  const LAYOUT_SANDBOX_WIDTH = 528;
+  const LAYOUT_SANDBOX_HEIGHT = Math.round((LAYOUT_SANDBOX_WIDTH * 17) / 11);
+  const LAYOUT_OVERLAY_SCALE = Math.max(2, Math.ceil(window.devicePixelRatio || 1));

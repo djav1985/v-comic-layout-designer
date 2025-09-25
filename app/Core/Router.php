@@ -14,6 +14,7 @@ class Router
             $r->addRoute('POST', '/delete-image', ['ImageController', 'delete']);
             $r->addRoute('POST', '/save-pages', ['PageController', 'save']);
             $r->addRoute('GET', '/get-pages', ['PageController', 'get']);
+            $r->addRoute('POST', '/build-overlays', ['TemplateController', 'store']);
         });
     }
 
