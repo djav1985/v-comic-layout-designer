@@ -215,7 +215,17 @@ class ComicModel
         }
 
         $pdo = new \PDO('sqlite:' . $databasePath);
-        $stmt = $pdo->query('SELECT key, value FROM state');
+        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+
+        // Check if the state table exists
+        $tableCheckStmt = $pdo->prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='state'");
+        $tableCheckStmt->execute();
+        if (!$tableCheckStmt->fetch()) {
+            throw new \RuntimeException('Invalid state database: missing required "state" table.');
+        }
+
+        $stmt = $pdo->prepare('SELECT key, value FROM state');
+        $stmt->execute();
         $state = [];
 
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
