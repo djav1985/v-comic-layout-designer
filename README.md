@@ -1,6 +1,14 @@
 # Comic Layout Designer
 
-A simple MVC PHP application that lets you drag and drop uploaded images into predefined comic page layouts and export the result to PDF.
+A modern MVC PHP application for crafting comic spreads. Upload artwork, drag it into responsive layout templates, and export the finished pages as high-resolution PDFs or images.
+
+## Features
+
+- **Curated asset library** – Upload multiple images at once and manage them with quick delete actions.
+- **Storyboard workspace** – Drag panels into dynamic templates, adjust gutter colors, and fine-tune each panel's zoom and position.
+- **Live autosave** – Progress is preserved automatically, with inline feedback to confirm every change.
+- **One-click exports** – Generate PDFs or high-quality image sets directly from the browser.
+- **Keyboard shortcuts** – Stay in flow with quick commands for saving, creating pages, and exporting.
 
 ## Setup
 
@@ -14,9 +22,25 @@ A simple MVC PHP application that lets you drag and drop uploaded images into pr
    ```
 3. Open `http://localhost:8000` in your browser.
 
-Uploaded images are stored in `uploads/`.
+Uploaded images are stored in `public/uploads/`. Generated exports live in `public/storage/generated/`.
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+| --- | --- |
+| `Ctrl` + `S` | Save the current project |
+| `Ctrl` + `N` | Add a new page |
+| `Ctrl` + `E` | Export as PDF |
+| `Ctrl` + `I` | Export as PNG images |
+| Mouse scroll | Zoom in/out on a placed image |
+
+## Modernized interface
+
+The refreshed UI introduces a glassmorphism-inspired surface layered over a deep gradient backdrop. Responsive cards separate the asset library from the workspace, while updated typography and spacing improve readability across screen sizes. Buttons and controls now share a consistent accent color palette, and empty states provide clear guidance for first-time users.
+
+The latest pass sets the application shell to a centered 90% width and locks the workspace grid to two page cards per row so the live canvas feels balanced while still collapsing gracefully on smaller screens.
 
 ## Notes
 
-* Exported PDFs and PNGs now keep the diagonal panel edges found in the angled layouts. The exporter re-applies each layout's
-  `clip-path` geometry after html2canvas renders the page so the gutters stay crisp in the output files.
+* Exported PDFs and PNGs now reliably keep the diagonal panel edges found in the angled layouts. The exporter reads the layout-specific CSS rules to cache each panel's clip-path (including vendor-prefixed values) and reapplies the geometry after html2canvas renders the page so the gutters stay crisp in the output files.
+* PDF exports respect the natural aspect ratio of each canvas when placing two pages per sheet, preventing the subtle horizontal squeeze that previously appeared in the generated documents.
