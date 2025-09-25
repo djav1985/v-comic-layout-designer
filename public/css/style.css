@@ -386,13 +386,19 @@ button.ghost:focus {
 
 .page-controls {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 44px 44px 1fr;
     gap: 16px;
     align-items: stretch;
 }
 
 .page-controls > * {
     min-width: 0;
+}
+
+.layout-selector,
+.gutter-selector {
+    display: flex;
+    align-items: center;
 }
 
 .input-group {
@@ -438,6 +444,21 @@ button.ghost:focus {
     min-height: 44px;
     font-size: 1.25rem;
     line-height: 1;
+}
+
+/* New layout-specific styles */
+.page-controls .delete-page-btn,
+.page-controls .gutter-selector input[type="color"] {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    aspect-ratio: 1 / 1;
+}
+
+.page-controls .layout-selector select {
+    width: 100%;
+    height: 44px;
+    padding: 10px 14px;
 }
 
 .page select:focus,

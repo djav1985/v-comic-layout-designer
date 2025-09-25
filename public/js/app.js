@@ -687,14 +687,12 @@ window.addEventListener("DOMContentLoaded", () => {
     gutterColor.title = "Gutter Color";
     gutterColor.className = "gutter-color-picker";
 
-    const layoutGroup = document.createElement("label");
-    layoutGroup.className = "input-group";
-    layoutGroup.innerHTML = "<span>Layout</span>";
+    const layoutGroup = document.createElement("div");
+    layoutGroup.className = "layout-selector";
     layoutGroup.appendChild(select);
 
-    const gutterGroup = document.createElement("label");
-    gutterGroup.className = "input-group";
-    gutterGroup.innerHTML = "<span>Gutter</span>";
+    const gutterGroup = document.createElement("div");
+    gutterGroup.className = "gutter-selector";
     gutterGroup.appendChild(gutterColor);
 
     const controlsDiv = document.createElement("div");
