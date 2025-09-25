@@ -11,14 +11,13 @@
 - Updated the workspace page grid to use one column below 1024px, two columns up to 1980px, and three columns on ultra-wide displays while preserving panel alignment and aspect ratios.
 - Locked the layout preview container to a 1:1.545 aspect ratio that matches a single page column and removed its rounded border so spreads sit flush without white bands.
 - Streamlined the page toolbar so the layout selector, gutter picker, and removal action share a single aligned row with matching control dimensions.
+- Removed the remaining angled panel styling and export helpers so every layout now uses straightforward rectangular frames.
 
 ### Fixed
-- Replace percentage-based polygon coordinates inside inline SVG masks with unitless values so browsers stop emitting console errors while angled layouts render correctly.
-- Execute layout PHP templates on the server before sending them to the browser so angled panels regain their SVG masks and render correctly in both the editor and exports.
+- Execute layout PHP templates on the server before sending them to the browser so panels render correctly in both the editor and exports.
 - Release the PHP session lock before streaming live updates so refreshing the workspace no longer hangs behind an open EventSource connection.
 - Strip library thumbnail styling from dropped artwork so newly placed panels render at full size without waiting for a page refresh.
-- Preserve diagonal panel shapes in exported images and PDFs by replaying each panel's stored polygon geometry after html2canvas renders the page.
-- Replace CSS clip-paths in angled layouts with inline SVG masks and dedicated panel content containers so diagonal gutters render correctly in the browser and survive PDF/image exports.
+- Restore clean rectangular panel exports by relying on the direct html2canvas capture instead of replaying clip-path data after render.
 - Keep exported PDF spreads true to their original proportions so two-up pages are no longer subtly squeezed horizontally on each sheet.
 - Scale each exported layout using its captured aspect ratio so generated PDFs no longer include white bands above or below the artwork.
 - Restore the classic 5.5" × 8.5" workspace aspect ratio so on-screen previews and exported files fill vertically without trimming the bottom or right-hand panels.

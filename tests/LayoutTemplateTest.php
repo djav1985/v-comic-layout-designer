@@ -42,26 +42,6 @@ foreach ($layoutFiles as $layoutFile) {
             );
         }
 
-        $clipPolygon = trim($panel->getAttribute('data-clip-polygon'));
-        if ($clipPolygon !== '') {
-            if (stripos($clipPolygon, 'polygon(') !== 0) {
-                $failures[] = sprintf(
-                    'Panel with slot "%s" in %s has an invalid data-clip-polygon value: %s',
-                    $panel->getAttribute('data-slot') ?: '(unknown)',
-                    basename($layoutFile),
-                    $clipPolygon
-                );
-            }
-
-            $maskSvg = $xpath->query('.//svg[contains(concat(" ", normalize-space(@class), " "), " panel-mask ")]', $panel);
-            if (!$maskSvg || !$maskSvg->length) {
-                $failures[] = sprintf(
-                    'Panel with slot "%s" in %s declares a clip polygon but has no inline SVG mask.',
-                    $panel->getAttribute('data-slot') ?: '(unknown)',
-                    basename($layoutFile)
-                );
-            }
-        }
     }
 }
 
@@ -72,4 +52,4 @@ if ($failures) {
     exit(1);
 }
 
-echo "All layout templates include panel-inner containers and SVG masks where required." . PHP_EOL;
+echo "All layout templates include panel-inner containers." . PHP_EOL;
