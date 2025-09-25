@@ -9,6 +9,7 @@ A modern MVC PHP application for crafting comic spreads. Upload artwork, drag it
 - **Live autosave** – Progress is preserved automatically, with inline feedback to confirm every change.
 - **Real-time sync** – The browser listens to server-sent events so every open tab mirrors updates written to `state.json` instantly.
 - **One-click exports** – Generate PDFs or high-quality image sets directly from the browser.
+
 - **State snapshots** – Reset the entire workspace in one click or save and restore zipped archives that bundle the SQLite state and uploaded images.
 - **Keyboard shortcuts** – Stay in flow with quick commands for saving, creating pages, and exporting, and reveal the animated cheatsheet on demand with the workspace help toggle.
 
@@ -45,6 +46,10 @@ Open the workspace help menu next to **Add Page** to reveal these commands when 
 The refreshed UI introduces a glassmorphism-inspired surface layered over a deep gradient backdrop. Responsive cards separate the asset library from the workspace, while updated typography and spacing improve readability across screen sizes. Buttons and controls now share a consistent accent color palette, and empty states provide clear guidance for first-time users.
 
 The latest pass sets the application shell to a centered 90% width and now adapts the workspace grid to one page per row under 1024px, two pages through 1980px, and three pages on ultra-wide displays so the live canvas stays balanced without disrupting panel alignment at any size.
+
+## Mobile image workflow
+
+On screens 768px wide and below, an **Images** pill anchors to the bottom edge of the interface. Tapping it reveals the asset library as a full-screen modal with upload controls. Select an image to collapse the modal, then double tap any panel to place the artwork instantly—no precision drag-and-drop required on touch devices.
 
 ## Note
 * Exported PDFs and PNGs are rendered with an internal high-resolution canvas pass that mirrors every panel transform and rounded gutter, preventing the ghosted doubles that previously slipped into exported files.

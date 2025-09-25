@@ -31,6 +31,10 @@
     </header>
     <main class="app-main">
         <section id="images" aria-label="Image library">
+            <button type="button" id="closeImageModal" class="mobile-modal-close" aria-label="Close image library">
+                <span aria-hidden="true">✕</span>
+                <span class="mobile-modal-close__text">Close</span>
+            </button>
             <div class="card-header">
                 <div>
                     <h2>Asset Library</h2>
@@ -70,6 +74,10 @@
             <div id="pages"></div>
         </section>
     </main>
+    <button id="mobileImageToggle" type="button" class="mobile-image-bar" aria-controls="images" aria-expanded="false">
+        <span class="mobile-image-bar__label">Images</span>
+    </button>
+    <div id="mobileImageBackdrop" class="mobile-image-backdrop" hidden aria-hidden="true"></div>
 </div>
 <script>
 const layouts = <?= json_encode(array_keys($layouts)) ?>;

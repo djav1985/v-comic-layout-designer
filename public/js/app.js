@@ -19,6 +19,91 @@ window.addEventListener("DOMContentLoaded", () => {
   const PDF_COLUMN_WIDTH = PDF_PAGE_WIDTH / 2;
   const DEFAULT_GUTTER_COLOR = "#cccccc";
   const EXPORT_SCALE = 2;
+  let selectedImageName = null;
+  let selectedImageWrapper = null;
+
+  function isMobileViewport() {
+    return window.matchMedia("(max-width: 768px)").matches;
+  }
+
+  function openImageLibrary() {
+    if (!imagesSection) return;
+    imagesSection.classList.add("is-open");
+    document.body.classList.add("image-library-open");
+    if (mobileImageToggle) {
+      mobileImageToggle.setAttribute("aria-expanded", "true");
+    }
+    if (mobileImageBackdrop) {
+      mobileImageBackdrop.hidden = false;
+    }
+  }
+
+  function closeImageLibrary() {
+    if (!imagesSection) return;
+    imagesSection.classList.remove("is-open");
+    document.body.classList.remove("image-library-open");
+    if (mobileImageToggle) {
+      mobileImageToggle.setAttribute("aria-expanded", "false");
+    }
+    if (mobileImageBackdrop) {
+      mobileImageBackdrop.hidden = true;
+    }
+  }
+
+  function clearSelectedImage() {
+    if (selectedImageWrapper && selectedImageWrapper.classList) {
+      selectedImageWrapper.classList.remove("selected");
+    }
+    selectedImageName = null;
+    selectedImageWrapper = null;
+  }
+
+  function selectImage(name, wrapper) {
+    if (!name || !wrapper) return;
+    if (selectedImageWrapper && selectedImageWrapper !== wrapper) {
+      selectedImageWrapper.classList.remove("selected");
+    }
+    selectedImageName = name;
+    selectedImageWrapper = wrapper;
+    wrapper.classList.add("selected");
+    if (isMobileViewport()) {
+      closeImageLibrary();
+    }
+  }
+
+  if (mobileImageToggle) {
+    mobileImageToggle.addEventListener("click", () => {
+      if (imagesSection && imagesSection.classList.contains("is-open")) {
+        closeImageLibrary();
+      } else {
+        openImageLibrary();
+      }
+    });
+  }
+
+  if (mobileModalClose) {
+    mobileModalClose.addEventListener("click", () => {
+      closeImageLibrary();
+    });
+  }
+
+  if (mobileImageBackdrop) {
+    mobileImageBackdrop.addEventListener("click", () => {
+      closeImageLibrary();
+    });
+  }
+
+  window.addEventListener("resize", () => {
+    if (!isMobileViewport()) {
+      closeImageLibrary();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeImageLibrary();
+    }
+  });
 
   function setInitialImages(list) {
     if (typeof initialImages === "undefined" || !Array.isArray(initialImages)) {
@@ -427,6 +512,79 @@ window.addEventListener("DOMContentLoaded", () => {
       console.warn(`No .layout div found in template: ${layoutName}`);
     }
 
+    function removeSlotInputs(slot) {
+      container
+        .querySelectorAll(`input[name="pages[${pageIndex}][slots][${slot}]"]`)
+        .forEach((input) => input.remove());
+      container
+        .querySelectorAll(`input[name="pages[${pageIndex}][transforms][${slot}]"]`)
+        .forEach((input) => input.remove());
+    }
+
+    function placeImageInPanel(panel, slot, imageName, options = {}) {
+      if (!panel || !imageName) return false;
+      const content = getPanelContent(panel);
+      if (!content) return false;
+
+      const {
+        initialTransform = {},
+        skipLibraryUpdate = false,
+        skipSave = false,
+      } = options;
+
+      removeSlotInputs(slot);
+      clearPanel(panel);
+
+      const clone = document.createElement("img");
+      clone.src = `/uploads/${imageName}`;
+      clone.draggable = false;
+      clone.dataset.name = imageName;
+      clone.classList.add("panel-image");
+
+      const transformInput = document.createElement("input");
+      transformInput.type = "hidden";
+      transformInput.name = `pages[${pageIndex}][transforms][${slot}]`;
+      transformInput.value = JSON.stringify(initialTransform || {});
+      container.appendChild(transformInput);
+      enableImageControls(clone, transformInput, initialTransform || {});
+
+      const hidden = document.createElement("input");
+      hidden.type = "hidden";
+      hidden.name = `pages[${pageIndex}][slots][${slot}]`;
+      hidden.value = imageName;
+      container.appendChild(hidden);
+
+      content.appendChild(clone);
+
+      if (!skipLibraryUpdate) {
+        setTimeout(() => {
+          updateImages(
+            typeof initialImages !== "undefined" ? initialImages : [],
+          );
+        }, 0);
+      }
+
+      if (!skipSave) {
+        debouncedSave();
+      }
+
+      return true;
+    }
+
+    function handleSelectedImagePlacement(panel, slot) {
+      if (!selectedImageName) {
+        if (isMobileViewport()) {
+          openImageLibrary();
+        }
+        return false;
+      }
+      const placed = placeImageInPanel(panel, slot, selectedImageName);
+      if (placed) {
+        clearSelectedImage();
+      }
+      return placed;
+    }
+
     container.querySelectorAll(".panel").forEach((panel) => {
       const slot = panel.getAttribute("data-slot");
 
@@ -450,79 +608,41 @@ window.addEventListener("DOMContentLoaded", () => {
         // Remove the entire image-wrapper for the new image
         const wrapper = img.closest(".image-wrapper");
         if (wrapper) wrapper.remove();
-
-        // If panel already has an image, return it to imageList
-        const oldImg = getPanelImage(panel);
-        if (oldImg) {
-          const oldName = oldImg.dataset.name;
-          // Remove old image's hidden inputs
-          const hiddenInputs = container.querySelectorAll(
-            `input[value="${oldName}"]`,
-          );
-          hiddenInputs.forEach((input) => input.remove());
-
-          // Return image to list by refreshing the image list
-          // This ensures proper state management
-          setTimeout(() => {
-            updateImages(
-              typeof initialImages !== "undefined" ? initialImages : [],
-            );
-          }, 0);
+        if (selectedImageName === name) {
+          clearSelectedImage();
         }
 
-        clearPanel(panel);
-        const content = getPanelContent(panel);
-        if (!content) return;
-        const clone = img.cloneNode();
-        clone.draggable = false;
-        clone.classList.remove("thumb");
-        clone.classList.add("panel-image");
-        clone.removeAttribute("width");
-        clone.removeAttribute("height");
-        clone.removeAttribute("style");
-        const transformInput = document.createElement("input");
-        transformInput.type = "hidden";
-        transformInput.name = `pages[${pageIndex}][transforms][${slot}]`;
-        container.appendChild(transformInput);
-        enableImageControls(clone, transformInput);
-        content.appendChild(clone);
-        const hidden = document.createElement("input");
-        hidden.type = "hidden";
-        hidden.name = `pages[${pageIndex}][slots][${slot}]`;
-        hidden.value = name;
-        container.appendChild(hidden);
-        debouncedSave(); // Use debounced save for drag & drop
+        placeImageInPanel(panel, slot, name);
       });
 
       if (slots[slot]) {
         // For page restoration, don't try to find image in imageList since it was filtered out by PHP
         // Instead, create the image element directly
         const imageName = slots[slot];
-        const clone = document.createElement("img");
-        clone.src = `/uploads/${imageName}`;
-        clone.draggable = false;
-        clone.dataset.name = imageName;
-        clone.classList.add("panel-image");
-
-        const transformInput = document.createElement("input");
-        transformInput.type = "hidden";
-        transformInput.name = `pages[${pageIndex}][transforms][${slot}]`;
         const initial = transforms[slot] || {};
-        transformInput.value = JSON.stringify(initial);
-        container.appendChild(transformInput);
-        enableImageControls(clone, transformInput, initial);
-        const content = getPanelContent(panel);
-        if (content) {
-          clearPanel(panel);
-          content.appendChild(clone);
-        }
-
-        const hidden = document.createElement("input");
-        hidden.type = "hidden";
-        hidden.name = `pages[${pageIndex}][slots][${slot}]`;
-        hidden.value = imageName;
-        container.appendChild(hidden);
+        placeImageInPanel(panel, slot, imageName, {
+          initialTransform: initial,
+          skipLibraryUpdate: true,
+          skipSave: true,
+        });
       }
+
+      let lastTouchTime = 0;
+
+      panel.addEventListener("touchend", (event) => {
+        if (event.touches && event.touches.length > 0) return;
+        const now = Date.now();
+        if (now - lastTouchTime < 300) {
+          event.preventDefault();
+          handleSelectedImagePlacement(panel, slot);
+        }
+        lastTouchTime = now;
+      });
+
+      panel.addEventListener("dblclick", (event) => {
+        event.preventDefault();
+        handleSelectedImagePlacement(panel, slot);
+      });
     });
   }
 
@@ -994,11 +1114,29 @@ window.addEventListener("DOMContentLoaded", () => {
       if (!assigned.has(name)) {
         const wrapper = document.createElement("div");
         wrapper.className = "image-wrapper";
+        wrapper.dataset.name = name;
         const img = document.createElement("img");
         img.src = `/uploads/${name}`;
         img.className = "thumb";
         img.draggable = true;
         img.dataset.name = name;
+
+        if (selectedImageName === name) {
+          wrapper.classList.add("selected");
+          selectedImageWrapper = wrapper;
+        }
+
+        img.setAttribute("role", "button");
+        img.setAttribute("tabindex", "0");
+        img.addEventListener("click", () => {
+          selectImage(name, wrapper);
+        });
+        img.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            selectImage(name, wrapper);
+          }
+        });
 
         // Add delete button
         const delBtn = document.createElement("button");
@@ -1018,6 +1156,9 @@ window.addEventListener("DOMContentLoaded", () => {
               if (!imageList.querySelector(".image-wrapper")) {
                 imageList.appendChild(createImagePlaceholder());
               }
+              if (selectedImageName === name) {
+                clearSelectedImage();
+              }
             });
         });
         wrapper.appendChild(img);
@@ -1029,6 +1170,13 @@ window.addEventListener("DOMContentLoaded", () => {
 
     if (appended === 0) {
       imageList.appendChild(createImagePlaceholder());
+    }
+
+    if (
+      selectedImageName &&
+      !imageList.querySelector(`.image-wrapper[data-name="${selectedImageName}"]`)
+    ) {
+      clearSelectedImage();
     }
   }
 
