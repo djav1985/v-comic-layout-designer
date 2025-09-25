@@ -29,3 +29,6 @@
 - Eliminate duplicate PDF export constants that triggered a `pageWidth` redeclaration error in the browser console.
 - Reload saved spreads directly from the persisted state file so previously authored pages render immediately after refresh.
 - Treat `public/storage/state.json` as the single source of truth when rehydrating pages, removing the fallback to embedded data bundled in the HTML.
+
+### Documentation
+- Replace the README with an in-depth, highly visual guide covering architecture, workflows, testing commands, and troubleshooting tips.
