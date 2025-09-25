@@ -4,6 +4,19 @@ window.addEventListener("DOMContentLoaded", () => {
   let saveTimeout = null;
   let isUpdatingFromServer = false;
   let saveIndicator = null;
+  const clipPathRuleCache = new Map();
+  const CSS_RULE_TYPES = window.CSSRule
+    ? {
+        STYLE: window.CSSRule.STYLE_RULE,
+        MEDIA: window.CSSRule.MEDIA_RULE,
+      }
+    : {
+        STYLE: 1,
+        MEDIA: 4,
+      };
+  const PDF_PAGE_WIDTH = 792;
+  const PDF_PAGE_HEIGHT = 612;
+  const PDF_COLUMN_WIDTH = PDF_PAGE_WIDTH / 2;
 
   // Create save indicator
   function createSaveIndicator() {
@@ -228,6 +241,115 @@ window.addEventListener("DOMContentLoaded", () => {
     document.head.appendChild(style);
   }
 
+  function collectClipPathRules(ruleList, target) {
+    if (!ruleList || !target) return;
+    Array.from(ruleList).forEach((rule) => {
+      if (!rule) return;
+      if (
+        rule.type === CSS_RULE_TYPES.STYLE &&
+        rule.style &&
+        (rule.style.getPropertyValue("clip-path") ||
+          rule.style.getPropertyValue("-webkit-clip-path"))
+      ) {
+        const clipPath =
+          rule.style.getPropertyValue("clip-path") ||
+          rule.style.getPropertyValue("-webkit-clip-path");
+        if (clipPath && clipPath !== "none") {
+          const selectors = (rule.selectorText || "")
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+          selectors.forEach((selector) => {
+            target.push({ selector, clipPath: clipPath.trim() });
+          });
+        }
+      } else if (rule.type === CSS_RULE_TYPES.MEDIA && rule.cssRules) {
+        collectClipPathRules(rule.cssRules, target);
+      }
+    });
+  }
+
+  function getClipPathRules(layoutName) {
+    if (!layoutName) return [];
+    if (clipPathRuleCache.has(layoutName)) {
+      return clipPathRuleCache.get(layoutName);
+    }
+    const results = [];
+    const styleEl = document.getElementById("style-" + layoutName);
+    if (styleEl && styleEl.sheet) {
+      try {
+        collectClipPathRules(styleEl.sheet.cssRules, results);
+      } catch (err) {
+        console.warn(
+          "Unable to read clip-path rules for layout:",
+          layoutName,
+          err,
+        );
+      }
+    }
+    clipPathRuleCache.set(layoutName, results);
+    return results;
+  }
+
+  function applyClipPathDataAttributes(layoutElement, layoutName) {
+    if (!layoutElement) return;
+    const rules = getClipPathRules(layoutName);
+    if (!rules.length) return;
+    rules.forEach(({ selector, clipPath }) => {
+      if (!selector || !clipPath) return;
+      try {
+        const scope = layoutElement.ownerDocument || document;
+        scope.querySelectorAll(selector).forEach((el) => {
+          if (layoutElement.contains(el) || el === layoutElement) {
+            el.dataset.clipPath = clipPath;
+          }
+        });
+      } catch (err) {
+        console.warn(
+          "Failed to apply cached clip-path selector:",
+          selector,
+          "for layout",
+          layoutName,
+          err,
+        );
+      }
+    });
+  }
+
+  function getClipPathFromRules(layoutName, element) {
+    if (!layoutName || !element) return null;
+    const rules = getClipPathRules(layoutName);
+    for (const { selector, clipPath } of rules) {
+      if (!selector || !clipPath) continue;
+      try {
+        if (element.matches(selector)) {
+          return clipPath;
+        }
+      } catch (err) {
+        // Ignore selectors that querySelector cannot evaluate
+      }
+    }
+    return null;
+  }
+
+  function addCanvasToPdf(pdf, canvas, imgData, columnIndex) {
+    if (!pdf || !canvas || !imgData) return;
+    const originalWidth = canvas.width;
+    const originalHeight = canvas.height;
+    if (!originalWidth || !originalHeight) return;
+    const scale = Math.min(
+      PDF_COLUMN_WIDTH / originalWidth,
+      PDF_PAGE_HEIGHT / originalHeight,
+    );
+    const renderWidth = originalWidth * scale;
+    const renderHeight = originalHeight * scale;
+    const offsetX =
+      columnIndex * PDF_COLUMN_WIDTH +
+      (PDF_COLUMN_WIDTH - renderWidth) / 2;
+    const offsetY = (PDF_PAGE_HEIGHT - renderHeight) / 2;
+    pdf.addImage(imgData, "PNG", offsetX, offsetY, renderWidth, renderHeight);
+  }
+
   function parseClipPathCoordinate(raw) {
     if (!raw) return null;
     const trimmed = raw.trim();
@@ -299,6 +421,7 @@ window.addEventListener("DOMContentLoaded", () => {
       gutterColor = "#ffffff";
     }
 
+    const layoutName = layout.dataset ? layout.dataset.layoutName : null;
     layout.querySelectorAll(".panel").forEach((panel) => {
       const panelStyle = window.getComputedStyle(panel);
       const clipPath =
@@ -310,7 +433,11 @@ window.addEventListener("DOMContentLoaded", () => {
           : null) ||
         (panelStyle.webkitClipPath && panelStyle.webkitClipPath !== "none"
           ? panelStyle.webkitClipPath
-          : null);
+          : null) ||
+        (layoutName ? getClipPathFromRules(layoutName, panel) : null);
+      if (!clipPath || clipPath === "none") {
+        return;
+      }
       const polygon = parseClipPathPolygon(clipPath);
       if (!polygon) return;
 
@@ -411,6 +538,8 @@ window.addEventListener("DOMContentLoaded", () => {
     if (layoutDiv) {
       // Add the specific layout class name for CSS targeting
       layoutDiv.classList.add(layoutName);
+      layoutDiv.dataset.layoutName = layoutName;
+      applyClipPathDataAttributes(layoutDiv, layoutName);
 
       // Find gutter color from parent page
       let gutterColor = "#cccccc";
@@ -597,6 +726,8 @@ window.addEventListener("DOMContentLoaded", () => {
           // Ensure the layout class is properly applied
           layoutDiv.classList.remove(...layouts); // Remove all layout classes
           layoutDiv.classList.add(select.value); // Add the selected layout class
+          layoutDiv.dataset.layoutName = select.value;
+          applyClipPathDataAttributes(layoutDiv, select.value);
           console.log(
             `After layout change - background: ${layoutDiv.style.background}, classes: ${layoutDiv.className}`,
           );
@@ -864,11 +995,12 @@ window.addEventListener("DOMContentLoaded", () => {
 
           // Capture second layout if exists
           let img2 = null;
+          let canvas2 = null;
           if (layouts[i + 1]) {
             const layout2 = layouts[i + 1];
             await new Promise((resolve) => setTimeout(resolve, 100));
 
-            const canvas2 = await html2canvas(layout2, {
+            canvas2 = await html2canvas(layout2, {
               scale: 2,
               useCORS: true,
               allowTaint: true,
@@ -887,9 +1019,9 @@ window.addEventListener("DOMContentLoaded", () => {
             img2 = canvas2.toDataURL("image/png", 1.0);
           }
 
-          pdf.addImage(img1, "PNG", 0, 0, 396, 612);
-          if (img2) {
-            pdf.addImage(img2, "PNG", 396, 0, 396, 612);
+          addCanvasToPdf(pdf, canvas1, img1, 0);
+          if (img2 && canvas2) {
+            addCanvasToPdf(pdf, canvas2, img2, 1);
           }
 
           if (i + 2 < layouts.length) {
