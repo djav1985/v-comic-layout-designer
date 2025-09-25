@@ -773,26 +773,36 @@ window.addEventListener("DOMContentLoaded", () => {
     savePagesState(true);
   });
 
-  // Initialize pages and then load images
-  if (Array.isArray(savedPages) && savedPages.length) {
-    console.log("Loading saved pages:", savedPages);
-    savedPages.forEach((p, index) => {
-      console.log(`Creating page ${index + 1} with layout: ${p.layout}`);
-      createPage(p);
-    });
-  } else {
-    console.log("Creating new default page");
-    createPage();
+  async function initializePages() {
+    try {
+      const response = await fetch("/get-pages", {
+        headers: { Accept: "application/json" },
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to load pages (status ${response.status})`);
+      }
+
+      const data = await response.json();
+      if (!data || !Array.isArray(data.pages)) {
+        throw new Error("Response payload was missing a pages array");
+      }
+
+      console.log("Loaded pages from server state:", data.pages);
+      rebuildPagesUI(data.pages);
+    } catch (error) {
+      console.error("Failed to load saved pages from state.json:", error);
+      rebuildPagesUI([]);
+    }
   }
+
+  initializePages();
 
   // Debug: Log available layouts and templates
   console.log("Available layouts:", layouts);
   console.log("Available templates:", Object.keys(layoutTemplates || {}));
 
   // Load images AFTER pages are created so assigned images are properly filtered
-  setTimeout(() => {
-    updateImages(typeof initialImages !== "undefined" ? initialImages : []);
-  }, 100);
+  // (rebuildPagesUI triggers this once the DOM is ready).
 
   document.getElementById("uploadForm").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -1018,38 +1028,36 @@ window.addEventListener("DOMContentLoaded", () => {
 
             img2 = canvas2.toDataURL("image/png", 1.0);
           }
-          const pageWidth = 792;
-          const pageHeight = 612;
-          const layoutsPerPage = 2;
-          const slotWidth = pageWidth / layoutsPerPage;
-          const layoutAspectRatio = 8.5 / 11;
-          let slotHeight = slotWidth / layoutAspectRatio;
+          const pageHeight = PDF_PAGE_HEIGHT;
+          const slotWidth = PDF_COLUMN_WIDTH;
 
-          if (slotHeight > pageHeight) {
-            slotHeight = pageHeight;
-          }
+          const canvases = [canvas1, canvas2];
+          const images = [img1, img2];
 
-          const verticalOffset = Math.max((pageHeight - slotHeight) / 2, 0);
-          const pageWidth = 792;
-          const pageHeight = 612;
-          const layoutsPerPage = 2;
-          const slotWidth = pageWidth / layoutsPerPage;
-          const layoutAspectRatio = 8.5 / 11;
-          let slotHeight = slotWidth / layoutAspectRatio;
+          images.forEach((img, columnIndex) => {
+            const canvas = canvases[columnIndex];
+            if (!img || !canvas) return;
 
-          if (slotHeight > pageHeight) {
-            slotHeight = pageHeight;
-          }
+            const aspectRatio =
+              canvas.width === 0 ? 1 : canvas.height / canvas.width;
 
-          const verticalOffset = Math.max((pageHeight - slotHeight) / 2, 0);
+            let renderWidth = slotWidth;
+            let renderHeight = renderWidth * aspectRatio;
 
-          pdf.addImage(img1, "PNG", 0, verticalOffset, slotWidth, slotHeight);
-          if (img2) {
-            pdf.addImage(img2, "PNG", slotWidth, verticalOffset, slotWidth, slotHeight);
-          }
+            if (renderHeight > pageHeight) {
+              renderHeight = pageHeight;
+              renderWidth = renderHeight / aspectRatio;
+            }
+
+            const offsetX =
+              columnIndex * slotWidth + (slotWidth - renderWidth) / 2;
+            const offsetY = (pageHeight - renderHeight) / 2;
+
+            pdf.addImage(img, "PNG", offsetX, offsetY, renderWidth, renderHeight);
+          });
 
           if (i + 2 < layouts.length) {
-            pdf.addPage([792, 612], "landscape");
+            pdf.addPage([PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT], "landscape");
           }
         }
 
