@@ -437,10 +437,8 @@ button.ghost:focus {
     position: relative;
     width: min(100%, 528px);
     max-width: 528px;
-    aspect-ratio: 11 / 17;
+    aspect-ratio: 1 / 1.545;
     margin: 0 auto;
-    border-radius: 20px;
-    border: 1px solid rgba(148, 163, 184, 0.2);
     overflow: hidden;
     background: linear-gradient(140deg, rgba(241, 245, 249, 0.95), rgba(226, 232, 240, 0.85));
     box-shadow: 0 24px 45px -32px rgba(15, 23, 42, 0.9);
