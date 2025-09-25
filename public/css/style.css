@@ -385,18 +385,14 @@ button.ghost:focus {
 }
 
 .page-controls {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 18px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    align-items: stretch;
 }
 
-.page-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 16px;
+.page-controls > * {
+    min-width: 0;
 }
 
 .input-group {
@@ -407,6 +403,7 @@ button.ghost:focus {
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-muted);
+    height: 100%;
 }
 
 .input-group span {
@@ -424,6 +421,23 @@ button.ghost:focus {
     padding: 10px 14px;
     min-width: 0;
     transition: border var(--transition), box-shadow var(--transition);
+}
+
+.page-controls .input-group select,
+.page-controls .input-group input[type="color"] {
+    width: 100%;
+}
+
+.page-controls .input-group input[type="color"] {
+    padding: 0;
+    height: 44px;
+}
+
+.page-controls .delete-page-btn {
+    width: 100%;
+    min-height: 44px;
+    font-size: 1.25rem;
+    line-height: 1;
 }
 
 .page select:focus,

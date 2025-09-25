@@ -49,3 +49,4 @@ The latest pass sets the application shell to a centered 90% width and now adapt
 * Saved layouts are loaded exclusively from `public/storage/state.json` at start-up, ensuring the browser always reflects the latest persisted state.
 * Server-Sent Events keep the UI and `state.json` in lockstep, propagating saves from any client to every other open session without additional polling.
 * Shared PDF page constants prevent duplicate variable declarations, silencing the `pageWidth` console error during exports.
+* Layout, gutter, and removal controls now share a single, aligned row with matched sizing so page actions remain balanced and easy to target.

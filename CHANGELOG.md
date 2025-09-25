@@ -10,6 +10,7 @@
 - Centered the shell at 90% width and standardized the page cards to two per row for a more intentional workspace rhythm on desktop screens.
 - Updated the workspace page grid to use one column below 1024px, two columns up to 1980px, and three columns on ultra-wide displays while preserving panel alignment and aspect ratios.
 - Locked the layout preview container to a 1:1.545 aspect ratio that matches a single page column and removed its rounded border so spreads sit flush without white bands.
+- Streamlined the page toolbar so the layout selector, gutter picker, and removal action share a single aligned row with matching control dimensions.
 
 ### Fixed
 - Preserve diagonal panel shapes in exported images and PDFs by parsing each layout's CSS rules, caching vendor-prefixed clip-paths, and reapplying them after html2canvas renders the page.

@@ -662,7 +662,8 @@ window.addEventListener("DOMContentLoaded", () => {
     const deleteBtn = document.createElement("button");
     deleteBtn.type = "button";
     deleteBtn.className = "delete-page-btn";
-    deleteBtn.innerHTML = '<span aria-hidden="true">✕</span> Remove Page';
+    deleteBtn.innerHTML = '<span aria-hidden="true">✕</span>';
+    deleteBtn.setAttribute("aria-label", "Remove page");
 
     // Layout selector
     const select = document.createElement("select");
@@ -690,14 +691,10 @@ window.addEventListener("DOMContentLoaded", () => {
     gutterGroup.innerHTML = "<span>Gutter</span>";
     gutterGroup.appendChild(gutterColor);
 
-    const meta = document.createElement("div");
-    meta.className = "page-meta";
-    meta.appendChild(layoutGroup);
-    meta.appendChild(gutterGroup);
-
     const controlsDiv = document.createElement("div");
     controlsDiv.className = "page-controls";
-    controlsDiv.appendChild(meta);
+    controlsDiv.appendChild(layoutGroup);
+    controlsDiv.appendChild(gutterGroup);
     controlsDiv.appendChild(deleteBtn);
     page.appendChild(controlsDiv);
 
@@ -1098,7 +1095,6 @@ window.addEventListener("DOMContentLoaded", () => {
           images.forEach((img, columnIndex) => {
             const canvas = canvases[columnIndex];
             if (!img || !canvas) return;
-
 
             const aspectRatio =
               canvas.width === 0 ? 1 : canvas.height / canvas.width;
