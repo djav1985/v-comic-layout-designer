@@ -12,7 +12,6 @@
 - Locked the layout preview container to a 1:1.545 aspect ratio that matches a single page column and removed its rounded border so spreads sit flush without white bands.
 - Streamlined the page toolbar so the layout selector, gutter picker, and removal action share a single aligned row with matching control dimensions.
 - Removed the remaining angled panel styling and export helpers so every layout now uses straightforward rectangular frames.
-- Replaced the html2canvas dependency with an internal canvas renderer so exports respect live transforms without duplicating elements.
 
 ### Fixed
 - Execute layout PHP templates on the server before sending them to the browser so panels render correctly in both the editor and exports.

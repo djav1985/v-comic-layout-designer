@@ -999,7 +999,7 @@ window.addEventListener("DOMContentLoaded", () => {
           if (layouts[i + 1]) {
             const layout2 = layouts[i + 1];
             await new Promise((resolve) => setTimeout(resolve, 100));
-
+            
             canvas2 = await renderLayoutToCanvas(layout2, EXPORT_SCALE);
 
             if (canvas2.width === 0 || canvas2.height === 0) {
