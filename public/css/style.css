@@ -97,7 +97,7 @@ body {
 
 .app-main {
     display: grid;
-    grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+    grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
     gap: 32px;
     width: 100%;
 }
@@ -386,8 +386,8 @@ button.ghost:focus {
 
 .page-controls {
     display: grid;
-    grid-template-columns: 44px 44px 1fr;
-    gap: 16px;
+    grid-template-columns: 1fr 44px;
+    gap: 20px;
     align-items: stretch;
 }
 
