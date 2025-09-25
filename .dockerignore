@@ -1,6 +1,5 @@
 vendor/
 public/uploads/
 public/storage/
-public/overlays/
 node_modules/
 *.log
