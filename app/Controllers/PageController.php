@@ -50,6 +50,8 @@ class PageController
 
     public function stream(): void
     {
+        $this->releaseSessionLock();
+
         ignore_user_abort(true);
         set_time_limit(0);
 
@@ -77,6 +79,13 @@ class PageController
                 break;
             }
             sleep(1);
+        }
+    }
+
+    private function releaseSessionLock(): void
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
         }
     }
 

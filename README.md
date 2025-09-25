@@ -51,3 +51,4 @@ The latest pass sets the application shell to a centered 90% width and now adapt
 * Shared PDF page constants prevent duplicate variable declarations, silencing the `pageWidth` console error during exports.
 * Layout, gutter, and removal controls now share a single, aligned row with matched sizing so page actions remain balanced and easy to target.
 * Drag-and-dropped artwork now immediately sheds the square thumbnail styling, letting panels render at full size without a manual refresh.
+* Refreshing the workspace no longer stalls because the live update stream releases its PHP session lock before waiting for changes.
