@@ -389,6 +389,7 @@ button.ghost:focus {
     grid-template-columns: 1fr 44px;
     gap: 20px;
     align-items: stretch;
+    width: 100%;
 }
 
 .page-controls > * {
