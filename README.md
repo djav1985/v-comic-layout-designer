@@ -6,6 +6,7 @@ A modern MVC PHP application for crafting comic spreads. Upload artwork, drag it
 
 - **Curated asset library** – Upload multiple images at once, drag-and-drop new artwork directly into the library, and manage assets with quick delete actions.
 - **Storyboard workspace** – Drag panels into dynamic templates, adjust gutter colors, and fine-tune each panel's zoom and position.
+- **Page locking** – Toggle a green “U”/yellow “L” control to freeze a page so placed artwork can't be moved, resized, or replaced until it’s unlocked.
 - **Live autosave** – Progress is preserved automatically, with inline feedback to confirm every change.
 - **Real-time sync** – The browser listens to server-sent events so every open tab mirrors updates written to `state.json` instantly.
 - **One-click exports** – Generate PDFs or high-quality image sets directly from the browser.
