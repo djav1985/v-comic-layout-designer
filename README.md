@@ -7,6 +7,7 @@ A modern MVC PHP application for crafting comic spreads. Upload artwork, drag it
 - **Curated asset library** – Upload multiple images at once and manage them with quick delete actions.
 - **Storyboard workspace** – Drag panels into dynamic templates, adjust gutter colors, and fine-tune each panel's zoom and position.
 - **Live autosave** – Progress is preserved automatically, with inline feedback to confirm every change.
+- **Real-time sync** – The browser listens to server-sent events so every open tab mirrors updates written to `state.json` instantly.
 - **One-click exports** – Generate PDFs or high-quality image sets directly from the browser.
 - **Keyboard shortcuts** – Stay in flow with quick commands for saving, creating pages, and exporting.
 
@@ -43,5 +44,8 @@ The latest pass sets the application shell to a centered 90% width and now adapt
 ## Notes
 
 * Exported PDFs and PNGs now reliably keep the diagonal panel edges found in the angled layouts. The exporter reads the layout-specific CSS rules to cache each panel's clip-path (including vendor-prefixed values) and reapplies the geometry after html2canvas renders the page so the gutters stay crisp in the output files.
-* PDF exports respect the natural aspect ratio of each canvas when placing two pages per sheet, preventing the subtle horizontal squeeze that previously appeared in the generated documents.
-* Workspace page previews once again adhere to the original 5.5" × 8.5" canvas ratio so panels fill the vertical space and no longer clip along the outer edges in live view or exported assets.
+* PDF exports respect the natural aspect ratio of each captured canvas when placing two pages per sheet, preventing the subtle horizontal squeeze and the top-and-bottom letterboxing that previously appeared in the generated documents.
+* Workspace page previews are locked to a cinematic 1.545:1 aspect ratio and render flush to the canvas frame, eliminating the rounded border padding and keeping the live view aligned with exported spreads.
+* Saved layouts are loaded exclusively from `public/storage/state.json` at start-up, ensuring the browser always reflects the latest persisted state.
+* Server-Sent Events keep the UI and `state.json` in lockstep, propagating saves from any client to every other open session without additional polling.
+* Shared PDF page constants prevent duplicate variable declarations, silencing the `pageWidth` console error during exports.
