@@ -906,6 +906,11 @@ window.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
       cleanupEventSource();
+    } else if (document.visibilityState === "visible") {
+      // Reconnect EventSource when tab becomes visible again
+      if (!pageStreamSource) {
+        subscribeToStateStream();
+      }
     }
   });
 
