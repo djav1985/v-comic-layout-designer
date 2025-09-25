@@ -1,7 +1,7 @@
-
- .layout.cover .panel1 {
-    top: 12px;
-    left: 12px;
-    width: calc(100% - 24px);
-    height: calc(100% - 24px);
+.layout.cover .panel1 {
+    position: absolute;
+    top: 36px;     /* larger top gutter */
+    bottom: 60px;  /* largest bottom gutter */
+    left: 12px;    /* original side gutter */
+    right: 12px;   /* original side gutter */
 }

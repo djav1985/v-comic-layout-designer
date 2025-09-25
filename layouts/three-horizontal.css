@@ -1,19 +1,36 @@
+.layout.three-horizontal {
+    --gutter-h: 12px;        /* left & right */
+    --gutter-top: 36px;      /* top gutter */
+    --gutter-bottom: 60px;   /* bottom gutter */
+    --gutter-middle-v: 12px; /* vertical gap between rows */
 
+    /* available row height for 3 panels */
+    --row-height: calc((100% - var(--gutter-top) - var(--gutter-bottom) - (2 * var(--gutter-middle-v))) / 3);
+}
+
+/* Top panel */
 .layout.three-horizontal .panel1 {
-    top: 12px;
-    left: 12px;
-    width: calc(100% - 24px);
-    height: calc(33.333% - 18px);
+    position: absolute;
+    top: var(--gutter-top);
+    left: var(--gutter-h);
+    width: calc(100% - (2 * var(--gutter-h)));
+    height: var(--row-height);
 }
+
+/* Middle panel */
 .layout.three-horizontal .panel2 {
-    top: calc(33.333% + 6px);
-    left: 12px;
-    width: calc(100% - 24px);
-    height: calc(33.333% - 18px);
+    position: absolute;
+    top: calc(var(--gutter-top) + var(--row-height) + var(--gutter-middle-v));
+    left: var(--gutter-h);
+    width: calc(100% - (2 * var(--gutter-h)));
+    height: var(--row-height);
 }
+
+/* Bottom panel */
 .layout.three-horizontal .panel3 {
-    top: calc(66.666% + 6px);
-    left: 12px;
-    width: calc(100% - 24px);
-    height: calc(33.333% - 18px);
+    position: absolute;
+    top: calc(var(--gutter-top) + (2 * var(--row-height)) + (2 * var(--gutter-middle-v)));
+    left: var(--gutter-h);
+    width: calc(100% - (2 * var(--gutter-h)));
+    height: var(--row-height);
 }

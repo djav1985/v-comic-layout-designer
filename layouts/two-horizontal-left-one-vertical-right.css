@@ -1,19 +1,40 @@
-/* two-horizontal-left-one-vertical-right.css */
+.layout.two-horizontal-left-one-vertical-right {
+    --gutter-h: 12px;        /* left & right */
+    --gutter-top: 36px;      /* top gutter */
+    --gutter-bottom: 60px;   /* bottom gutter */
+    --gutter-middle-h: 12px; /* horizontal gutter between left/right */
+    --gutter-middle-v: 12px; /* vertical gutter between left panels */
+
+    /* widths */
+    --col-width: calc((100% - (2 * var(--gutter-h)) - var(--gutter-middle-h)) / 2);
+
+    /* heights for left column */
+    --row-height: calc((100% - var(--gutter-top) - var(--gutter-bottom) - var(--gutter-middle-v)) / 2);
+}
+
+/* Top-left panel */
 .layout.two-horizontal-left-one-vertical-right .panel1 {
-    top: 12px;
-    left: 12px;
-    width: calc(50% - 18px);
-    height: calc(50% - 18px);
+    position: absolute;
+    top: var(--gutter-top);
+    left: var(--gutter-h);
+    width: var(--col-width);
+    height: var(--row-height);
 }
+
+/* Bottom-left panel */
 .layout.two-horizontal-left-one-vertical-right .panel2 {
-    top: calc(50% + 6px);
-    left: 12px;
-    width: calc(50% - 18px);
-    height: calc(50% - 18px);
+    position: absolute;
+    top: calc(var(--gutter-top) + var(--row-height) + var(--gutter-middle-v));
+    left: var(--gutter-h);
+    width: var(--col-width);
+    height: var(--row-height);
 }
+
+/* Right vertical panel */
 .layout.two-horizontal-left-one-vertical-right .panel3 {
-    top: 12px;
-    left: calc(50% + 6px);
-    width: calc(50% - 18px);
-    height: calc(100% - 24px);
+    position: absolute;
+    top: var(--gutter-top);
+    bottom: var(--gutter-bottom);
+    left: calc(var(--gutter-h) + var(--col-width) + var(--gutter-middle-h));
+    width: var(--col-width);
 }

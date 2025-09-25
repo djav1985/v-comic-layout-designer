@@ -1,15 +1,27 @@
+.layout.two-horizontal {
+    --gutter-h: 12px;        /* left & right */
+    --gutter-top: 36px;      /* top gutter */
+    --gutter-bottom: 60px;   /* bottom gutter */
+    --gutter-middle-v: 12px; /* gutter between top/bottom panels */
 
-
-
-.layout.two-horizontal .panel1 {
-    top: 12px;
-    left: 12px;
-    width: calc(100% - 24px);
-    height: calc(50% - 18px);
+    /* heights */
+    --row-height: calc((100% - var(--gutter-top) - var(--gutter-bottom) - var(--gutter-middle-v)) / 2);
 }
+
+/* Top panel */
+.layout.two-horizontal .panel1 {
+    position: absolute;
+    top: var(--gutter-top);
+    left: var(--gutter-h);
+    width: calc(100% - (2 * var(--gutter-h)));
+    height: var(--row-height);
+}
+
+/* Bottom panel */
 .layout.two-horizontal .panel2 {
-    top: calc(50% + 6px);
-    left: 12px;
-    width: calc(100% - 24px);
-    height: calc(50% - 18px);
+    position: absolute;
+    top: calc(var(--gutter-top) + var(--row-height) + var(--gutter-middle-v));
+    left: var(--gutter-h);
+    width: calc(100% - (2 * var(--gutter-h)));
+    height: var(--row-height);
 }

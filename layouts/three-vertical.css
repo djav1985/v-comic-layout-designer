@@ -1,19 +1,36 @@
-/* three-vertical.css */
+.layout.three-vertical {
+    --gutter-h: 12px;        /* left & right */
+    --gutter-top: 36px;      /* top gutter */
+    --gutter-bottom: 60px;   /* bottom gutter */
+    --gutter-middle-h: 12px; /* gutters between panels */
+
+    /* available width for 3 panels */
+    --col-width: calc((100% - (2 * var(--gutter-h)) - (2 * var(--gutter-middle-h))) / 3);
+}
+
+/* Left panel */
 .layout.three-vertical .panel1 {
-    top: 12px;
-    left: 12px;
-    width: calc(33.333% - 16px);
-    height: calc(100% - 24px);
+    position: absolute;
+    top: var(--gutter-top);
+    bottom: var(--gutter-bottom);
+    left: var(--gutter-h);
+    width: var(--col-width);
 }
+
+/* Center panel */
 .layout.three-vertical .panel2 {
-    top: 12px;
-    left: calc(33.333% + 8px);
-    width: calc(33.333% - 16px);
-    height: calc(100% - 24px);
+    position: absolute;
+    top: var(--gutter-top);
+    bottom: var(--gutter-bottom);
+    left: calc(var(--gutter-h) + var(--col-width) + var(--gutter-middle-h));
+    width: var(--col-width);
 }
+
+/* Right panel */
 .layout.three-vertical .panel3 {
-    top: 12px;
-    left: calc(66.666% + 4px);
-    width: calc(33.333% - 16px);
-    height: calc(100% - 24px);
+    position: absolute;
+    top: var(--gutter-top);
+    bottom: var(--gutter-bottom);
+    left: calc(var(--gutter-h) + (2 * var(--col-width)) + (2 * var(--gutter-middle-h)));
+    width: var(--col-width);
 }

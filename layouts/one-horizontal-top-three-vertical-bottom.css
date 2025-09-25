@@ -1,33 +1,49 @@
-/* one-horizontal-top-three-vertical-bottom.css */
+.layout.one-horizontal-top-three-vertical-bottom {
+    --gutter-h: 12px;        /* left & right */
+    --gutter-top: 36px;      /* top gutter */
+    --gutter-bottom: 60px;   /* bottom gutter */
+    --gutter-middle-v: 12px; /* vertical gap between top and bottom */
+    --gutter-middle-h: 12px; /* horizontal gaps between the 3 bottom panels */
+
+    /* available width for 3 bottom panels */
+    --col-width: calc((100% - (2 * var(--gutter-h)) - (2 * var(--gutter-middle-h))) / 3);
+
+    /* available height: total minus top + bottom + middle gutter, split into 2 rows */
+    --row-height: calc((100% - var(--gutter-top) - var(--gutter-bottom) - var(--gutter-middle-v)) / 2);
+}
+
+/* Top horizontal panel */
 .layout.one-horizontal-top-three-vertical-bottom .panel1 {
-    top: 12px;
-    left: 12px;
-    width: calc(100% - 24px);
-    height: calc(50% - 18px);
+    position: absolute;
+    top: var(--gutter-top);
+    left: var(--gutter-h);
+    width: calc(100% - (2 * var(--gutter-h)));
+    height: var(--row-height);
 }
-/* Bottom left panel with equal gutter */
-/* Bottom left panel with equal gutter */
+
+/* Bottom left panel */
 .layout.one-horizontal-top-three-vertical-bottom .panel2 {
-    top: calc(50% + 6px);
-    left: 12px;
-    width: calc(33.333% - 16px);
-    height: calc(50% - 18px);
+    position: absolute;
+    top: calc(var(--gutter-top) + var(--row-height) + var(--gutter-middle-v));
+    left: var(--gutter-h);
+    width: var(--col-width);
+    height: var(--row-height);
 }
-/* Bottom center panel with equal gutter */
-/* Bottom center panel with equal gutter */
+
+/* Bottom center panel */
 .layout.one-horizontal-top-three-vertical-bottom .panel3 {
-    top: calc(50% + 6px);
-    left: calc(33.333% + 12px);
-    width: calc(33.333% - 16px);
-    height: calc(50% - 18px);
+    position: absolute;
+    top: calc(var(--gutter-top) + var(--row-height) + var(--gutter-middle-v));
+    left: calc(var(--gutter-h) + var(--col-width) + var(--gutter-middle-h));
+    width: var(--col-width);
+    height: var(--row-height);
 }
-/* Bottom right panel with equal gutter */
-/* Bottom right panel with equal gutter */
-/* Bottom right panel with correct right gutter */
-/* Bottom right panel with left and right gutter */
+
+/* Bottom right panel */
 .layout.one-horizontal-top-three-vertical-bottom .panel4 {
-    top: calc(50% + 6px);
-    left: calc(66.666% + 12px);
-    width: calc(33.333% - 24px);
-    height: calc(50% - 18px);
+    position: absolute;
+    top: calc(var(--gutter-top) + var(--row-height) + var(--gutter-middle-v));
+    left: calc(var(--gutter-h) + (2 * var(--col-width)) + (2 * var(--gutter-middle-h)));
+    width: var(--col-width);
+    height: var(--row-height);
 }

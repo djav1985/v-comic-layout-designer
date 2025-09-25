@@ -1,27 +1,45 @@
+.layout.four-grid {
+    --gutter-h: 12px;
+    --gutter-top: 36px;
+    --gutter-bottom: 60px;
+    --gutter-middle-v: 12px;
+
+    --col-width: calc((100% - (2 * var(--gutter-h)) - var(--gutter-h)) / 2); /* left + right + middle gutter */
+    --row-height: calc((100% - var(--gutter-top) - var(--gutter-bottom) - var(--gutter-middle-v)) / 2);
+}
+
+/* Top-left */
 .layout.four-grid .panel1 {
-    top: 12px;
-    left: 12px;
-    width: calc(50% - 18px);
-    height: calc(50% - 18px);
+    position: absolute;
+    top: var(--gutter-top);
+    left: var(--gutter-h);
+    width: var(--col-width);
+    height: var(--row-height);
 }
 
+/* Top-right */
 .layout.four-grid .panel2 {
-    top: 12px;
-    left: calc(50% + 6px);
-    width: calc(50% - 18px);
-    height: calc(50% - 18px);
+    position: absolute;
+    top: var(--gutter-top);
+    left: calc(var(--gutter-h) + var(--col-width) + var(--gutter-h));
+    width: var(--col-width);
+    height: var(--row-height);
 }
 
+/* Bottom-left */
 .layout.four-grid .panel3 {
-    top: calc(50% + 6px);
-    left: 12px;
-    width: calc(50% - 18px);
-    height: calc(50% - 18px);
+    position: absolute;
+    top: calc(var(--gutter-top) + var(--row-height) + var(--gutter-middle-v));
+    left: var(--gutter-h);
+    width: var(--col-width);
+    height: var(--row-height);
 }
 
+/* Bottom-right */
 .layout.four-grid .panel4 {
-    top: calc(50% + 6px);
-    left: calc(50% + 6px);
-    width: calc(50% - 18px);
-    height: calc(50% - 18px);
+    position: absolute;
+    top: calc(var(--gutter-top) + var(--row-height) + var(--gutter-middle-v));
+    left: calc(var(--gutter-h) + var(--col-width) + var(--gutter-h));
+    width: var(--col-width);
+    height: var(--row-height);
 }
