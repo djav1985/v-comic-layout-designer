@@ -4,6 +4,8 @@ window.addEventListener("DOMContentLoaded", () => {
   let saveTimeout = null;
   let isUpdatingFromServer = false;
   let saveIndicator = null;
+  let lastSyncedSignature = null;
+  let pageStreamSource = null;
   const clipPathRuleCache = new Map();
   const CSS_RULE_TYPES = window.CSSRule
     ? {
@@ -17,6 +19,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const PDF_PAGE_WIDTH = 792;
   const PDF_PAGE_HEIGHT = 612;
   const PDF_COLUMN_WIDTH = PDF_PAGE_WIDTH / 2;
+  const DEFAULT_GUTTER_COLOR = "#cccccc";
 
   // Create save indicator
   function createSaveIndicator() {
@@ -65,14 +68,12 @@ window.addEventListener("DOMContentLoaded", () => {
     }, 500); // Wait 500ms after last change before saving
   }
 
-  function savePagesState(rebuildUI = true) {
-    if (isUpdatingFromServer) return; // Prevent recursive updates
-
+  function capturePagesFromDom() {
     const pages = [];
     document.querySelectorAll("#pages > .page").forEach((pageDiv) => {
       const layout = pageDiv.querySelector("select").value;
       const gutterColorInput = pageDiv.querySelector('input[type="color"]');
-      const gutterColor = gutterColorInput ? gutterColorInput.value : "#cccccc";
+      const gutterColor = gutterColorInput ? gutterColorInput.value : DEFAULT_GUTTER_COLOR;
       const slots = {};
       const transforms = {};
       pageDiv.querySelectorAll(".panel").forEach((panel) => {
@@ -89,6 +90,14 @@ window.addEventListener("DOMContentLoaded", () => {
       });
       pages.push({ layout, gutterColor, slots, transforms });
     });
+    return pages;
+  }
+
+  function savePagesState(rebuildUI = true) {
+    if (isUpdatingFromServer) return; // Prevent recursive updates
+
+    const pages = capturePagesFromDom();
+    const signature = JSON.stringify(pages);
 
     // Save to server in background
     fetch("/save-pages", {
@@ -99,19 +108,9 @@ window.addEventListener("DOMContentLoaded", () => {
       .then((res) => {
         if (!res.ok) throw new Error("Save request failed");
         showSaveIndicator("Saved ✓", "#4CAF50");
-        // Only rebuild UI if explicitly requested (like adding/deleting pages)
+        lastSyncedSignature = signature;
         if (rebuildUI) {
-          return fetch("/get-pages")
-            .then((r) => {
-              if (!r.ok) throw new Error("Load request failed");
-              return r.json();
-            })
-            .then((data) => {
-              if (!data || !Array.isArray(data.pages)) {
-                throw new Error("Invalid page data");
-              }
-              rebuildPagesUI(data.pages);
-            });
+          rebuildPagesUI(pages);
         }
       })
       .catch((err) => {
@@ -133,6 +132,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     try {
       window.savedPages = pages;
+      lastSyncedSignature = JSON.stringify(pages);
       if (pages.length) {
         pages.forEach((p) => createPage(p, newPagesDiv));
       } else {
@@ -542,7 +542,7 @@ window.addEventListener("DOMContentLoaded", () => {
       applyClipPathDataAttributes(layoutDiv, layoutName);
 
       // Find gutter color from parent page
-      let gutterColor = "#cccccc";
+      let gutterColor = DEFAULT_GUTTER_COLOR;
       const pageDiv = container.closest(".page");
       if (pageDiv) {
         const colorInput = pageDiv.querySelector('input[type="color"]');
@@ -676,7 +676,7 @@ window.addEventListener("DOMContentLoaded", () => {
     // Gutter color picker
     const gutterColor = document.createElement("input");
     gutterColor.type = "color";
-    gutterColor.value = data && data.gutterColor ? data.gutterColor : "#cccccc";
+    gutterColor.value = data && data.gutterColor ? data.gutterColor : DEFAULT_GUTTER_COLOR;
     gutterColor.title = "Gutter Color";
     gutterColor.className = "gutter-color-picker";
 
@@ -795,7 +795,69 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  initializePages();
+  function subscribeToStateStream() {
+    if (!window.EventSource) {
+      console.warn("EventSource is not supported in this browser; live sync disabled.");
+      return;
+    }
+
+    if (pageStreamSource) {
+      return;
+    }
+
+    pageStreamSource = new EventSource("/pages/stream");
+
+    const processIncomingPages = (incomingPages) => {
+      const incomingSignature = JSON.stringify(incomingPages);
+
+      if (incomingSignature === lastSyncedSignature) {
+        return;
+      }
+
+      const currentSignature = JSON.stringify(capturePagesFromDom());
+      if (incomingSignature === currentSignature) {
+        lastSyncedSignature = incomingSignature;
+        return;
+      }
+
+      rebuildPagesUI(incomingPages);
+      lastSyncedSignature = incomingSignature;
+    };
+
+    pageStreamSource.addEventListener("pages", (event) => {
+      if (!event.data) {
+        return;
+      }
+
+      try {
+        const payload = JSON.parse(event.data);
+        const incomingPages = Array.isArray(payload.pages) ? payload.pages : [];
+
+        if (isUpdatingFromServer) {
+          setTimeout(() => processIncomingPages(incomingPages), 100);
+        } else {
+          processIncomingPages(incomingPages);
+        }
+      } catch (err) {
+        console.error("Failed to process streaming page update", err);
+      }
+    });
+
+    pageStreamSource.addEventListener("error", (event) => {
+      console.error("Page stream connection error", event);
+    });
+  }
+
+  initializePages().finally(() => {
+    subscribeToStateStream();
+  });
+
+  window.addEventListener("beforeunload", () => {
+    if (pageStreamSource) {
+      pageStreamSource.close();
+      pageStreamSource = null;
+    }
+  });
 
   // Debug: Log available layouts and templates
   console.log("Available layouts:", layouts);
