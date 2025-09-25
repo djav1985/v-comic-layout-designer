@@ -680,8 +680,17 @@ window.addEventListener("DOMContentLoaded", () => {
     controlsDiv.className = "page-controls";
     controlsDiv.appendChild(layoutGroup);
     controlsDiv.appendChild(gutterGroup);
-    controlsDiv.appendChild(deleteBtn);
-    page.appendChild(controlsDiv);
+    
+    // Create a container for controls and delete button
+    const controlsContainer = document.createElement("div");
+    controlsContainer.style.display = "flex";
+    controlsContainer.style.gap = "18px";
+    controlsContainer.style.alignItems = "flex-start";
+    
+    controlsContainer.appendChild(controlsDiv);
+    controlsContainer.appendChild(deleteBtn);
+    
+    page.appendChild(controlsContainer);
 
     const container = document.createElement("div");
     container.className = "layout-container";
