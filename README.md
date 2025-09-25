@@ -44,6 +44,7 @@ The latest pass sets the application shell to a centered 90% width and now adapt
 ## Notes
 
 * Exported PDFs and PNGs now keep the diagonal panel edges found in the angled layouts by wrapping those panels in inline SVG clip masks. The browser and html2canvas both honor the embedded geometry, and the exporter still replays each polygon so the gutters stay crisp in the final files.
+* Inline SVG masks now declare their polygon geometry with unitless coordinates, preventing browsers from logging console errors about invalid `%` values while preserving the diagonal panel shapes.
 * Layout templates are rendered through PHP on the server before they reach the browser so angled masks and data attributes are present during initial paint and export capture.
 * PDF exports respect the natural aspect ratio of each captured canvas when placing two pages per sheet, preventing the subtle horizontal squeeze and the top-and-bottom letterboxing that previously appeared in the generated documents.
 * Workspace page previews are locked to a 1:1.545 aspect ratio that mirrors a single page column while rendering flush to the canvas frame, eliminating the rounded border padding and keeping the live view aligned with exported spreads.
