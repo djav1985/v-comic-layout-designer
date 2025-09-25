@@ -385,18 +385,14 @@ button.ghost:focus {
 }
 
 .page-controls {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 18px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    align-items: stretch;
 }
 
-.page-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 16px;
+.page-controls > * {
+    min-width: 0;
 }
 
 .input-group {
@@ -407,6 +403,7 @@ button.ghost:focus {
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-muted);
+    height: 100%;
 }
 
 .input-group span {
@@ -426,6 +423,23 @@ button.ghost:focus {
     transition: border var(--transition), box-shadow var(--transition);
 }
 
+.page-controls .input-group select,
+.page-controls .input-group input[type="color"] {
+    width: 100%;
+}
+
+.page-controls .input-group input[type="color"] {
+    padding: 0;
+    height: 44px;
+}
+
+.page-controls .delete-page-btn {
+    width: 100%;
+    min-height: 44px;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
 .page select:focus,
 .page input[type="color"]:focus {
     border-color: var(--accent);
@@ -437,10 +451,8 @@ button.ghost:focus {
     position: relative;
     width: min(100%, 528px);
     max-width: 528px;
-    aspect-ratio: 11 / 17;
+    aspect-ratio: 1 / 1.545;
     margin: 0 auto;
-    border-radius: 20px;
-    border: 1px solid rgba(148, 163, 184, 0.2);
     overflow: hidden;
     background: linear-gradient(140deg, rgba(241, 245, 249, 0.95), rgba(226, 232, 240, 0.85));
     box-shadow: 0 24px 45px -32px rgba(15, 23, 42, 0.9);

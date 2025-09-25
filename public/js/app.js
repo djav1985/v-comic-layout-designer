@@ -4,6 +4,8 @@ window.addEventListener("DOMContentLoaded", () => {
   let saveTimeout = null;
   let isUpdatingFromServer = false;
   let saveIndicator = null;
+  let lastSyncedSignature = null;
+  let pageStreamSource = null;
   const clipPathRuleCache = new Map();
   const CSS_RULE_TYPES = window.CSSRule
     ? {
@@ -17,6 +19,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const PDF_PAGE_WIDTH = 792;
   const PDF_PAGE_HEIGHT = 612;
   const PDF_COLUMN_WIDTH = PDF_PAGE_WIDTH / 2;
+  const DEFAULT_GUTTER_COLOR = "#cccccc";
 
   // Create save indicator
   function createSaveIndicator() {
@@ -65,14 +68,12 @@ window.addEventListener("DOMContentLoaded", () => {
     }, 500); // Wait 500ms after last change before saving
   }
 
-  function savePagesState(rebuildUI = true) {
-    if (isUpdatingFromServer) return; // Prevent recursive updates
-
+  function capturePagesFromDom() {
     const pages = [];
     document.querySelectorAll("#pages > .page").forEach((pageDiv) => {
       const layout = pageDiv.querySelector("select").value;
       const gutterColorInput = pageDiv.querySelector('input[type="color"]');
-      const gutterColor = gutterColorInput ? gutterColorInput.value : "#cccccc";
+      const gutterColor = gutterColorInput ? gutterColorInput.value : DEFAULT_GUTTER_COLOR;
       const slots = {};
       const transforms = {};
       pageDiv.querySelectorAll(".panel").forEach((panel) => {
@@ -89,6 +90,14 @@ window.addEventListener("DOMContentLoaded", () => {
       });
       pages.push({ layout, gutterColor, slots, transforms });
     });
+    return pages;
+  }
+
+  function savePagesState(rebuildUI = true) {
+    if (isUpdatingFromServer) return; // Prevent recursive updates
+
+    const pages = capturePagesFromDom();
+    const signature = JSON.stringify(pages);
 
     // Save to server in background
     fetch("/save-pages", {
@@ -99,19 +108,9 @@ window.addEventListener("DOMContentLoaded", () => {
       .then((res) => {
         if (!res.ok) throw new Error("Save request failed");
         showSaveIndicator("Saved ✓", "#4CAF50");
-        // Only rebuild UI if explicitly requested (like adding/deleting pages)
+        lastSyncedSignature = signature;
         if (rebuildUI) {
-          return fetch("/get-pages")
-            .then((r) => {
-              if (!r.ok) throw new Error("Load request failed");
-              return r.json();
-            })
-            .then((data) => {
-              if (!data || !Array.isArray(data.pages)) {
-                throw new Error("Invalid page data");
-              }
-              rebuildPagesUI(data.pages);
-            });
+          rebuildPagesUI(pages);
         }
       })
       .catch((err) => {
@@ -133,6 +132,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     try {
       window.savedPages = pages;
+      lastSyncedSignature = JSON.stringify(pages);
       if (pages.length) {
         pages.forEach((p) => createPage(p, newPagesDiv));
       } else {
@@ -542,7 +542,7 @@ window.addEventListener("DOMContentLoaded", () => {
       applyClipPathDataAttributes(layoutDiv, layoutName);
 
       // Find gutter color from parent page
-      let gutterColor = "#cccccc";
+      let gutterColor = DEFAULT_GUTTER_COLOR;
       const pageDiv = container.closest(".page");
       if (pageDiv) {
         const colorInput = pageDiv.querySelector('input[type="color"]');
@@ -662,7 +662,8 @@ window.addEventListener("DOMContentLoaded", () => {
     const deleteBtn = document.createElement("button");
     deleteBtn.type = "button";
     deleteBtn.className = "delete-page-btn";
-    deleteBtn.innerHTML = '<span aria-hidden="true">✕</span> Remove Page';
+    deleteBtn.innerHTML = '<span aria-hidden="true">✕</span>';
+    deleteBtn.setAttribute("aria-label", "Remove page");
 
     // Layout selector
     const select = document.createElement("select");
@@ -676,7 +677,7 @@ window.addEventListener("DOMContentLoaded", () => {
     // Gutter color picker
     const gutterColor = document.createElement("input");
     gutterColor.type = "color";
-    gutterColor.value = data && data.gutterColor ? data.gutterColor : "#cccccc";
+    gutterColor.value = data && data.gutterColor ? data.gutterColor : DEFAULT_GUTTER_COLOR;
     gutterColor.title = "Gutter Color";
     gutterColor.className = "gutter-color-picker";
 
@@ -690,14 +691,10 @@ window.addEventListener("DOMContentLoaded", () => {
     gutterGroup.innerHTML = "<span>Gutter</span>";
     gutterGroup.appendChild(gutterColor);
 
-    const meta = document.createElement("div");
-    meta.className = "page-meta";
-    meta.appendChild(layoutGroup);
-    meta.appendChild(gutterGroup);
-
     const controlsDiv = document.createElement("div");
     controlsDiv.className = "page-controls";
-    controlsDiv.appendChild(meta);
+    controlsDiv.appendChild(layoutGroup);
+    controlsDiv.appendChild(gutterGroup);
     controlsDiv.appendChild(deleteBtn);
     page.appendChild(controlsDiv);
 
@@ -773,26 +770,98 @@ window.addEventListener("DOMContentLoaded", () => {
     savePagesState(true);
   });
 
-  // Initialize pages and then load images
-  if (Array.isArray(savedPages) && savedPages.length) {
-    console.log("Loading saved pages:", savedPages);
-    savedPages.forEach((p, index) => {
-      console.log(`Creating page ${index + 1} with layout: ${p.layout}`);
-      createPage(p);
-    });
-  } else {
-    console.log("Creating new default page");
-    createPage();
+  async function initializePages() {
+    try {
+      const response = await fetch("/get-pages", {
+        headers: { Accept: "application/json" },
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to load pages (status ${response.status})`);
+      }
+
+      const data = await response.json();
+      if (!data || !Array.isArray(data.pages)) {
+        throw new Error("Response payload was missing a pages array");
+      }
+
+      console.log("Loaded pages from server state:", data.pages);
+      rebuildPagesUI(data.pages);
+    } catch (error) {
+      console.error("Failed to load saved pages from state.json:", error);
+      rebuildPagesUI([]);
+    }
   }
+
+  function subscribeToStateStream() {
+    if (!window.EventSource) {
+      console.warn("EventSource is not supported in this browser; live sync disabled.");
+      return;
+    }
+
+    if (pageStreamSource) {
+      return;
+    }
+
+    pageStreamSource = new EventSource("/pages/stream");
+
+    const processIncomingPages = (incomingPages) => {
+      const incomingSignature = JSON.stringify(incomingPages);
+
+      if (incomingSignature === lastSyncedSignature) {
+        return;
+      }
+
+      const currentSignature = JSON.stringify(capturePagesFromDom());
+      if (incomingSignature === currentSignature) {
+        lastSyncedSignature = incomingSignature;
+        return;
+      }
+
+      rebuildPagesUI(incomingPages);
+      lastSyncedSignature = incomingSignature;
+    };
+
+    pageStreamSource.addEventListener("pages", (event) => {
+      if (!event.data) {
+        return;
+      }
+
+      try {
+        const payload = JSON.parse(event.data);
+        const incomingPages = Array.isArray(payload.pages) ? payload.pages : [];
+
+        if (isUpdatingFromServer) {
+          setTimeout(() => processIncomingPages(incomingPages), 100);
+        } else {
+          processIncomingPages(incomingPages);
+        }
+      } catch (err) {
+        console.error("Failed to process streaming page update", err);
+      }
+    });
+
+    pageStreamSource.addEventListener("error", (event) => {
+      console.error("Page stream connection error", event);
+    });
+  }
+
+  initializePages().finally(() => {
+    subscribeToStateStream();
+  });
+
+  window.addEventListener("beforeunload", () => {
+    if (pageStreamSource) {
+      pageStreamSource.close();
+      pageStreamSource = null;
+    }
+  });
 
   // Debug: Log available layouts and templates
   console.log("Available layouts:", layouts);
   console.log("Available templates:", Object.keys(layoutTemplates || {}));
 
   // Load images AFTER pages are created so assigned images are properly filtered
-  setTimeout(() => {
-    updateImages(typeof initialImages !== "undefined" ? initialImages : []);
-  }, 100);
+  // (rebuildPagesUI triggers this once the DOM is ready).
 
   document.getElementById("uploadForm").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -1018,38 +1087,36 @@ window.addEventListener("DOMContentLoaded", () => {
 
             img2 = canvas2.toDataURL("image/png", 1.0);
           }
-          const pageWidth = 792;
-          const pageHeight = 612;
-          const layoutsPerPage = 2;
-          const slotWidth = pageWidth / layoutsPerPage;
-          const layoutAspectRatio = 8.5 / 11;
-          let slotHeight = slotWidth / layoutAspectRatio;
+          const pageHeight = PDF_PAGE_HEIGHT;
+          const slotWidth = PDF_COLUMN_WIDTH;
 
-          if (slotHeight > pageHeight) {
-            slotHeight = pageHeight;
-          }
+          const canvases = [canvas1, canvas2];
+          const images = [img1, img2];
 
-          const verticalOffset = Math.max((pageHeight - slotHeight) / 2, 0);
-          const pageWidth = 792;
-          const pageHeight = 612;
-          const layoutsPerPage = 2;
-          const slotWidth = pageWidth / layoutsPerPage;
-          const layoutAspectRatio = 8.5 / 11;
-          let slotHeight = slotWidth / layoutAspectRatio;
+          images.forEach((img, columnIndex) => {
+            const canvas = canvases[columnIndex];
+            if (!img || !canvas) return;
 
-          if (slotHeight > pageHeight) {
-            slotHeight = pageHeight;
-          }
+            const aspectRatio =
+              canvas.width === 0 ? 1 : canvas.height / canvas.width;
 
-          const verticalOffset = Math.max((pageHeight - slotHeight) / 2, 0);
+            let renderWidth = slotWidth;
+            let renderHeight = renderWidth * aspectRatio;
 
-          pdf.addImage(img1, "PNG", 0, verticalOffset, slotWidth, slotHeight);
-          if (img2) {
-            pdf.addImage(img2, "PNG", slotWidth, verticalOffset, slotWidth, slotHeight);
-          }
+            if (renderHeight > pageHeight) {
+              renderHeight = pageHeight;
+              renderWidth = renderHeight / aspectRatio;
+            }
+
+            const offsetX =
+              columnIndex * slotWidth + (slotWidth - renderWidth) / 2;
+            const offsetY = (pageHeight - renderHeight) / 2;
+
+            pdf.addImage(img, "PNG", offsetX, offsetY, renderWidth, renderHeight);
+          });
 
           if (i + 2 < layouts.length) {
-            pdf.addPage([792, 612], "landscape");
+            pdf.addPage([PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT], "landscape");
           }
         }
 
