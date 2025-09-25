@@ -21,6 +21,7 @@
             </div>
         </div>
         <div class="header-actions">
+            <button id="buildTemplates" type="button" class="ghost">Build Templates</button>
             <button id="exportPdf" type="button" class="ghost">Export PDF</button>
             <button id="exportImages" type="button" class="ghost">Export Images</button>
         </div>

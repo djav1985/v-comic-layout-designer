@@ -1,5 +1,7 @@
 /vendor/
 /uploads/*
 !/uploads/.gitkeep
+/public/overlays/*
+!/public/overlays/.gitignore
 /storage/generated/*
 !/storage/generated/.gitkeep

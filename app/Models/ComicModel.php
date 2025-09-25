@@ -6,6 +6,7 @@ class ComicModel
     public string $uploadDir;
     public string $layoutDir;
     private string $stateFile;
+    private string $overlayDir;
     private array $state = [
         'images' => [],
         'pages' => [],
@@ -17,11 +18,15 @@ class ComicModel
         $this->uploadDir = __DIR__ . '/../../public/uploads';
         $this->layoutDir = __DIR__ . '/../../layouts';
         $this->stateFile = __DIR__ . '/../../public/storage/state.json';
+        $this->overlayDir = __DIR__ . '/../../public/overlays';
         if (!is_dir($this->uploadDir)) {
             mkdir($this->uploadDir, 0777, true);
         }
         if (!is_dir(dirname($this->stateFile))) {
             mkdir(dirname($this->stateFile), 0777, true);
+        }
+        if (!is_dir($this->overlayDir)) {
+            mkdir($this->overlayDir, 0777, true);
         }
         $this->loadState();
     }
@@ -129,5 +134,21 @@ class ComicModel
         $this->state['pages'] = $pages;
         $this->state['pageCount'] = count($pages);
         $this->saveState();
+    }
+
+    public function saveOverlay(string $name, string $binary): ?string
+    {
+        $safe = preg_replace('/[^a-z0-9\-]+/i', '-', strtolower($name));
+        $safe = trim($safe, '-');
+        if ($safe === '') {
+            return null;
+        }
+
+        $path = $this->overlayDir . '/' . $safe . '.png';
+        if (file_put_contents($path, $binary) === false) {
+            return null;
+        }
+
+        return basename($path);
     }
 }
