@@ -58,21 +58,19 @@ class PageController
         header('Connection: keep-alive');
         header('X-Accel-Buffering: no');
 
-        $stateFile = $this->model->getStateFilePath();
-        $lastHash = null;
+        $lastModified = null;
 
         echo "retry: 5000\n\n";
         @ob_flush();
         flush();
 
         $this->emitState($this->model->refreshStateFromDisk());
-        $lastHash = is_file($stateFile) ? md5_file($stateFile) : null;
+        $lastModified = $this->model->getLastModified();
 
         while (!connection_aborted()) {
-            clearstatcache(false, $stateFile);
-            $currentHash = is_file($stateFile) ? md5_file($stateFile) : null;
-            if ($currentHash !== $lastHash) {
-                $lastHash = $currentHash;
+            $currentModified = $this->model->getLastModified();
+            if ($currentModified !== $lastModified) {
+                $lastModified = $currentModified;
                 $this->emitState($this->model->refreshStateFromDisk());
             }
             if (connection_aborted()) {

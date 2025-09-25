@@ -44,8 +44,15 @@ class Router
                 [$class, $method] = $routeInfo[1];
                 $vars = $routeInfo[2];
                 $fqcn = 'App\\Controllers\\' . $class;
-                $controller = new $fqcn();
-                call_user_func_array([$controller, $method], $vars);
+                
+                try {
+                    $controller = new $fqcn();
+                    call_user_func_array([$controller, $method], $vars);
+                } catch (\Throwable $e) {
+                    error_log('Router error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+                    http_response_code(500);
+                    echo 'Something broke.';
+                }
                 break;
         }
     }

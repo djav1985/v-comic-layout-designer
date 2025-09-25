@@ -4,3 +4,5 @@
 /storage/generated/*
 !/storage/generated/.gitkeep
 *.png
+# SQLite database files
+public/storage/*.db
