@@ -515,7 +515,6 @@ button.ghost:focus {
     overflow: hidden;
     background: rgba(255, 255, 255, 0.85);
     border-radius: inherit;
-    border: 2px solid transparent;
     box-sizing: border-box;
     transition: background var(--transition), border var(--transition), transform 120ms ease-out;
 }
