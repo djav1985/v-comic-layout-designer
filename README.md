@@ -43,7 +43,7 @@ The latest pass sets the application shell to a centered 90% width and now adapt
 
 ## Notes
 
-* Exported PDFs and PNGs now reliably keep the diagonal panel edges found in the angled layouts. The exporter reads the layout-specific CSS rules to cache each panel's clip-path (including vendor-prefixed values) and reapplies the geometry after html2canvas renders the page so the gutters stay crisp in the output files.
+* Exported PDFs and PNGs now keep the diagonal panel edges found in the angled layouts by wrapping those panels in inline SVG clip masks. The browser and html2canvas both honor the embedded geometry, and the exporter still replays each polygon so the gutters stay crisp in the final files.
 * PDF exports respect the natural aspect ratio of each captured canvas when placing two pages per sheet, preventing the subtle horizontal squeeze and the top-and-bottom letterboxing that previously appeared in the generated documents.
 * Workspace page previews are locked to a 1:1.545 aspect ratio that mirrors a single page column while rendering flush to the canvas frame, eliminating the rounded border padding and keeping the live view aligned with exported spreads.
 * Saved layouts are loaded exclusively from `public/storage/state.json` at start-up, ensuring the browser always reflects the latest persisted state.
@@ -51,3 +51,4 @@ The latest pass sets the application shell to a centered 90% width and now adapt
 * Shared PDF page constants prevent duplicate variable declarations, silencing the `pageWidth` console error during exports.
 * Layout, gutter, and removal controls now share a single, aligned row with matched sizing so page actions remain balanced and easy to target.
 * Drag-and-dropped artwork now immediately sheds the square thumbnail styling, letting panels render at full size without a manual refresh.
+* Refreshing the workspace no longer stalls because the live update stream releases its PHP session lock before waiting for changes.

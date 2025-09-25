@@ -13,8 +13,10 @@
 - Streamlined the page toolbar so the layout selector, gutter picker, and removal action share a single aligned row with matching control dimensions.
 
 ### Fixed
+- Release the PHP session lock before streaming live updates so refreshing the workspace no longer hangs behind an open EventSource connection.
 - Strip library thumbnail styling from dropped artwork so newly placed panels render at full size without waiting for a page refresh.
-- Preserve diagonal panel shapes in exported images and PDFs by parsing each layout's CSS rules, caching vendor-prefixed clip-paths, and reapplying them after html2canvas renders the page.
+- Preserve diagonal panel shapes in exported images and PDFs by replaying each panel's stored polygon geometry after html2canvas renders the page.
+- Replace CSS clip-paths in angled layouts with inline SVG masks and dedicated panel content containers so diagonal gutters render correctly in the browser and survive PDF/image exports.
 - Keep exported PDF spreads true to their original proportions so two-up pages are no longer subtly squeezed horizontally on each sheet.
 - Scale each exported layout using its captured aspect ratio so generated PDFs no longer include white bands above or below the artwork.
 - Restore the classic 5.5" × 8.5" workspace aspect ratio so on-screen previews and exported files fill vertically without trimming the bottom or right-hand panels.

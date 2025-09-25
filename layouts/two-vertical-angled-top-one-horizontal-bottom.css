@@ -5,7 +5,6 @@
     width: calc(50% - 12px);
     height: calc(50% - 18px);
     /* Standard gutter and steeper diagonal */
-    clip-path: polygon(0 0, 100% 0, 94% 100%, 0 100%);
 }
 .layout.two-vertical-angled-top-one-horizontal-bottom .panel2 {
     top: 12px;
@@ -13,7 +12,6 @@
     width: calc(50% - 12px);
     height: calc(50% - 18px);
     /* Standard gutter and steeper diagonal */
-    clip-path: polygon(6% 0, 100% 0, 100% 100%, 0 100%);
 }
 .layout.two-vertical-angled-top-one-horizontal-bottom .panel3 {
     top: calc(50% + 6px);

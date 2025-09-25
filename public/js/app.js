@@ -21,6 +21,23 @@ window.addEventListener("DOMContentLoaded", () => {
   const PDF_COLUMN_WIDTH = PDF_PAGE_WIDTH / 2;
   const DEFAULT_GUTTER_COLOR = "#cccccc";
 
+  function getPanelContent(panel) {
+    if (!panel) return null;
+    return panel.querySelector(".panel-inner") || panel;
+  }
+
+  function getPanelImage(panel) {
+    const content = getPanelContent(panel);
+    return content ? content.querySelector("img") : null;
+  }
+
+  function clearPanel(panel) {
+    const content = getPanelContent(panel);
+    if (content) {
+      content.innerHTML = "";
+    }
+  }
+
   // Create save indicator
   function createSaveIndicator() {
     if (!saveIndicator) {
@@ -78,7 +95,7 @@ window.addEventListener("DOMContentLoaded", () => {
       const transforms = {};
       pageDiv.querySelectorAll(".panel").forEach((panel) => {
         const slot = String(panel.getAttribute("data-slot"));
-        const img = panel.querySelector("img");
+        const img = getPanelImage(panel);
         if (img) {
           slots[slot] = img.dataset.name;
           transforms[slot] = {
@@ -219,7 +236,7 @@ window.addEventListener("DOMContentLoaded", () => {
       .forEach((i) => i.remove());
     // Clear all panels
     container.querySelectorAll(".panel").forEach((panel) => {
-      panel.innerHTML = "";
+      clearPanel(panel);
     });
     // Refresh the image list to show returned images
     setTimeout(() => {
@@ -334,11 +351,15 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function applyClipPath(ctx, element, canvasWidth, canvasHeight) {
     const style = window.getComputedStyle(element);
-    const clipPath = style.clipPath || style.webkitClipPath;
+    const clipSource =
+      element.dataset.clipPolygon ||
+      element.dataset.clipPath ||
+      style.clipPath ||
+      style.webkitClipPath;
 
-    if (!clipPath || clipPath === "none") return;
+    if (!clipSource || clipSource === "none") return;
 
-    const polygonMatch = clipPath.match(/polygon\(([^)]+)\)/i);
+    const polygonMatch = clipSource.match(/polygon\(([^)]+)\)/i);
     if (!polygonMatch) return;
 
     const points = polygonMatch[1].split(",").map(pt => pt.trim());
@@ -548,6 +569,9 @@ window.addEventListener("DOMContentLoaded", () => {
           : null);
       if (resolvedClip) {
         panel.dataset.clipPath = resolvedClip;
+        if (!panel.dataset.clipPolygon && resolvedClip.startsWith("polygon")) {
+          panel.dataset.clipPolygon = resolvedClip;
+        }
       }
 
       const slot = panel.getAttribute("data-slot");
@@ -574,7 +598,7 @@ window.addEventListener("DOMContentLoaded", () => {
         if (wrapper) wrapper.remove();
 
         // If panel already has an image, return it to imageList
-        const oldImg = panel.querySelector("img");
+        const oldImg = getPanelImage(panel);
         if (oldImg) {
           const oldName = oldImg.dataset.name;
           // Remove old image's hidden inputs
@@ -592,7 +616,9 @@ window.addEventListener("DOMContentLoaded", () => {
           }, 0);
         }
 
-        panel.innerHTML = "";
+        clearPanel(panel);
+        const content = getPanelContent(panel);
+        if (!content) return;
         const clone = img.cloneNode();
         clone.draggable = false;
         clone.classList.remove("thumb");
@@ -605,7 +631,7 @@ window.addEventListener("DOMContentLoaded", () => {
         transformInput.name = `pages[${pageIndex}][transforms][${slot}]`;
         container.appendChild(transformInput);
         enableImageControls(clone, transformInput);
-        panel.appendChild(clone);
+        content.appendChild(clone);
         const hidden = document.createElement("input");
         hidden.type = "hidden";
         hidden.name = `pages[${pageIndex}][slots][${slot}]`;
@@ -631,7 +657,11 @@ window.addEventListener("DOMContentLoaded", () => {
         transformInput.value = JSON.stringify(initial);
         container.appendChild(transformInput);
         enableImageControls(clone, transformInput, initial);
-        panel.appendChild(clone);
+        const content = getPanelContent(panel);
+        if (content) {
+          clearPanel(panel);
+          content.appendChild(clone);
+        }
 
         const hidden = document.createElement("input");
         hidden.type = "hidden";
@@ -973,7 +1003,7 @@ window.addEventListener("DOMContentLoaded", () => {
       const slots = {};
       pageDiv.querySelectorAll(".panel").forEach((panel) => {
         const slot = String(panel.getAttribute("data-slot"));
-        const img = panel.querySelector("img");
+        const img = getPanelImage(panel);
         if (img) {
           slots[slot] = img.dataset.name;
         }

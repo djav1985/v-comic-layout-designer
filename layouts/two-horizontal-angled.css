@@ -10,11 +10,9 @@
 /* Top panel: diagonal bottom edge, smaller angled gutter */
 .layout.two-horizontal-angled .panel1 {
     top: 12px;
-    clip-path: polygon(0 0, 100% 0, 100% 97%, 0 100%);
 }
 /* Bottom panel: matching diagonal top edge, pixel gutter */
 /* Bottom panel: matching diagonal top edge, smaller angled gutter */
 .layout.two-horizontal-angled .panel2 {
     top: calc(50% + 6px);
-    clip-path: polygon(0 3%, 100% 0, 100% 100%, 0 100%);
 }
