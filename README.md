@@ -38,7 +38,7 @@ Uploaded images are stored in `public/uploads/`. Generated exports live in `publ
 
 The refreshed UI introduces a glassmorphism-inspired surface layered over a deep gradient backdrop. Responsive cards separate the asset library from the workspace, while updated typography and spacing improve readability across screen sizes. Buttons and controls now share a consistent accent color palette, and empty states provide clear guidance for first-time users.
 
-The latest pass sets the application shell to a centered 90% width and locks the workspace grid to two page cards per row so the live canvas feels balanced while still collapsing gracefully on smaller screens.
+The latest pass sets the application shell to a centered 90% width and now adapts the workspace grid to one page per row under 1024px, two pages through 1980px, and three pages on ultra-wide displays so the live canvas stays balanced without disrupting panel alignment at any size.
 
 ## Notes
 
