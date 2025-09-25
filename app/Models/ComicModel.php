@@ -42,6 +42,22 @@ class ComicModel
         file_put_contents($this->stateFile, json_encode($this->state, JSON_PRETTY_PRINT));
     }
 
+    public function refreshStateFromDisk(): array
+    {
+        $this->loadState();
+        return $this->state;
+    }
+
+    public function getStateFilePath(): string
+    {
+        return $this->stateFile;
+    }
+
+    public function getStateSnapshot(): array
+    {
+        return $this->state;
+    }
+
 
     public function getImages(): array
     {

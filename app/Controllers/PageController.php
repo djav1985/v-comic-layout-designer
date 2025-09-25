@@ -47,4 +47,52 @@ class PageController
         header('Content-Type: application/json');
         echo json_encode(['pages' => $this->model->getPages()]);
     }
+
+    public function stream(): void
+    {
+        ignore_user_abort(true);
+        set_time_limit(0);
+
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache');
+        header('Connection: keep-alive');
+        header('X-Accel-Buffering: no');
+
+        $stateFile = $this->model->getStateFilePath();
+        $lastHash = null;
+
+        echo "retry: 5000\n\n";
+        @ob_flush();
+        flush();
+
+        $this->emitState($this->model->refreshStateFromDisk());
+        $lastHash = is_file($stateFile) ? md5_file($stateFile) : null;
+
+        while (!connection_aborted()) {
+            clearstatcache(false, $stateFile);
+            $currentHash = is_file($stateFile) ? md5_file($stateFile) : null;
+            if ($currentHash !== $lastHash) {
+                $lastHash = $currentHash;
+                $this->emitState($this->model->refreshStateFromDisk());
+            }
+            if (connection_aborted()) {
+                break;
+            }
+            sleep(1);
+        }
+    }
+
+    private function emitState(array $state): void
+    {
+        $payload = [
+            'pages' => $state['pages'] ?? [],
+            'pageCount' => $state['pageCount'] ?? 0,
+            'timestamp' => time(),
+        ];
+
+        echo "event: pages\n";
+        echo 'data: ' . json_encode($payload, JSON_UNESCAPED_UNICODE) . "\n\n";
+        @ob_flush();
+        flush();
+    }
 }
