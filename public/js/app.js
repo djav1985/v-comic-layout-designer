@@ -1030,6 +1030,18 @@ window.addEventListener("DOMContentLoaded", () => {
           }
 
           const verticalOffset = Math.max((pageHeight - slotHeight) / 2, 0);
+          const pageWidth = 792;
+          const pageHeight = 612;
+          const layoutsPerPage = 2;
+          const slotWidth = pageWidth / layoutsPerPage;
+          const layoutAspectRatio = 8.5 / 11;
+          let slotHeight = slotWidth / layoutAspectRatio;
+
+          if (slotHeight > pageHeight) {
+            slotHeight = pageHeight;
+          }
+
+          const verticalOffset = Math.max((pageHeight - slotHeight) / 2, 0);
 
           pdf.addImage(img1, "PNG", 0, verticalOffset, slotWidth, slotHeight);
           if (img2) {
