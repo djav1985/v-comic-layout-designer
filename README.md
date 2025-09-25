@@ -198,8 +198,21 @@ php tests/SessionLockTest.php
 
 All tests exit with status code `0` on success and emit a descriptive message on failure.
 
-> [!NOTE]
-> Tests create temporary files inside your system temp directory and will clean them up when finished.
+te-files
+## Frontend architecture
+
+The browser code is now organized as ES modules so individual concerns can evolve without navigating a 1,700-line script:
+
+- `public/js/image-library.js` handles the asset gallery, uploads, and selection state.
+- `public/js/pages.js` owns layout rendering, persistence, state streaming, and shared constants.
+- `public/js/exporters.js` focuses on PDF/PNG export routines and keyboard shortcuts.
+- `public/js/save-indicator.js` and `public/js/state.js` keep UI feedback and shared flags centralized.
+- `public/js/app.js` wires the modules together on `DOMContentLoaded`.
+
+When contributing frontend features, choose the module that matches the responsibility above or create a new one for any major concern rather than expanding `app.js` again.
+
+## Keyboard Shortcuts
+
 
 ---
 

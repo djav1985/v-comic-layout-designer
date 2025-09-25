@@ -88,6 +88,6 @@ const initialImages = <?= json_encode($images) ?>;
 </script>
 <!-- jsPDF CDN -->
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-<script src="/js/app.js"></script>
+<script type="module" src="/js/app.js"></script>
 </body>
 </html>
