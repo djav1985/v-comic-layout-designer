@@ -614,6 +614,11 @@ window.addEventListener("DOMContentLoaded", () => {
         panel.innerHTML = "";
         const clone = img.cloneNode();
         clone.draggable = false;
+        clone.classList.remove("thumb");
+        clone.classList.add("panel-image");
+        clone.removeAttribute("width");
+        clone.removeAttribute("height");
+        clone.removeAttribute("style");
         const transformInput = document.createElement("input");
         transformInput.type = "hidden";
         transformInput.name = `pages[${pageIndex}][transforms][${slot}]`;
@@ -636,6 +641,7 @@ window.addEventListener("DOMContentLoaded", () => {
         clone.src = `/uploads/${imageName}`;
         clone.draggable = false;
         clone.dataset.name = imageName;
+        clone.classList.add("panel-image");
 
         const transformInput = document.createElement("input");
         transformInput.type = "hidden";
@@ -1089,6 +1095,7 @@ window.addEventListener("DOMContentLoaded", () => {
           }
           const pageHeight = PDF_PAGE_HEIGHT;
           const slotWidth = PDF_COLUMN_WIDTH;
+
           const canvases = [canvas1, canvas2];
           const images = [img1, img2];
 
@@ -1101,7 +1108,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
             let renderWidth = slotWidth;
             let renderHeight = renderWidth * aspectRatio;
-
             if (renderHeight > pageHeight) {
               renderHeight = pageHeight;
               renderWidth = renderHeight / aspectRatio;
