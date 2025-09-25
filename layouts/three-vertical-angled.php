@@ -8,7 +8,7 @@ $panel3Clip = uniqid('three-vertical-angled-panel3-');
         <svg class="panel-mask" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             <defs>
                 <clipPath id="<?= htmlspecialchars($panel1Clip, ENT_QUOTES, 'UTF-8') ?>">
-                    <polygon points="0% 0%, 100% 0%, 94% 100%, 0% 100%"></polygon>
+                    <polygon points="0 0, 100 0, 94 100, 0 100"></polygon>
                 </clipPath>
             </defs>
             <foreignObject x="0" y="0" width="100" height="100" clip-path="url(#<?= htmlspecialchars($panel1Clip, ENT_QUOTES, 'UTF-8') ?>)">
@@ -20,7 +20,7 @@ $panel3Clip = uniqid('three-vertical-angled-panel3-');
         <svg class="panel-mask" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             <defs>
                 <clipPath id="<?= htmlspecialchars($panel2Clip, ENT_QUOTES, 'UTF-8') ?>">
-                    <polygon points="6% 0%, 100% 0%, 94% 100%, 0% 100%"></polygon>
+                    <polygon points="6 0, 100 0, 94 100, 0 100"></polygon>
                 </clipPath>
             </defs>
             <foreignObject x="0" y="0" width="100" height="100" clip-path="url(#<?= htmlspecialchars($panel2Clip, ENT_QUOTES, 'UTF-8') ?>)">
@@ -32,7 +32,7 @@ $panel3Clip = uniqid('three-vertical-angled-panel3-');
         <svg class="panel-mask" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             <defs>
                 <clipPath id="<?= htmlspecialchars($panel3Clip, ENT_QUOTES, 'UTF-8') ?>">
-                    <polygon points="6% 0%, 100% 0%, 100% 100%, 0% 100%"></polygon>
+                    <polygon points="6 0, 100 0, 100 100, 0 100"></polygon>
                 </clipPath>
             </defs>
             <foreignObject x="0" y="0" width="100" height="100" clip-path="url(#<?= htmlspecialchars($panel3Clip, ENT_QUOTES, 'UTF-8') ?>)">

@@ -13,6 +13,7 @@
 - Streamlined the page toolbar so the layout selector, gutter picker, and removal action share a single aligned row with matching control dimensions.
 
 ### Fixed
+- Replace percentage-based polygon coordinates inside inline SVG masks with unitless values so browsers stop emitting console errors while angled layouts render correctly.
 - Execute layout PHP templates on the server before sending them to the browser so angled panels regain their SVG masks and render correctly in both the editor and exports.
 - Release the PHP session lock before streaming live updates so refreshing the workspace no longer hangs behind an open EventSource connection.
 - Strip library thumbnail styling from dropped artwork so newly placed panels render at full size without waiting for a page refresh.
