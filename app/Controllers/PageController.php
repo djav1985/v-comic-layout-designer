@@ -58,6 +58,7 @@ class PageController
         header('Connection: keep-alive');
         header('X-Accel-Buffering: no');
 
+
         $stateFile = $this->model->getStateFilePath();
         $lastHash = null;
 

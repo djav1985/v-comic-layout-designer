@@ -1092,13 +1092,13 @@ window.addEventListener("DOMContentLoaded", () => {
           }
           const pageHeight = PDF_PAGE_HEIGHT;
           const slotWidth = PDF_COLUMN_WIDTH;
-
           const canvases = [canvas1, canvas2];
           const images = [img1, img2];
 
           images.forEach((img, columnIndex) => {
             const canvas = canvases[columnIndex];
             if (!img || !canvas) return;
+
 
             const aspectRatio =
               canvas.width === 0 ? 1 : canvas.height / canvas.width;
