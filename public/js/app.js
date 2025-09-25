@@ -1099,11 +1099,13 @@ window.addEventListener("DOMContentLoaded", () => {
             const canvas = canvases[columnIndex];
             if (!img || !canvas) return;
 
+
             const aspectRatio =
               canvas.width === 0 ? 1 : canvas.height / canvas.width;
 
             let renderWidth = slotWidth;
             let renderHeight = renderWidth * aspectRatio;
+
             if (renderHeight > pageHeight) {
               renderHeight = pageHeight;
               renderWidth = renderHeight / aspectRatio;

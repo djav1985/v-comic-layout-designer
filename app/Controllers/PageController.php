@@ -58,11 +58,6 @@ class PageController
         header('Connection: keep-alive');
         header('X-Accel-Buffering: no');
 
-        // Release the session before holding the connection open
-        // This prevents blocking other requests from the same browser
-        if (session_status() === PHP_SESSION_ACTIVE) {
-            session_write_close();
-        }
 
         $stateFile = $this->model->getStateFilePath();
         $lastHash = null;
