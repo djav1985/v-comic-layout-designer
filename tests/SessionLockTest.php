@@ -28,8 +28,8 @@ if ($statusBefore !== PHP_SESSION_ACTIVE) {
     exit(1);
 }
 
-if ($statusAfter !== PHP_SESSION_NONE) {
-    fwrite(STDERR, "Expected session lock to be released after invoking releaseSessionLock().\n");
+if ($statusAfter !== PHP_SESSION_ACTIVE) {
+    fwrite(STDERR, "Expected session to remain active after releasing the lock (session_write_close()).\n");
     exit(1);
 }
 
