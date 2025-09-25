@@ -6,6 +6,7 @@ A modern MVC PHP application for crafting comic spreads. Upload artwork, drag it
 
 - **Curated asset library** – Upload multiple images at once and manage them with quick delete actions.
 - **Storyboard workspace** – Drag panels into dynamic templates, adjust gutter colors, and fine-tune each panel's zoom and position.
+- **Speech bubbles** – Drop resizable dialogue bubbles onto any page, choose between classic, thought, or burst outlines, drag the tail to point at a character, and edit the copy in-place with smart padding.
 - **Live autosave** – Progress is preserved automatically, with inline feedback to confirm every change.
 - **One-click exports** – Generate PDFs or high-quality image sets directly from the browser.
 - **Keyboard shortcuts** – Stay in flow with quick commands for saving, creating pages, and exporting.
@@ -34,11 +35,24 @@ Uploaded images are stored in `public/uploads/`. Generated exports live in `publ
 | `Ctrl` + `I` | Export as PNG images |
 | Mouse scroll | Zoom in/out on a placed image |
 
+## Speech bubble overlays
+
+Each page now includes a bubble toolbar directly above the live canvas. Pick one of three styles—Classic, Thought, or Burst—and click **Add bubble** to drop it onto the layout. Every bubble now ships with:
+
+- a drag handle to reposition the bubble anywhere on the page without disturbing your panels
+- a corner resize grip so you can scale the callout while the text automatically reflows inside padded margins
+- a movable tail handle to aim the pointer toward a character or point of interest
+- inline text editing with live autosave so your dialogue stays in sync with the rest of the project
+
+Every style uses bold comic outlines, hand-lettering friendly fonts, and tails that keep their silhouette even while you resize or rotate them, so the overlays feel native to the artwork instead of floating UI widgets.
+
+You can swap styles at any time from the select menu in the bubble header or remove a bubble entirely with the close button. All bubble settings—including tail location, text, and size—are stored with the page and restored on reload or export.
+
 ## Modernized interface
 
 The refreshed UI introduces a glassmorphism-inspired surface layered over a deep gradient backdrop. Responsive cards separate the asset library from the workspace, while updated typography and spacing improve readability across screen sizes. Buttons and controls now share a consistent accent color palette, and empty states provide clear guidance for first-time users.
 
-The latest pass sets the application shell to a centered 90% width and locks the workspace grid to two page cards per row so the live canvas feels balanced while still collapsing gracefully on smaller screens.
+The latest pass sets the application shell to a centered 90% width and now adapts the workspace grid to one page per row under 1024px, two pages through 1980px, and three pages on ultra-wide displays so the live canvas stays balanced without disrupting panel alignment at any size. The asset library column also gained a little extra width so upload controls and thumbnails have more breathing room alongside the builder.
 
 ## Notes
 

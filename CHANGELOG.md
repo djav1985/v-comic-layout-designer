@@ -1,10 +1,15 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- Introduced an interactive speech bubble system with selectable styles, movable tails, and inline text editing that saves with each page.
 ### Changed
+- Restyled the speech bubble controls with thick comic outlines, playful tails, and clearer handles so they feel like part of the page art.
 - Rebuilt the entire interface with a modern glassmorphism aesthetic, refreshed typography, and responsive layout cards to separate the asset library from the page builder.
 - Widened the app shell and workspace grid to give the builder canvas more horizontal breathing room on large screens while keeping the layout responsive.
+- Slightly widened the asset library column so the upload form and thumbnails have more breathing room on wide displays.
 - Centered the shell at 90% width and standardized the page cards to two per row for a more intentional workspace rhythm on desktop screens.
+- Updated the workspace page grid to use one column below 1024px, two columns up to 1980px, and three columns on ultra-wide displays while preserving panel alignment and aspect ratios.
 
 ### Fixed
 - Preserve diagonal panel shapes in exported images and PDFs by parsing each layout's CSS rules, caching vendor-prefixed clip-paths, and reapplying them after html2canvas renders the page.

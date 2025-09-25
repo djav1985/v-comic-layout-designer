@@ -17,6 +17,11 @@ window.addEventListener("DOMContentLoaded", () => {
   const PDF_PAGE_WIDTH = 792;
   const PDF_PAGE_HEIGHT = 612;
   const PDF_COLUMN_WIDTH = PDF_PAGE_WIDTH / 2;
+  const BUBBLE_STYLES = [
+    { value: "rounded", label: "Classic" },
+    { value: "cloud", label: "Thought" },
+    { value: "shout", label: "Burst" },
+  ];
 
   // Create save indicator
   function createSaveIndicator() {
@@ -87,7 +92,9 @@ window.addEventListener("DOMContentLoaded", () => {
           };
         }
       });
-      pages.push({ layout, gutterColor, slots, transforms });
+      const bubbleLayer = pageDiv.querySelector(".bubble-layer");
+      const bubbles = collectBubbleDataFromLayer(bubbleLayer);
+      pages.push({ layout, gutterColor, slots, transforms, bubbles });
     });
 
     // Save to server in background
@@ -225,6 +232,319 @@ window.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
       updateImages(typeof initialImages !== "undefined" ? initialImages : []);
     }, 0);
+  }
+
+  function ensureBubbleLayer(container) {
+    let layer = container.querySelector(".bubble-layer");
+    if (!layer) {
+      layer = document.createElement("div");
+      layer.className = "bubble-layer";
+      container.appendChild(layer);
+    }
+    return layer;
+  }
+
+  function clampBubbleSize(value) {
+    const MIN = 0.12;
+    const MAX = 0.9;
+    return Math.min(MAX, Math.max(MIN, value));
+  }
+
+  function clampBubblePosition(value, sizeFraction) {
+    const margin = 0.18;
+    const min = -margin;
+    const max = 1 - sizeFraction + margin;
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function setBubbleSize(bubble, width, height) {
+    const clampedWidth = clampBubbleSize(width);
+    const clampedHeight = clampBubbleSize(height);
+    bubble.dataset.width = clampedWidth.toFixed(4);
+    bubble.dataset.height = clampedHeight.toFixed(4);
+    bubble.style.width = `${(clampedWidth * 100).toFixed(4)}%`;
+    bubble.style.height = `${(clampedHeight * 100).toFixed(4)}%`;
+    const currentX = parseFloat(bubble.dataset.x || "0");
+    const currentY = parseFloat(bubble.dataset.y || "0");
+    setBubblePosition(bubble, currentX, currentY);
+  }
+
+  function setBubblePosition(bubble, x, y) {
+    const width = parseFloat(bubble.dataset.width || "0.25");
+    const height = parseFloat(bubble.dataset.height || "0.2");
+    const clampedX = clampBubblePosition(x, width);
+    const clampedY = clampBubblePosition(y, height);
+    bubble.dataset.x = clampedX.toFixed(4);
+    bubble.dataset.y = clampedY.toFixed(4);
+    bubble.style.left = `${(clampedX * 100).toFixed(4)}%`;
+    bubble.style.top = `${(clampedY * 100).toFixed(4)}%`;
+  }
+
+  function applyBubbleStyle(bubble, style) {
+    bubble.dataset.style = style;
+    Array.from(bubble.classList)
+      .filter((cls) => cls.startsWith("bubble-style-"))
+      .forEach((cls) => bubble.classList.remove(cls));
+    bubble.classList.add(`bubble-style-${style}`);
+  }
+
+  function updateTailPosition(bubble, tailX, tailY) {
+    const clampedX = Math.min(1.4, Math.max(-0.4, tailX));
+    const clampedY = Math.min(1.4, Math.max(-0.4, tailY));
+    bubble.dataset.tailX = clampedX.toFixed(4);
+    bubble.dataset.tailY = clampedY.toFixed(4);
+    bubble.style.setProperty("--tail-x", `${(clampedX * 100).toFixed(4)}%`);
+    bubble.style.setProperty("--tail-y", `${(clampedY * 100).toFixed(4)}%`);
+    const angle = Math.atan2(clampedY - 0.5, clampedX - 0.5);
+    bubble.style.setProperty("--tail-rotation", `${angle}rad`);
+  }
+
+  function startPointerTracking(event, { onMove, onEnd }) {
+    event.preventDefault();
+    const pointerId = event.pointerId;
+    const handleMove = (moveEvent) => {
+      if (moveEvent.pointerId !== pointerId) return;
+      moveEvent.preventDefault();
+      onMove(moveEvent);
+    };
+    const handleUp = (upEvent) => {
+      if (upEvent.pointerId !== pointerId) return;
+      document.removeEventListener("pointermove", handleMove);
+      document.removeEventListener("pointerup", handleUp);
+      document.removeEventListener("pointercancel", handleCancel);
+      if (typeof onEnd === "function") {
+        onEnd(upEvent);
+      }
+    };
+    const handleCancel = (cancelEvent) => {
+      if (cancelEvent.pointerId !== pointerId) return;
+      document.removeEventListener("pointermove", handleMove);
+      document.removeEventListener("pointerup", handleUp);
+      document.removeEventListener("pointercancel", handleCancel);
+      if (typeof onEnd === "function") {
+        onEnd(cancelEvent);
+      }
+    };
+    document.addEventListener("pointermove", handleMove);
+    document.addEventListener("pointerup", handleUp);
+    document.addEventListener("pointercancel", handleCancel);
+  }
+
+  function startBubbleDrag(event, bubble, layer) {
+    const layerRect = layer.getBoundingClientRect();
+    const bubbleRect = bubble.getBoundingClientRect();
+    const offsetX = (event.clientX - bubbleRect.left) / layerRect.width;
+    const offsetY = (event.clientY - bubbleRect.top) / layerRect.height;
+    startPointerTracking(event, {
+      onMove(moveEvent) {
+        const relativeX =
+          (moveEvent.clientX - layerRect.left) / layerRect.width - offsetX;
+        const relativeY =
+          (moveEvent.clientY - layerRect.top) / layerRect.height - offsetY;
+        setBubblePosition(bubble, relativeX, relativeY);
+      },
+      onEnd() {
+        debouncedSave();
+      },
+    });
+  }
+
+  function startBubbleResize(event, bubble, layer) {
+    const layerRect = layer.getBoundingClientRect();
+    const startWidth = parseFloat(bubble.dataset.width || "0.25");
+    const startHeight = parseFloat(bubble.dataset.height || "0.2");
+    const startX = event.clientX;
+    const startY = event.clientY;
+    startPointerTracking(event, {
+      onMove(moveEvent) {
+        const deltaX = (moveEvent.clientX - startX) / layerRect.width;
+        const deltaY = (moveEvent.clientY - startY) / layerRect.height;
+        const newWidth = clampBubbleSize(startWidth + deltaX);
+        const newHeight = clampBubbleSize(startHeight + deltaY);
+        setBubbleSize(bubble, newWidth, newHeight);
+      },
+      onEnd() {
+        debouncedSave();
+      },
+    });
+  }
+
+  function startTailDrag(event, bubble) {
+    startPointerTracking(event, {
+      onMove(moveEvent) {
+        const bubbleRect = bubble.getBoundingClientRect();
+        const relativeX =
+          (moveEvent.clientX - bubbleRect.left) / bubbleRect.width;
+        const relativeY =
+          (moveEvent.clientY - bubbleRect.top) / bubbleRect.height;
+        updateTailPosition(bubble, relativeX, relativeY);
+      },
+      onEnd() {
+        debouncedSave();
+      },
+    });
+  }
+
+  function makeBubbleInteractive(bubble, layer) {
+    const moveHandle = bubble.querySelector(".bubble-move-handle");
+    if (moveHandle) {
+      moveHandle.addEventListener("pointerdown", (event) =>
+        startBubbleDrag(event, bubble, layer),
+      );
+    }
+
+    const resizeHandle = bubble.querySelector(".bubble-resize-handle");
+    if (resizeHandle) {
+      resizeHandle.addEventListener("pointerdown", (event) =>
+        startBubbleResize(event, bubble, layer),
+      );
+    }
+
+    const tailHandle = bubble.querySelector(".bubble-tail-handle");
+    if (tailHandle) {
+      tailHandle.addEventListener("pointerdown", (event) =>
+        startTailDrag(event, bubble),
+      );
+    }
+  }
+
+  function createSpeechBubble(layer, pageIndex, data = {}) {
+    const bubbleData = {
+      id:
+        data.id ||
+        `bubble-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+      style: data.style || BUBBLE_STYLES[0].value,
+      x: typeof data.x === "number" ? data.x : 0.32,
+      y: typeof data.y === "number" ? data.y : 0.28,
+      width: typeof data.width === "number" ? data.width : 0.28,
+      height: typeof data.height === "number" ? data.height : 0.18,
+      text: data.text || "",
+      tail: {
+        x:
+          data.tail && typeof data.tail.x === "number"
+            ? data.tail.x
+            : 0.5,
+        y:
+          data.tail && typeof data.tail.y === "number"
+            ? data.tail.y
+            : 1.08,
+      },
+    };
+
+    const bubble = document.createElement("div");
+    bubble.className = "speech-bubble";
+    bubble.dataset.pageIndex = String(pageIndex);
+    bubble.dataset.bubbleId = bubbleData.id;
+
+    const header = document.createElement("div");
+    header.className = "bubble-header";
+    const moveHandle = document.createElement("div");
+    moveHandle.className = "bubble-move-handle";
+    moveHandle.title = "Drag to move bubble";
+    moveHandle.setAttribute("role", "button");
+    moveHandle.setAttribute("aria-label", "Drag to move speech bubble");
+    header.appendChild(moveHandle);
+
+    const styleSelect = document.createElement("select");
+    styleSelect.className = "bubble-style-picker";
+    BUBBLE_STYLES.forEach(({ value, label }) => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = label;
+      styleSelect.appendChild(option);
+    });
+    header.appendChild(styleSelect);
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "bubble-delete";
+    deleteBtn.setAttribute("aria-label", "Remove speech bubble");
+    deleteBtn.textContent = "✕";
+    header.appendChild(deleteBtn);
+
+    const textArea = document.createElement("textarea");
+    textArea.className = "bubble-text";
+    textArea.setAttribute("placeholder", "Add dialogue…");
+    textArea.value = bubbleData.text;
+
+    const tail = document.createElement("div");
+    tail.className = "bubble-tail";
+
+    const resizeHandle = document.createElement("div");
+    resizeHandle.className = "bubble-resize-handle";
+
+    const tailHandle = document.createElement("div");
+    tailHandle.className = "bubble-tail-handle";
+    tailHandle.setAttribute("role", "button");
+    tailHandle.setAttribute("aria-label", "Drag to move bubble tail");
+
+    bubble.appendChild(header);
+    bubble.appendChild(textArea);
+    bubble.appendChild(tail);
+    bubble.appendChild(resizeHandle);
+    bubble.appendChild(tailHandle);
+
+    bubble.dataset.x = String(bubbleData.x);
+    bubble.dataset.y = String(bubbleData.y);
+    bubble.dataset.width = String(bubbleData.width);
+    bubble.dataset.height = String(bubbleData.height);
+    bubble.dataset.tailX = String(bubbleData.tail.x);
+    bubble.dataset.tailY = String(bubbleData.tail.y);
+
+    setBubbleSize(bubble, bubbleData.width, bubbleData.height);
+    setBubblePosition(bubble, bubbleData.x, bubbleData.y);
+    updateTailPosition(bubble, bubbleData.tail.x, bubbleData.tail.y);
+    applyBubbleStyle(bubble, bubbleData.style);
+    styleSelect.value = bubbleData.style;
+
+    styleSelect.addEventListener("change", () => {
+      applyBubbleStyle(bubble, styleSelect.value);
+      debouncedSave();
+    });
+
+    deleteBtn.addEventListener("click", () => {
+      bubble.remove();
+      debouncedSave();
+    });
+
+    textArea.addEventListener("input", () => {
+      debouncedSave();
+    });
+
+    makeBubbleInteractive(bubble, layer);
+    return bubble;
+  }
+
+  function initializeBubbleLayer(container, pageIndex, bubbles = []) {
+    const layer = ensureBubbleLayer(container);
+    layer.dataset.pageIndex = String(pageIndex);
+    layer.innerHTML = "";
+    const list = Array.isArray(bubbles) ? bubbles : [];
+    list.forEach((bubbleData) => {
+      const bubble = createSpeechBubble(layer, pageIndex, bubbleData);
+      layer.appendChild(bubble);
+    });
+    return layer;
+  }
+
+  function collectBubbleDataFromLayer(layer) {
+    if (!layer) return [];
+    return Array.from(layer.querySelectorAll(".speech-bubble")).map((bubble) => {
+      const textarea = bubble.querySelector(".bubble-text");
+      return {
+        id: bubble.dataset.bubbleId,
+        style: bubble.dataset.style || BUBBLE_STYLES[0].value,
+        x: parseFloat(bubble.dataset.x || "0"),
+        y: parseFloat(bubble.dataset.y || "0"),
+        width: parseFloat(bubble.dataset.width || "0.3"),
+        height: parseFloat(bubble.dataset.height || "0.2"),
+        text: textarea ? textarea.value : "",
+        tail: {
+          x: parseFloat(bubble.dataset.tailX || "0.5"),
+          y: parseFloat(bubble.dataset.tailY || "1"),
+        },
+      };
+    });
   }
 
   imageList.addEventListener("dragstart", (e) => {
@@ -518,6 +838,7 @@ window.addEventListener("DOMContentLoaded", () => {
     pageIndex,
     slots = {},
     transforms = {},
+    bubbles,
   ) {
     console.log(`Rendering layout: ${layoutName} for page ${pageIndex}`);
     console.log("Available templates:", Object.keys(layoutTemplates));
@@ -530,6 +851,9 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     // Inject HTML, handling possible escaping
+    const preservedBubbles = Array.isArray(bubbles)
+      ? bubbles
+      : collectBubbleDataFromLayer(container.querySelector(".bubble-layer"));
     container.innerHTML = layoutTemplates[layoutName];
     ensureLayoutStyle(layoutName);
 
@@ -653,6 +977,8 @@ window.addEventListener("DOMContentLoaded", () => {
         container.appendChild(hidden);
       }
     });
+
+    initializeBubbleLayer(container, pageIndex, preservedBubbles || []);
   }
 
   function createPage(data, pagesContainer = document.getElementById("pages")) {
@@ -701,6 +1027,28 @@ window.addEventListener("DOMContentLoaded", () => {
     controlsDiv.appendChild(deleteBtn);
     page.appendChild(controlsDiv);
 
+    const bubbleToolbar = document.createElement("div");
+    bubbleToolbar.className = "bubble-toolbar";
+    const bubbleLabel = document.createElement("label");
+    bubbleLabel.className = "bubble-toolbar-style";
+    bubbleLabel.innerHTML = "<span>Speech bubble</span>";
+    const bubbleStyleSelect = document.createElement("select");
+    bubbleStyleSelect.className = "bubble-toolbar-select";
+    BUBBLE_STYLES.forEach(({ value, label }) => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = label;
+      bubbleStyleSelect.appendChild(option);
+    });
+    bubbleLabel.appendChild(bubbleStyleSelect);
+    const addBubbleBtn = document.createElement("button");
+    addBubbleBtn.type = "button";
+    addBubbleBtn.className = "ghost add-bubble-btn";
+    addBubbleBtn.textContent = "Add bubble";
+    bubbleToolbar.appendChild(bubbleLabel);
+    bubbleToolbar.appendChild(addBubbleBtn);
+    page.appendChild(bubbleToolbar);
+
     const container = document.createElement("div");
     container.className = "layout-container";
     page.appendChild(container);
@@ -712,12 +1060,29 @@ window.addEventListener("DOMContentLoaded", () => {
       select.value = data.layout;
     }
 
+    addBubbleBtn.addEventListener("click", () => {
+      const layer = ensureBubbleLayer(container);
+      const bubble = createSpeechBubble(layer, index, {
+        style: bubbleStyleSelect.value,
+      });
+      layer.appendChild(bubble);
+      const textarea = bubble.querySelector(".bubble-text");
+      if (textarea) {
+        textarea.focus();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+      }
+      debouncedSave();
+    });
+
     select.addEventListener("change", () => {
       console.log(
         `Layout changed to: ${select.value} for page index: ${index}`,
       );
       returnImagesFromPage(container);
-      renderLayout(container, select.value, index);
+      const preservedBubbles = collectBubbleDataFromLayer(
+        container.querySelector(".bubble-layer"),
+      );
+      renderLayout(container, select.value, index, {}, {}, preservedBubbles);
 
       // Force immediate visual update and class application
       setTimeout(() => {
@@ -754,6 +1119,7 @@ window.addEventListener("DOMContentLoaded", () => {
       index,
       data ? data.slots : {},
       data ? data.transforms : {},
+      data ? data.bubbles : [],
     );
     if (!data) {
       debouncedSave(); // Use debounced save for new pages
@@ -1018,30 +1384,18 @@ window.addEventListener("DOMContentLoaded", () => {
 
             img2 = canvas2.toDataURL("image/png", 1.0);
           }
-          const pageWidth = 792;
-          const pageHeight = 612;
-          const layoutsPerPage = 2;
-          const slotWidth = pageWidth / layoutsPerPage;
-          const layoutAspectRatio = 8.5 / 11;
-          let slotHeight = slotWidth / layoutAspectRatio;
+            const pageWidth = 792;
+            const pageHeight = 612;
+            const layoutsPerPage = 2;
+            const slotWidth = pageWidth / layoutsPerPage;
+            const layoutAspectRatio = 8.5 / 11;
+            let slotHeight = slotWidth / layoutAspectRatio;
 
-          if (slotHeight > pageHeight) {
-            slotHeight = pageHeight;
-          }
+            if (slotHeight > pageHeight) {
+              slotHeight = pageHeight;
+            }
 
-          const verticalOffset = Math.max((pageHeight - slotHeight) / 2, 0);
-          const pageWidth = 792;
-          const pageHeight = 612;
-          const layoutsPerPage = 2;
-          const slotWidth = pageWidth / layoutsPerPage;
-          const layoutAspectRatio = 8.5 / 11;
-          let slotHeight = slotWidth / layoutAspectRatio;
-
-          if (slotHeight > pageHeight) {
-            slotHeight = pageHeight;
-          }
-
-          const verticalOffset = Math.max((pageHeight - slotHeight) / 2, 0);
+            const verticalOffset = Math.max((pageHeight - slotHeight) / 2, 0);
 
           pdf.addImage(img1, "PNG", 0, verticalOffset, slotWidth, slotHeight);
           if (img2) {
