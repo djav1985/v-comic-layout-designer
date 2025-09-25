@@ -3,3 +3,4 @@
 !/uploads/.gitkeep
 /storage/generated/*
 !/storage/generated/.gitkeep
+*.png
