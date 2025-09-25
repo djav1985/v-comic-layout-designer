@@ -623,6 +623,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
       panel.addEventListener("dragover", (e) => {
         if (isPageLocked(panel)) {
+          e.preventDefault();
           panel.classList.remove("drag-over");
           return;
         }
@@ -636,6 +637,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
       panel.addEventListener("drop", (e) => {
         if (isPageLocked(panel)) {
+          e.preventDefault();
           panel.classList.remove("drag-over");
           return;
         }
