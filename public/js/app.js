@@ -332,6 +332,37 @@ window.addEventListener("DOMContentLoaded", () => {
     return null;
   }
 
+  function applyClipPath(ctx, element, canvasWidth, canvasHeight) {
+    const style = window.getComputedStyle(element);
+    const clipPath = style.clipPath || style.webkitClipPath;
+
+    if (!clipPath || clipPath === "none") return;
+
+    const polygonMatch = clipPath.match(/polygon\(([^)]+)\)/i);
+    if (!polygonMatch) return;
+
+    const points = polygonMatch[1].split(",").map(pt => pt.trim());
+    if (points.length < 3) return;
+
+    ctx.beginPath();
+
+    points.forEach((pt, i) => {
+      const [xStr, yStr] = pt.split(/\s+/);
+      let x = xStr.endsWith("%")
+        ? (parseFloat(xStr) / 100) * canvasWidth
+        : parseFloat(xStr);
+      let y = yStr.endsWith("%")
+        ? (parseFloat(yStr) / 100) * canvasHeight
+        : parseFloat(yStr);
+
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+
+    ctx.closePath();
+    ctx.clip();
+  }
+
   function addCanvasToPdf(pdf, canvas, imgData, columnIndex) {
     if (!pdf || !canvas || !imgData) return;
     const originalWidth = canvas.width;
@@ -421,42 +452,11 @@ window.addEventListener("DOMContentLoaded", () => {
       gutterColor = "#ffffff";
     }
 
-    const layoutName = layout.dataset ? layout.dataset.layoutName : null;
     layout.querySelectorAll(".panel").forEach((panel) => {
-      const panelStyle = window.getComputedStyle(panel);
-      const clipPath =
-        (panel.dataset.clipPath && panel.dataset.clipPath !== "none"
-          ? panel.dataset.clipPath
-          : null) ||
-        (panelStyle.clipPath && panelStyle.clipPath !== "none"
-          ? panelStyle.clipPath
-          : null) ||
-        (panelStyle.webkitClipPath && panelStyle.webkitClipPath !== "none"
-          ? panelStyle.webkitClipPath
-          : null) ||
-        (layoutName ? getClipPathFromRules(layoutName, panel) : null);
-      if (!clipPath || clipPath === "none") {
-        return;
-      }
-      const polygon = parseClipPathPolygon(clipPath);
-      if (!polygon) return;
-
       const panelRect = panel.getBoundingClientRect();
       const panelWidth = panelRect.width;
       const panelHeight = panelRect.height;
       if (!panelWidth || !panelHeight) return;
-
-      const numericPoints = polygon.map(([xCoord, yCoord]) => [
-        convertClipValue(xCoord, panelWidth),
-        convertClipValue(yCoord, panelHeight),
-      ]);
-
-      if (
-        !numericPoints.length ||
-        isAxisAlignedRectangle(numericPoints, panelWidth, panelHeight)
-      ) {
-        return;
-      }
 
       const canvasWidth = Math.round(panelWidth * scaleX);
       const canvasHeight = Math.round(panelHeight * scaleY);
@@ -480,32 +480,13 @@ window.addEventListener("DOMContentLoaded", () => {
 
         tempCtx.putImageData(imageData, 0, 0);
 
-        const scalePointX = canvasWidth / panelWidth;
-        const scalePointY = canvasHeight / panelHeight;
-        const scaledPoints = numericPoints.map(([x, y]) => [
-          x * scalePointX,
-          y * scalePointY,
-        ]);
-
-        tempCtx.globalCompositeOperation = "destination-in";
-        tempCtx.beginPath();
-        scaledPoints.forEach(([px, py], index) => {
-          if (index === 0) {
-            tempCtx.moveTo(px, py);
-          } else {
-            tempCtx.lineTo(px, py);
-          }
-        });
-        tempCtx.closePath();
-        tempCtx.fillStyle = "#ffffff";
-        tempCtx.fill();
-        tempCtx.globalCompositeOperation = "source-over";
-
         ctx.save();
         ctx.fillStyle = gutterColor;
         ctx.fillRect(offsetX, offsetY, canvasWidth, canvasHeight);
+        ctx.translate(offsetX, offsetY);
+        applyClipPath(ctx, panel, canvasWidth, canvasHeight);
+        ctx.drawImage(tempCanvas, 0, 0);
         ctx.restore();
-        ctx.drawImage(tempCanvas, offsetX, offsetY);
       } catch (error) {
         console.warn("Failed to apply clip-path for panel export:", error);
       }
