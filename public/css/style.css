@@ -34,7 +34,7 @@ body {
 }
 
 .app-shell {
-    width: min(1520px, 100%);
+    width: 90%;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -357,8 +357,14 @@ button.ghost:focus {
 #pages {
     display: grid;
     gap: 24px;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-content: flex-start;
+}
+
+@media (max-width: 960px) {
+    #pages {
+        grid-template-columns: 1fr;
+    }
 }
 
 .page {
@@ -423,9 +429,9 @@ button.ghost:focus {
 
 .layout-container {
     position: relative;
-    width: 100%;
+    width: min(100%, 528px);
     max-width: 528px;
-    aspect-ratio: 8.5 / 11;
+    aspect-ratio: 11 / 17;
     margin: 0 auto;
     border-radius: 20px;
     border: 1px solid rgba(148, 163, 184, 0.2);
