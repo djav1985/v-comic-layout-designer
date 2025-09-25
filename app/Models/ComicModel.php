@@ -115,9 +115,24 @@ class ComicModel
     {
         $templates = [];
         foreach ($this->getLayouts() as $name => $file) {
-            $templates[$name] = file_get_contents($file);
+            $templates[$name] = $this->renderLayoutTemplate($file);
         }
         return $templates;
+    }
+
+    private function renderLayoutTemplate(string $file): string
+    {
+        if (!is_file($file)) {
+            return '';
+        }
+
+        $renderer = static function (string $__file__) {
+            ob_start();
+            include $__file__;
+            return (string)ob_get_clean();
+        };
+
+        return $renderer($file);
     }
 
     public function getLayoutStyles(): array
