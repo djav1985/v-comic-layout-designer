@@ -301,7 +301,16 @@ window.addEventListener("DOMContentLoaded", () => {
 
     layout.querySelectorAll(".panel").forEach((panel) => {
       const panelStyle = window.getComputedStyle(panel);
-      const clipPath = panelStyle.clipPath;
+      const clipPath =
+        (panel.dataset.clipPath && panel.dataset.clipPath !== "none"
+          ? panel.dataset.clipPath
+          : null) ||
+        (panelStyle.clipPath && panelStyle.clipPath !== "none"
+          ? panelStyle.clipPath
+          : null) ||
+        (panelStyle.webkitClipPath && panelStyle.webkitClipPath !== "none"
+          ? panelStyle.webkitClipPath
+          : null);
       const polygon = parseClipPathPolygon(clipPath);
       if (!polygon) return;
 
@@ -419,6 +428,18 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     container.querySelectorAll(".panel").forEach((panel) => {
+      const computed = window.getComputedStyle(panel);
+      const resolvedClip =
+        (computed.clipPath && computed.clipPath !== "none"
+          ? computed.clipPath
+          : null) ||
+        (computed.webkitClipPath && computed.webkitClipPath !== "none"
+          ? computed.webkitClipPath
+          : null);
+      if (resolvedClip) {
+        panel.dataset.clipPath = resolvedClip;
+      }
+
       const slot = panel.getAttribute("data-slot");
 
       panel.addEventListener("dragover", (e) => {

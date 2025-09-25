@@ -42,4 +42,4 @@ The latest pass sets the application shell to a centered 90% width and locks the
 
 ## Notes
 
-* Exported PDFs and PNGs keep the diagonal panel edges found in the angled layouts. The exporter re-applies each layout's `clip-path` geometry after html2canvas renders the page so the gutters stay crisp in the output files.
+* Exported PDFs and PNGs now reliably keep the diagonal panel edges found in the angled layouts. The exporter caches each panel's computed `clip-path` (including vendor-prefixed values) and reapplies the geometry after html2canvas renders the page so the gutters stay crisp in the output files.

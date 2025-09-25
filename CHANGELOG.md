@@ -7,4 +7,4 @@
 - Centered the shell at 90% width and standardized the page cards to two per row for a more intentional workspace rhythm on desktop screens.
 
 ### Fixed
-- Preserve diagonal panel shapes in exported images and PDFs by post-processing html2canvas output with the layout's clip-path data.
+- Preserve diagonal panel shapes in exported images and PDFs even when browsers expose the geometry through vendor-prefixed clip-path values by caching the resolved shape before rendering.
