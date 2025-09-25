@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 class ComicModel
@@ -11,24 +10,15 @@ class ComicModel
     private array $state = [
         'images' => [],
         'pages' => [],
-        'pageCount' => 0,
+        'pageCount' => 0
     ];
 
-    /**
-     * @param array{
-     *     uploadDir?: string,
-     *     layoutDir?: string,
-     *     stateFile?: string,
-     *     overlayDir?: string
-     * }|null $paths
-     */
-    public function __construct(?array $paths = null)
+    public function __construct()
     {
-        $paths = $paths ?? [];
-        $this->uploadDir = $paths['uploadDir'] ?? (__DIR__ . '/../../public/uploads');
-        $this->layoutDir = $paths['layoutDir'] ?? (__DIR__ . '/../../layouts');
-        $this->stateFile = $paths['stateFile'] ?? (__DIR__ . '/../../public/storage/state.json');
-        $this->overlayDir = $paths['overlayDir'] ?? (__DIR__ . '/../../public/overlays');
+        $this->uploadDir = __DIR__ . '/../../public/uploads';
+        $this->layoutDir = __DIR__ . '/../../layouts';
+        $this->stateFile = __DIR__ . '/../../public/storage/state.json';
+        $this->overlayDir = __DIR__ . '/../../public/overlays';
         if (!is_dir($this->uploadDir)) {
             mkdir($this->uploadDir, 0777, true);
         }
@@ -57,6 +47,7 @@ class ComicModel
         file_put_contents($this->stateFile, json_encode($this->state, JSON_PRETTY_PRINT));
     }
 
+
     public function getImages(): array
     {
         // Sync state with actual files
@@ -71,53 +62,22 @@ class ComicModel
 
     public function saveUpload(array $file): void
     {
-        $name = isset($file['name']) ? basename((string) $file['name']) : '';
-        $tmpName = $file['tmp_name'] ?? '';
-        $type = $file['type'] ?? '';
-        $size = $file['size'] ?? 0;
-        $error = $file['error'] ?? UPLOAD_ERR_NO_FILE;
-        if ($error !== UPLOAD_ERR_OK) {
-            throw new \Exception('Upload failed.');
-        }
-        if ($name === '') {
-            throw new \Exception('Invalid file name.');
-        }
-        if (!is_string($tmpName) || $tmpName === '' || !is_file($tmpName)) {
-            throw new \Exception('Upload failed.');
-        }
-
+        $name = basename($file['name']);
         $target = $this->uploadDir . '/' . $name;
         $allowed = ['image/jpeg', 'image/png', 'image/gif'];
         $maxSize = 5 * 1024 * 1024; // 5MB
-        if (!in_array($type, $allowed, true)) {
+        if (!in_array($file['type'], $allowed)) {
             throw new \Exception('Invalid file type.');
         }
-        if (!is_numeric($size) || $size > $maxSize) {
+        if ($file['size'] > $maxSize) {
             throw new \Exception('File too large.');
         }
-        $isCli = in_array(PHP_SAPI, ['cli', 'phpdbg'], true);
-        $isUploadedFile = !$isCli && is_uploaded_file($tmpName);
-        if (!$isCli && !$isUploadedFile) {
+        if (!is_uploaded_file($file['tmp_name'])) {
             throw new \Exception('Upload failed.');
         }
-
-        $moved = false;
-        if ($isUploadedFile) {
-            $moved = move_uploaded_file($tmpName, $target);
-        } else {
-            $moved = @rename($tmpName, $target);
-            if (!$moved) {
-                $moved = copy($tmpName, $target);
-                if ($moved) {
-                    unlink($tmpName);
-                }
-            }
-        }
-
-        if (!$moved) {
+        if (!move_uploaded_file($file['tmp_name'], $target)) {
             throw new \Exception('Failed to save file.');
         }
-
         $this->state['images'][] = $name;
         $this->saveState();
     }
