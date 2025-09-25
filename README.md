@@ -30,6 +30,18 @@ Uploaded images are stored in `public/uploads/`. Generated exports live in `publ
 
 State archives download as ZIP files that include `state.db` alongside every asset in `public/uploads/`. Restoring a snapshot replaces the database and asset library with the archive contents.
 
+## Frontend architecture
+
+The browser code is now organized as ES modules so individual concerns can evolve without navigating a 1,700-line script:
+
+- `public/js/image-library.js` handles the asset gallery, uploads, and selection state.
+- `public/js/pages.js` owns layout rendering, persistence, state streaming, and shared constants.
+- `public/js/exporters.js` focuses on PDF/PNG export routines and keyboard shortcuts.
+- `public/js/save-indicator.js` and `public/js/state.js` keep UI feedback and shared flags centralized.
+- `public/js/app.js` wires the modules together on `DOMContentLoaded`.
+
+When contributing frontend features, choose the module that matches the responsibility above or create a new one for any major concern rather than expanding `app.js` again.
+
 ## Keyboard Shortcuts
 
 Open the workspace help menu next to **Add Page** to reveal these commands when you need a refresher.

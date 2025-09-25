@@ -9,6 +9,7 @@
 - Add a lock toggle next to each page so spreads can be frozen (yellow “L”) or unlocked (green “U”) to prevent accidental image edits.
 
 ### Changed
+- Split the monolithic `app.js` client script into focused ES modules for the image library, page management, exports, and shared state to simplify maintenance.
 - Rebuilt the entire interface with a modern glassmorphism aesthetic, refreshed typography, and responsive layout cards to separate the asset library from the page builder.
 - Widened the app shell and workspace grid to give the builder canvas more horizontal breathing room on large screens while keeping the layout responsive.
 - Centered the shell at 90% width and standardized the page cards to two per row for a more intentional workspace rhythm on desktop screens.
