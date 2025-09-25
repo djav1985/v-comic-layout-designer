@@ -774,9 +774,6 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   async function initializePages() {
-    const embeddedPages =
-      Array.isArray(savedPages) && savedPages.length ? savedPages : [];
-
     try {
       const response = await fetch("/get-pages", {
         headers: { Accept: "application/json" },
@@ -786,22 +783,14 @@ window.addEventListener("DOMContentLoaded", () => {
       }
 
       const data = await response.json();
-      if (data && Array.isArray(data.pages) && data.pages.length) {
-        console.log("Loaded pages from server state:", data.pages);
-        rebuildPagesUI(data.pages);
-        return;
+      if (!data || !Array.isArray(data.pages)) {
+        throw new Error("Response payload was missing a pages array");
       }
 
-      console.log("Server returned no pages; using embedded state if available.");
+      console.log("Loaded pages from server state:", data.pages);
+      rebuildPagesUI(data.pages);
     } catch (error) {
-      console.warn("Falling back to embedded page state:", error);
-    }
-
-    if (embeddedPages.length) {
-      console.log("Loading embedded saved pages:", embeddedPages);
-      rebuildPagesUI(embeddedPages);
-    } else {
-      console.log("No saved pages found; creating default page.");
+      console.error("Failed to load saved pages from state.json:", error);
       rebuildPagesUI([]);
     }
   }
@@ -1039,23 +1028,32 @@ window.addEventListener("DOMContentLoaded", () => {
 
             img2 = canvas2.toDataURL("image/png", 1.0);
           }
-          const pageWidth = PDF_PAGE_WIDTH;
           const pageHeight = PDF_PAGE_HEIGHT;
-          const layoutsPerPage = 2;
           const slotWidth = PDF_COLUMN_WIDTH;
-          const layoutAspectRatio = 8.5 / 11;
-          let slotHeight = slotWidth / layoutAspectRatio;
+          const canvases = [canvas1, canvas2];
+          const images = [img1, img2];
 
-          if (slotHeight > pageHeight) {
-            slotHeight = pageHeight;
-          }
+          images.forEach((img, columnIndex) => {
+            const canvas = canvases[columnIndex];
+            if (!img || !canvas) return;
 
-          const verticalOffset = Math.max((pageHeight - slotHeight) / 2, 0);
+            const aspectRatio =
+              canvas.width === 0 ? 1 : canvas.height / canvas.width;
 
-          pdf.addImage(img1, "PNG", 0, verticalOffset, slotWidth, slotHeight);
-          if (img2) {
-            pdf.addImage(img2, "PNG", slotWidth, verticalOffset, slotWidth, slotHeight);
-          }
+            let renderWidth = slotWidth;
+            let renderHeight = renderWidth * aspectRatio;
+
+            if (renderHeight > pageHeight) {
+              renderHeight = pageHeight;
+              renderWidth = renderHeight / aspectRatio;
+            }
+
+            const offsetX =
+              columnIndex * slotWidth + (slotWidth - renderWidth) / 2;
+            const offsetY = (pageHeight - renderHeight) / 2;
+
+            pdf.addImage(img, "PNG", offsetX, offsetY, renderWidth, renderHeight);
+          });
 
           if (i + 2 < layouts.length) {
             pdf.addPage([PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT], "landscape");
