@@ -4,19 +4,16 @@
     left: 12px;
     width: calc(100% - 24px);
     height: calc(33.333% - 18px);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
 }
 .layout.three-horizontal .panel2 {
     top: calc(33.333% + 6px);
     left: 12px;
     width: calc(100% - 24px);
     height: calc(33.333% - 18px);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
 }
 .layout.three-horizontal .panel3 {
     top: calc(66.666% + 6px);
     left: 12px;
     width: calc(100% - 24px);
     height: calc(33.333% - 18px);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
 }

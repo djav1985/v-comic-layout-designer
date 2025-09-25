@@ -6,20 +6,11 @@ window.addEventListener("DOMContentLoaded", () => {
   let saveIndicator = null;
   let lastSyncedSignature = null;
   let pageStreamSource = null;
-  const clipPathRuleCache = new Map();
-  const CSS_RULE_TYPES = window.CSSRule
-    ? {
-        STYLE: window.CSSRule.STYLE_RULE,
-        MEDIA: window.CSSRule.MEDIA_RULE,
-      }
-    : {
-        STYLE: 1,
-        MEDIA: 4,
-      };
   const PDF_PAGE_WIDTH = 792;
   const PDF_PAGE_HEIGHT = 612;
   const PDF_COLUMN_WIDTH = PDF_PAGE_WIDTH / 2;
   const DEFAULT_GUTTER_COLOR = "#cccccc";
+  const EXPORT_SCALE = 2;
 
   function getPanelContent(panel) {
     if (!panel) return null;
@@ -258,132 +249,6 @@ window.addEventListener("DOMContentLoaded", () => {
     document.head.appendChild(style);
   }
 
-  function collectClipPathRules(ruleList, target) {
-    if (!ruleList || !target) return;
-    Array.from(ruleList).forEach((rule) => {
-      if (!rule) return;
-      if (
-        rule.type === CSS_RULE_TYPES.STYLE &&
-        rule.style &&
-        (rule.style.getPropertyValue("clip-path") ||
-          rule.style.getPropertyValue("-webkit-clip-path"))
-      ) {
-        const clipPath =
-          rule.style.getPropertyValue("clip-path") ||
-          rule.style.getPropertyValue("-webkit-clip-path");
-        if (clipPath && clipPath !== "none") {
-          const selectors = (rule.selectorText || "")
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean);
-          selectors.forEach((selector) => {
-            target.push({ selector, clipPath: clipPath.trim() });
-          });
-        }
-      } else if (rule.type === CSS_RULE_TYPES.MEDIA && rule.cssRules) {
-        collectClipPathRules(rule.cssRules, target);
-      }
-    });
-  }
-
-  function getClipPathRules(layoutName) {
-    if (!layoutName) return [];
-    if (clipPathRuleCache.has(layoutName)) {
-      return clipPathRuleCache.get(layoutName);
-    }
-    const results = [];
-    const styleEl = document.getElementById("style-" + layoutName);
-    if (styleEl && styleEl.sheet) {
-      try {
-        collectClipPathRules(styleEl.sheet.cssRules, results);
-      } catch (err) {
-        console.warn(
-          "Unable to read clip-path rules for layout:",
-          layoutName,
-          err,
-        );
-      }
-    }
-    clipPathRuleCache.set(layoutName, results);
-    return results;
-  }
-
-  function applyClipPathDataAttributes(layoutElement, layoutName) {
-    if (!layoutElement) return;
-    const rules = getClipPathRules(layoutName);
-    if (!rules.length) return;
-    rules.forEach(({ selector, clipPath }) => {
-      if (!selector || !clipPath) return;
-      try {
-        const scope = layoutElement.ownerDocument || document;
-        scope.querySelectorAll(selector).forEach((el) => {
-          if (layoutElement.contains(el) || el === layoutElement) {
-            el.dataset.clipPath = clipPath;
-          }
-        });
-      } catch (err) {
-        console.warn(
-          "Failed to apply cached clip-path selector:",
-          selector,
-          "for layout",
-          layoutName,
-          err,
-        );
-      }
-    });
-  }
-
-  function getClipPathFromRules(layoutName, element) {
-    if (!layoutName || !element) return null;
-    const rules = getClipPathRules(layoutName);
-    for (const { selector, clipPath } of rules) {
-      if (!selector || !clipPath) continue;
-      try {
-        if (element.matches(selector)) {
-          return clipPath;
-        }
-      } catch (err) {
-        // Ignore selectors that querySelector cannot evaluate
-      }
-    }
-    return null;
-  }
-
-  function applyClipPath(ctx, element, canvasWidth, canvasHeight) {
-    const style = window.getComputedStyle(element);
-    const clipSource =
-      element.dataset.clipPolygon ||
-      element.dataset.clipPath ||
-      style.clipPath ||
-      style.webkitClipPath;
-
-    if (!clipSource || clipSource === "none") return;
-
-    const polygonMatch = clipSource.match(/polygon\(([^)]+)\)/i);
-    if (!polygonMatch) return;
-
-    const points = polygonMatch[1].split(",").map(pt => pt.trim());
-    if (points.length < 3) return;
-
-    ctx.beginPath();
-
-    points.forEach((pt, i) => {
-      const [xStr, yStr] = pt.split(/\s+/);
-      let x = xStr.endsWith("%")
-        ? (parseFloat(xStr) / 100) * canvasWidth
-        : parseFloat(xStr);
-      let y = yStr.endsWith("%")
-        ? (parseFloat(yStr) / 100) * canvasHeight
-        : parseFloat(yStr);
-
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-
-    ctx.closePath();
-    ctx.clip();
-  }
-
   function addCanvasToPdf(pdf, canvas, imgData, columnIndex) {
     if (!pdf || !canvas || !imgData) return;
     const originalWidth = canvas.width;
@@ -400,118 +265,6 @@ window.addEventListener("DOMContentLoaded", () => {
       (PDF_COLUMN_WIDTH - renderWidth) / 2;
     const offsetY = (PDF_PAGE_HEIGHT - renderHeight) / 2;
     pdf.addImage(imgData, "PNG", offsetX, offsetY, renderWidth, renderHeight);
-  }
-
-  function parseClipPathCoordinate(raw) {
-    if (!raw) return null;
-    const trimmed = raw.trim();
-    if (trimmed.endsWith("%")) {
-      return { value: parseFloat(trimmed.slice(0, -1)), unit: "%" };
-    }
-    if (trimmed.endsWith("px")) {
-      return { value: parseFloat(trimmed.slice(0, -2)), unit: "px" };
-    }
-    const parsed = parseFloat(trimmed);
-    if (Number.isFinite(parsed)) {
-      return { value: parsed, unit: "px" };
-    }
-    return null;
-  }
-
-  function parseClipPathPolygon(clipPath) {
-    if (!clipPath || clipPath === "none") return null;
-    const match = clipPath.match(/^polygon\((.+)\)$/i);
-    if (!match) return null;
-    const parts = match[1].split(",");
-    const points = [];
-    for (const part of parts) {
-      const [xRaw, yRaw] = part.trim().split(/\s+/);
-      if (!xRaw || !yRaw) return null;
-      const x = parseClipPathCoordinate(xRaw);
-      const y = parseClipPathCoordinate(yRaw);
-      if (!x || !y) return null;
-      points.push([x, y]);
-    }
-    return points.length ? points : null;
-  }
-
-  function convertClipValue(coord, size) {
-    if (!coord) return 0;
-    if (coord.unit === "%") {
-      return (coord.value / 100) * size;
-    }
-    return coord.value;
-  }
-
-  function isAxisAlignedRectangle(points, width, height) {
-    if (!points.length) return true;
-    const approx = (a, b) => Math.abs(a - b) < 0.5;
-    return points.every(
-      ([x, y]) =>
-        (approx(x, 0) || approx(x, width)) &&
-        (approx(y, 0) || approx(y, height)),
-    );
-  }
-
-  function applyClipPathsToCanvas(layout, canvas) {
-    if (!layout || !canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const layoutRect = layout.getBoundingClientRect();
-    if (!layoutRect.width || !layoutRect.height) return;
-
-    const scaleX = canvas.width / layoutRect.width;
-    const scaleY = canvas.height / layoutRect.height;
-    const computedLayoutStyle = window.getComputedStyle(layout);
-    let gutterColor = computedLayoutStyle.backgroundColor;
-    if (
-      !gutterColor ||
-      gutterColor === "transparent" ||
-      gutterColor === "rgba(0, 0, 0, 0)"
-    ) {
-      gutterColor = "#ffffff";
-    }
-
-    layout.querySelectorAll(".panel").forEach((panel) => {
-      const panelRect = panel.getBoundingClientRect();
-      const panelWidth = panelRect.width;
-      const panelHeight = panelRect.height;
-      if (!panelWidth || !panelHeight) return;
-
-      const canvasWidth = Math.round(panelWidth * scaleX);
-      const canvasHeight = Math.round(panelHeight * scaleY);
-      if (canvasWidth <= 0 || canvasHeight <= 0) return;
-
-      const offsetX = Math.round((panelRect.left - layoutRect.left) * scaleX);
-      const offsetY = Math.round((panelRect.top - layoutRect.top) * scaleY);
-
-      try {
-        const imageData = ctx.getImageData(
-          offsetX,
-          offsetY,
-          canvasWidth,
-          canvasHeight,
-        );
-        const tempCanvas = document.createElement("canvas");
-        tempCanvas.width = canvasWidth;
-        tempCanvas.height = canvasHeight;
-        const tempCtx = tempCanvas.getContext("2d");
-        if (!tempCtx) return;
-
-        tempCtx.putImageData(imageData, 0, 0);
-
-        ctx.save();
-        ctx.fillStyle = gutterColor;
-        ctx.fillRect(offsetX, offsetY, canvasWidth, canvasHeight);
-        ctx.translate(offsetX, offsetY);
-        applyClipPath(ctx, panel, canvasWidth, canvasHeight);
-        ctx.drawImage(tempCanvas, 0, 0);
-        ctx.restore();
-      } catch (error) {
-        console.warn("Failed to apply clip-path for panel export:", error);
-      }
-    });
   }
 
   function renderLayout(
@@ -541,7 +294,6 @@ window.addEventListener("DOMContentLoaded", () => {
       // Add the specific layout class name for CSS targeting
       layoutDiv.classList.add(layoutName);
       layoutDiv.dataset.layoutName = layoutName;
-      applyClipPathDataAttributes(layoutDiv, layoutName);
 
       // Find gutter color from parent page
       let gutterColor = DEFAULT_GUTTER_COLOR;
@@ -559,21 +311,6 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     container.querySelectorAll(".panel").forEach((panel) => {
-      const computed = window.getComputedStyle(panel);
-      const resolvedClip =
-        (computed.clipPath && computed.clipPath !== "none"
-          ? computed.clipPath
-          : null) ||
-        (computed.webkitClipPath && computed.webkitClipPath !== "none"
-          ? computed.webkitClipPath
-          : null);
-      if (resolvedClip) {
-        panel.dataset.clipPath = resolvedClip;
-        if (!panel.dataset.clipPolygon && resolvedClip.startsWith("polygon")) {
-          panel.dataset.clipPolygon = resolvedClip;
-        }
-      }
-
       const slot = panel.getAttribute("data-slot");
 
       panel.addEventListener("dragover", (e) => {
@@ -748,7 +485,6 @@ window.addEventListener("DOMContentLoaded", () => {
           layoutDiv.classList.remove(...layouts); // Remove all layout classes
           layoutDiv.classList.add(select.value); // Add the selected layout class
           layoutDiv.dataset.layoutName = select.value;
-          applyClipPathDataAttributes(layoutDiv, select.value);
           console.log(
             `After layout change - background: ${layoutDiv.style.background}, classes: ${layoutDiv.className}`,
           );
@@ -1050,6 +786,153 @@ window.addEventListener("DOMContentLoaded", () => {
   // Removed comicForm submit handler since the form no longer exists
 
   // Export PDF (Client-side)
+  function parseRadiusValue(value) {
+    const parsed = parseFloat(value);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+
+  function buildRoundedRectPath(ctx, x, y, width, height, radii) {
+    if (!radii || radii.every((r) => r === 0)) {
+      ctx.beginPath();
+      ctx.rect(x, y, width, height);
+      return;
+    }
+
+    const [tl, tr, br, bl] = radii;
+    ctx.beginPath();
+    ctx.moveTo(x + tl, y);
+    ctx.lineTo(x + width - tr, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + tr);
+    ctx.lineTo(x + width, y + height - br);
+    ctx.quadraticCurveTo(
+      x + width,
+      y + height,
+      x + width - br,
+      y + height,
+    );
+    ctx.lineTo(x + bl, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - bl);
+    ctx.lineTo(x, y + tl);
+    ctx.quadraticCurveTo(x, y, x + tl, y);
+    ctx.closePath();
+  }
+
+  function waitForImageLoad(img) {
+    if (!img) return Promise.resolve();
+    if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+      return Promise.resolve();
+    }
+    return new Promise((resolve) => {
+      const cleanup = () => {
+        img.removeEventListener("load", onLoad);
+        img.removeEventListener("error", onError);
+      };
+      const onLoad = () => {
+        cleanup();
+        resolve();
+      };
+      const onError = () => {
+        cleanup();
+        resolve();
+      };
+      img.addEventListener("load", onLoad, { once: true });
+      img.addEventListener("error", onError, { once: true });
+    });
+  }
+
+  async function renderLayoutToCanvas(layout, scale = EXPORT_SCALE) {
+    if (!layout) {
+      throw new Error("Cannot render export for an empty layout");
+    }
+
+    const layoutRect = layout.getBoundingClientRect();
+    if (!layoutRect.width || !layoutRect.height) {
+      throw new Error("Layout has zero dimensions");
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(layoutRect.width * scale);
+    canvas.height = Math.round(layoutRect.height * scale);
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("Unable to obtain 2D canvas context");
+    }
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+
+    const computedLayoutStyle = window.getComputedStyle(layout);
+    let gutterColor = computedLayoutStyle.backgroundColor;
+    if (
+      !gutterColor ||
+      gutterColor === "transparent" ||
+      gutterColor === "rgba(0, 0, 0, 0)"
+    ) {
+      gutterColor = DEFAULT_GUTTER_COLOR;
+    }
+
+    ctx.fillStyle = gutterColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const images = Array.from(layout.querySelectorAll(".panel img"));
+    await Promise.all(images.map((img) => waitForImageLoad(img)));
+
+    layout.querySelectorAll(".panel").forEach((panel) => {
+      const panelRect = panel.getBoundingClientRect();
+      if (!panelRect.width || !panelRect.height) {
+        return;
+      }
+
+      const offsetX = (panelRect.left - layoutRect.left) * scale;
+      const offsetY = (panelRect.top - layoutRect.top) * scale;
+      const panelWidth = panelRect.width * scale;
+      const panelHeight = panelRect.height * scale;
+
+      const panelStyle = window.getComputedStyle(panel);
+      const radii = [
+        parseRadiusValue(panelStyle.borderTopLeftRadius) * scale,
+        parseRadiusValue(panelStyle.borderTopRightRadius) * scale,
+        parseRadiusValue(panelStyle.borderBottomRightRadius) * scale,
+        parseRadiusValue(panelStyle.borderBottomLeftRadius) * scale,
+      ];
+
+      const inner = panel.querySelector(".panel-inner");
+      const innerStyle = inner ? window.getComputedStyle(inner) : null;
+      let panelBackground = innerStyle ? innerStyle.backgroundColor : "#ffffff";
+      if (
+        !panelBackground ||
+        panelBackground === "transparent" ||
+        panelBackground === "rgba(0, 0, 0, 0)"
+      ) {
+        panelBackground = "#ffffff";
+      }
+
+      ctx.save();
+      buildRoundedRectPath(ctx, offsetX, offsetY, panelWidth, panelHeight, radii);
+      ctx.clip();
+      ctx.fillStyle = panelBackground;
+      ctx.fillRect(offsetX, offsetY, panelWidth, panelHeight);
+
+      const img = panel.querySelector("img");
+      if (img && img.naturalWidth && img.naturalHeight) {
+        const imgRect = img.getBoundingClientRect();
+        const imgX = (imgRect.left - layoutRect.left) * scale;
+        const imgY = (imgRect.top - layoutRect.top) * scale;
+        const imgWidth = imgRect.width * scale;
+        const imgHeight = imgRect.height * scale;
+
+        if (imgWidth > 0 && imgHeight > 0) {
+          ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
+        }
+      }
+
+      ctx.restore();
+    });
+
+    return canvas;
+  }
+
   const exportBtn = document.getElementById("exportPdf");
   if (exportBtn) {
     exportBtn.addEventListener("click", async () => {
@@ -1102,17 +985,7 @@ window.addEventListener("DOMContentLoaded", () => {
           await new Promise((resolve) => setTimeout(resolve, 100));
 
           // Capture first layout
-          const canvas1 = await html2canvas(layout1, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: null,
-            logging: false,
-            width: layout1.offsetWidth,
-            height: layout1.offsetHeight,
-          });
-
-          applyClipPathsToCanvas(layout1, canvas1);
+          const canvas1 = await renderLayoutToCanvas(layout1, EXPORT_SCALE);
 
           if (canvas1.width === 0 || canvas1.height === 0) {
             throw new Error(`Canvas ${i + 1} has zero dimensions`);
@@ -1127,17 +1000,7 @@ window.addEventListener("DOMContentLoaded", () => {
             const layout2 = layouts[i + 1];
             await new Promise((resolve) => setTimeout(resolve, 100));
 
-            canvas2 = await html2canvas(layout2, {
-              scale: 2,
-              useCORS: true,
-              allowTaint: true,
-              backgroundColor: null,
-              logging: false,
-              width: layout2.offsetWidth,
-              height: layout2.offsetHeight,
-            });
-
-            applyClipPathsToCanvas(layout2, canvas2);
+            canvas2 = await renderLayoutToCanvas(layout2, EXPORT_SCALE);
 
             if (canvas2.width === 0 || canvas2.height === 0) {
               throw new Error(`Canvas ${i + 2} has zero dimensions`);
@@ -1223,17 +1086,7 @@ window.addEventListener("DOMContentLoaded", () => {
           const layout = layouts[i];
           await new Promise((resolve) => setTimeout(resolve, 100));
 
-          const canvas = await html2canvas(layout, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: null,
-            logging: false,
-            width: layout.offsetWidth,
-            height: layout.offsetHeight,
-          });
-
-          applyClipPathsToCanvas(layout, canvas);
+          const canvas = await renderLayoutToCanvas(layout, EXPORT_SCALE);
 
           if (canvas.width === 0 || canvas.height === 0) {
             throw new Error(`Canvas ${i + 1} has zero dimensions`);
@@ -1326,35 +1179,28 @@ window.addEventListener("DOMContentLoaded", () => {
 
     for (let i = 0; i < layoutContainers.length; i++) {
       const container = layoutContainers[i];
-      console.log(`Capturing layout container ${i + 1}:`, container);
-      console.log(
-        `  - Size: ${container.offsetWidth}x${container.offsetHeight}`,
-      );
-      console.log(`  - Background: ${container.style.background}`);
-
       const layout = container.querySelector(".layout");
-      if (layout) {
-        console.log(`  - Layout background: ${layout.style.background}`);
-        console.log(
-          `  - Panel count: ${layout.querySelectorAll(".panel").length}`,
-        );
+
+      if (!layout) {
+        console.warn(`No .layout found in container ${i + 1}`);
+        continue;
       }
 
-      try {
-        const canvas = await html2canvas(container, {
-          scale: 2,
-          backgroundColor: "#fffbe6",
-          logging: true,
-          useCORS: true,
-          allowTaint: true,
-        });
+      console.log(`Capturing layout container ${i + 1}:`, container);
+      console.log(
+        `  - Layout size: ${layout.offsetWidth}x${layout.offsetHeight}`,
+      );
+      console.log(`  - Layout background: ${layout.style.background}`);
+      console.log(
+        `  - Panel count: ${layout.querySelectorAll(".panel").length}`,
+      );
 
-        if (layout) {
-          applyClipPathsToCanvas(layout, canvas);
-        }
+      try {
+        const canvas = await renderLayoutToCanvas(layout, EXPORT_SCALE);
 
         // Convert to blob and create download link
         canvas.toBlob((blob) => {
+          if (!blob) return;
           const url = URL.createObjectURL(blob);
           const link = document.createElement("a");
           link.href = url;
