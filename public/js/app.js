@@ -10,6 +10,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const PDF_PAGE_HEIGHT = 612;
   const PDF_COLUMN_WIDTH = PDF_PAGE_WIDTH / 2;
   const DEFAULT_GUTTER_COLOR = "#cccccc";
+  const EXPORT_SCALE = 2;
 
   function getPanelContent(panel) {
     if (!panel) return null;
@@ -785,6 +786,153 @@ window.addEventListener("DOMContentLoaded", () => {
   // Removed comicForm submit handler since the form no longer exists
 
   // Export PDF (Client-side)
+  function parseRadiusValue(value) {
+    const parsed = parseFloat(value);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+
+  function buildRoundedRectPath(ctx, x, y, width, height, radii) {
+    if (!radii || radii.every((r) => r === 0)) {
+      ctx.beginPath();
+      ctx.rect(x, y, width, height);
+      return;
+    }
+
+    const [tl, tr, br, bl] = radii;
+    ctx.beginPath();
+    ctx.moveTo(x + tl, y);
+    ctx.lineTo(x + width - tr, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + tr);
+    ctx.lineTo(x + width, y + height - br);
+    ctx.quadraticCurveTo(
+      x + width,
+      y + height,
+      x + width - br,
+      y + height,
+    );
+    ctx.lineTo(x + bl, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - bl);
+    ctx.lineTo(x, y + tl);
+    ctx.quadraticCurveTo(x, y, x + tl, y);
+    ctx.closePath();
+  }
+
+  function waitForImageLoad(img) {
+    if (!img) return Promise.resolve();
+    if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+      return Promise.resolve();
+    }
+    return new Promise((resolve) => {
+      const cleanup = () => {
+        img.removeEventListener("load", onLoad);
+        img.removeEventListener("error", onError);
+      };
+      const onLoad = () => {
+        cleanup();
+        resolve();
+      };
+      const onError = () => {
+        cleanup();
+        resolve();
+      };
+      img.addEventListener("load", onLoad, { once: true });
+      img.addEventListener("error", onError, { once: true });
+    });
+  }
+
+  async function renderLayoutToCanvas(layout, scale = EXPORT_SCALE) {
+    if (!layout) {
+      throw new Error("Cannot render export for an empty layout");
+    }
+
+    const layoutRect = layout.getBoundingClientRect();
+    if (!layoutRect.width || !layoutRect.height) {
+      throw new Error("Layout has zero dimensions");
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(layoutRect.width * scale);
+    canvas.height = Math.round(layoutRect.height * scale);
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("Unable to obtain 2D canvas context");
+    }
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+
+    const computedLayoutStyle = window.getComputedStyle(layout);
+    let gutterColor = computedLayoutStyle.backgroundColor;
+    if (
+      !gutterColor ||
+      gutterColor === "transparent" ||
+      gutterColor === "rgba(0, 0, 0, 0)"
+    ) {
+      gutterColor = DEFAULT_GUTTER_COLOR;
+    }
+
+    ctx.fillStyle = gutterColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const images = Array.from(layout.querySelectorAll(".panel img"));
+    await Promise.all(images.map((img) => waitForImageLoad(img)));
+
+    layout.querySelectorAll(".panel").forEach((panel) => {
+      const panelRect = panel.getBoundingClientRect();
+      if (!panelRect.width || !panelRect.height) {
+        return;
+      }
+
+      const offsetX = (panelRect.left - layoutRect.left) * scale;
+      const offsetY = (panelRect.top - layoutRect.top) * scale;
+      const panelWidth = panelRect.width * scale;
+      const panelHeight = panelRect.height * scale;
+
+      const panelStyle = window.getComputedStyle(panel);
+      const radii = [
+        parseRadiusValue(panelStyle.borderTopLeftRadius) * scale,
+        parseRadiusValue(panelStyle.borderTopRightRadius) * scale,
+        parseRadiusValue(panelStyle.borderBottomRightRadius) * scale,
+        parseRadiusValue(panelStyle.borderBottomLeftRadius) * scale,
+      ];
+
+      const inner = panel.querySelector(".panel-inner");
+      const innerStyle = inner ? window.getComputedStyle(inner) : null;
+      let panelBackground = innerStyle ? innerStyle.backgroundColor : "#ffffff";
+      if (
+        !panelBackground ||
+        panelBackground === "transparent" ||
+        panelBackground === "rgba(0, 0, 0, 0)"
+      ) {
+        panelBackground = "#ffffff";
+      }
+
+      ctx.save();
+      buildRoundedRectPath(ctx, offsetX, offsetY, panelWidth, panelHeight, radii);
+      ctx.clip();
+      ctx.fillStyle = panelBackground;
+      ctx.fillRect(offsetX, offsetY, panelWidth, panelHeight);
+
+      const img = panel.querySelector("img");
+      if (img && img.naturalWidth && img.naturalHeight) {
+        const imgRect = img.getBoundingClientRect();
+        const imgX = (imgRect.left - layoutRect.left) * scale;
+        const imgY = (imgRect.top - layoutRect.top) * scale;
+        const imgWidth = imgRect.width * scale;
+        const imgHeight = imgRect.height * scale;
+
+        if (imgWidth > 0 && imgHeight > 0) {
+          ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
+        }
+      }
+
+      ctx.restore();
+    });
+
+    return canvas;
+  }
+
   const exportBtn = document.getElementById("exportPdf");
   if (exportBtn) {
     exportBtn.addEventListener("click", async () => {
@@ -837,15 +985,7 @@ window.addEventListener("DOMContentLoaded", () => {
           await new Promise((resolve) => setTimeout(resolve, 100));
 
           // Capture first layout
-          const canvas1 = await html2canvas(layout1, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: null,
-            logging: false,
-            width: layout1.offsetWidth,
-            height: layout1.offsetHeight,
-          });
+          const canvas1 = await renderLayoutToCanvas(layout1, EXPORT_SCALE);
 
           if (canvas1.width === 0 || canvas1.height === 0) {
             throw new Error(`Canvas ${i + 1} has zero dimensions`);
@@ -859,16 +999,8 @@ window.addEventListener("DOMContentLoaded", () => {
           if (layouts[i + 1]) {
             const layout2 = layouts[i + 1];
             await new Promise((resolve) => setTimeout(resolve, 100));
-
-            canvas2 = await html2canvas(layout2, {
-              scale: 2,
-              useCORS: true,
-              allowTaint: true,
-              backgroundColor: null,
-              logging: false,
-              width: layout2.offsetWidth,
-              height: layout2.offsetHeight,
-            });
+            
+            canvas2 = await renderLayoutToCanvas(layout2, EXPORT_SCALE);
 
             if (canvas2.width === 0 || canvas2.height === 0) {
               throw new Error(`Canvas ${i + 2} has zero dimensions`);
@@ -954,15 +1086,7 @@ window.addEventListener("DOMContentLoaded", () => {
           const layout = layouts[i];
           await new Promise((resolve) => setTimeout(resolve, 100));
 
-          const canvas = await html2canvas(layout, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: null,
-            logging: false,
-            width: layout.offsetWidth,
-            height: layout.offsetHeight,
-          });
+          const canvas = await renderLayoutToCanvas(layout, EXPORT_SCALE);
 
           if (canvas.width === 0 || canvas.height === 0) {
             throw new Error(`Canvas ${i + 1} has zero dimensions`);
@@ -1055,31 +1179,28 @@ window.addEventListener("DOMContentLoaded", () => {
 
     for (let i = 0; i < layoutContainers.length; i++) {
       const container = layoutContainers[i];
-      console.log(`Capturing layout container ${i + 1}:`, container);
-      console.log(
-        `  - Size: ${container.offsetWidth}x${container.offsetHeight}`,
-      );
-      console.log(`  - Background: ${container.style.background}`);
-
       const layout = container.querySelector(".layout");
-      if (layout) {
-        console.log(`  - Layout background: ${layout.style.background}`);
-        console.log(
-          `  - Panel count: ${layout.querySelectorAll(".panel").length}`,
-        );
+
+      if (!layout) {
+        console.warn(`No .layout found in container ${i + 1}`);
+        continue;
       }
 
+      console.log(`Capturing layout container ${i + 1}:`, container);
+      console.log(
+        `  - Layout size: ${layout.offsetWidth}x${layout.offsetHeight}`,
+      );
+      console.log(`  - Layout background: ${layout.style.background}`);
+      console.log(
+        `  - Panel count: ${layout.querySelectorAll(".panel").length}`,
+      );
+
       try {
-        const canvas = await html2canvas(container, {
-          scale: 2,
-          backgroundColor: "#fffbe6",
-          logging: true,
-          useCORS: true,
-          allowTaint: true,
-        });
+        const canvas = await renderLayoutToCanvas(layout, EXPORT_SCALE);
 
         // Convert to blob and create download link
         canvas.toBlob((blob) => {
+          if (!blob) return;
           const url = URL.createObjectURL(blob);
           const link = document.createElement("a");
           link.href = url;

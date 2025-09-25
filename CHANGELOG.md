@@ -17,7 +17,7 @@
 - Execute layout PHP templates on the server before sending them to the browser so panels render correctly in both the editor and exports.
 - Release the PHP session lock before streaming live updates so refreshing the workspace no longer hangs behind an open EventSource connection.
 - Strip library thumbnail styling from dropped artwork so newly placed panels render at full size without waiting for a page refresh.
-- Restore clean rectangular panel exports by relying on the direct html2canvas capture instead of replaying clip-path data after render.
+- Eliminate the double-exposed panels that appeared in PDF and PNG exports by drawing each layout column with the exact on-screen transforms.
 - Keep exported PDF spreads true to their original proportions so two-up pages are no longer subtly squeezed horizontally on each sheet.
 - Scale each exported layout using its captured aspect ratio so generated PDFs no longer include white bands above or below the artwork.
 - Restore the classic 5.5" × 8.5" workspace aspect ratio so on-screen previews and exported files fill vertically without trimming the bottom or right-hand panels.

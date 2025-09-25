@@ -41,9 +41,8 @@ The refreshed UI introduces a glassmorphism-inspired surface layered over a deep
 
 The latest pass sets the application shell to a centered 90% width and now adapts the workspace grid to one page per row under 1024px, two pages through 1980px, and three pages on ultra-wide displays so the live canvas stays balanced without disrupting panel alignment at any size.
 
-## Notes
-
-* Exported PDFs and PNGs now rely on the html2canvas capture directly, eliminating the stretched and clipped rectangles that appeared after the angled panel cleanup.
+## Note
+* Exported PDFs and PNGs are rendered with an internal high-resolution canvas pass that mirrors every panel transform and rounded gutter, preventing the ghosted doubles that previously slipped into exported files.
 * Layout templates are rendered through PHP on the server before they reach the browser so every panel container is present during initial paint and export capture.
 * PDF exports respect the natural aspect ratio of each captured canvas when placing two pages per sheet, preventing the subtle horizontal squeeze and the top-and-bottom letterboxing that previously appeared in the generated documents.
 * Workspace page previews are locked to a 1:1.545 aspect ratio that mirrors a single page column while rendering flush to the canvas frame, eliminating the rounded border padding and keeping the live view aligned with exported spreads.
