@@ -3,7 +3,7 @@ $panel1Clip = uniqid('two-vertical-angled-top-one-horizontal-bottom-panel1-');
 $panel2Clip = uniqid('two-vertical-angled-top-one-horizontal-bottom-panel2-');
 ?>
 <div class="layout two-vertical-angled-top-one-horizontal-bottom">
-    <div class="panel panel1" data-slot="1" data-clip-polygon="polygon(0 0, 100 0, 94 100, 0 100)">
+    <div class="panel panel1" data-slot="1" data-clip-polygon="polygon(0% 0%, 100% 0%, 94% 100%, 0% 100%)">
         <svg class="panel-mask" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             <defs>
                 <clipPath id="<?= htmlspecialchars($panel1Clip, ENT_QUOTES, 'UTF-8') ?>">
@@ -15,7 +15,7 @@ $panel2Clip = uniqid('two-vertical-angled-top-one-horizontal-bottom-panel2-');
             </foreignObject>
         </svg>
     </div>
-    <div class="panel panel2" data-slot="2" data-clip-polygon="polygon(6 0, 100 0, 100 100, 0 100)">
+    <div class="panel panel2" data-slot="2" data-clip-polygon="polygon(6% 0%, 100% 0%, 100% 100%, 0% 100%)">
         <svg class="panel-mask" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             <defs>
                 <clipPath id="<?= htmlspecialchars($panel2Clip, ENT_QUOTES, 'UTF-8') ?>">
