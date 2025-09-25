@@ -23,6 +23,10 @@
         <div class="header-actions">
             <button id="exportPdf" type="button" class="ghost">Export PDF</button>
             <button id="exportImages" type="button" class="ghost">Export Images</button>
+            <button id="resetWorkspace" type="button" class="ghost danger">Reset Workspace</button>
+            <button id="saveState" type="button" class="ghost">Save State</button>
+            <button id="loadState" type="button" class="ghost">Load State</button>
+            <input type="file" id="loadStateInput" accept="application/zip" hidden />
         </div>
     </header>
     <main class="app-main">
@@ -53,9 +57,10 @@
                 </div>
                 <div class="toolbar-actions">
                     <button id="addPage" type="button" class="primary">Add Page</button>
+                    <button id="toggleShortcuts" type="button" class="ghost" aria-expanded="false" aria-controls="shortcutList">Show Shortcuts</button>
                 </div>
             </div>
-            <ul class="shortcuts">
+            <ul id="shortcutList" class="shortcuts" aria-hidden="true">
                 <li><span>Ctrl + S</span>Quick save</li>
                 <li><span>Ctrl + N</span>New page</li>
                 <li><span>Ctrl + E</span>Export PDF</li>

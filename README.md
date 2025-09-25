@@ -4,12 +4,13 @@ A modern MVC PHP application for crafting comic spreads. Upload artwork, drag it
 
 ## Features
 
-- **Curated asset library** – Upload multiple images at once and manage them with quick delete actions.
+- **Curated asset library** – Upload multiple images at once, drag-and-drop new artwork directly into the library, and manage assets with quick delete actions.
 - **Storyboard workspace** – Drag panels into dynamic templates, adjust gutter colors, and fine-tune each panel's zoom and position.
 - **Live autosave** – Progress is preserved automatically, with inline feedback to confirm every change.
 - **Real-time sync** – The browser listens to server-sent events so every open tab mirrors updates written to `state.json` instantly.
 - **One-click exports** – Generate PDFs or high-quality image sets directly from the browser.
-- **Keyboard shortcuts** – Stay in flow with quick commands for saving, creating pages, and exporting.
+- **State snapshots** – Reset the entire workspace in one click or save and restore zipped archives that bundle the SQLite state and uploaded images.
+- **Keyboard shortcuts** – Stay in flow with quick commands for saving, creating pages, and exporting, and reveal the animated cheatsheet on demand with the workspace help toggle.
 
 ## Setup
 
@@ -25,7 +26,11 @@ A modern MVC PHP application for crafting comic spreads. Upload artwork, drag it
 
 Uploaded images are stored in `public/uploads/`. Generated exports live in `public/storage/generated/`.
 
+State archives download as ZIP files that include `state.db` alongside every asset in `public/uploads/`. Restoring a snapshot replaces the database and asset library with the archive contents.
+
 ## Keyboard Shortcuts
+
+Open the workspace help menu next to **Add Page** to reveal these commands when you need a refresher.
 
 | Shortcut | Action |
 | --- | --- |

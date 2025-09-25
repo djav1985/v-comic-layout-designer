@@ -1,5 +1,13 @@
 window.addEventListener("DOMContentLoaded", () => {
   const imageList = document.getElementById("imageList");
+  const uploadForm = document.getElementById("uploadForm");
+  const imageInput = document.getElementById("imageInput");
+  const resetButton = document.getElementById("resetWorkspace");
+  const saveStateButton = document.getElementById("saveState");
+  const loadStateButton = document.getElementById("loadState");
+  const loadStateInput = document.getElementById("loadStateInput");
+  const toggleShortcutsButton = document.getElementById("toggleShortcuts");
+  const shortcutList = document.getElementById("shortcutList");
   let pageCounter = 0;
   let saveTimeout = null;
   let isUpdatingFromServer = false;
@@ -11,6 +19,70 @@ window.addEventListener("DOMContentLoaded", () => {
   const PDF_COLUMN_WIDTH = PDF_PAGE_WIDTH / 2;
   const DEFAULT_GUTTER_COLOR = "#cccccc";
   const EXPORT_SCALE = 2;
+
+  function setInitialImages(list) {
+    if (typeof initialImages === "undefined" || !Array.isArray(initialImages)) {
+      return;
+    }
+
+    initialImages.length = 0;
+    if (Array.isArray(list)) {
+      initialImages.push(...list);
+    }
+  }
+
+  function uploadImages(files) {
+    if (!files || !files.length) {
+      return Promise.resolve();
+    }
+
+    const formData = new FormData();
+    Array.from(files).forEach((file) => {
+      formData.append("images[]", file);
+    });
+
+    return fetch("/upload", { method: "POST", body: formData }).then((response) =>
+      response
+        .json()
+        .catch(() => ({ error: "Upload failed" }))
+        .then((data) => {
+          if (!response.ok || (data && data.error)) {
+            const message = data && data.error ? data.error : "Upload failed";
+            throw new Error(message);
+          }
+
+          if (Array.isArray(data)) {
+            setInitialImages(data);
+            updateImages(data);
+            showSaveIndicator("Images uploaded ✓", "#4CAF50");
+          }
+
+          return data;
+        }),
+    );
+  }
+
+  function parseFilenameFromDisposition(disposition) {
+    if (!disposition) {
+      return `comic-state-${Date.now()}.zip`;
+    }
+
+    const utfMatch = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (utfMatch && utfMatch[1]) {
+      try {
+        return decodeURIComponent(utfMatch[1]);
+      } catch (err) {
+        console.warn("Failed to decode UTF-8 filename", err);
+      }
+    }
+
+    const quotedMatch = disposition.match(/filename="?([^";]+)"?/i);
+    if (quotedMatch && quotedMatch[1]) {
+      return quotedMatch[1];
+    }
+
+    return `comic-state-${Date.now()}.zip`;
+  }
 
   function getPanelContent(panel) {
     if (!panel) return null;
@@ -53,6 +125,51 @@ window.addEventListener("DOMContentLoaded", () => {
       document.body.appendChild(saveIndicator);
     }
     return saveIndicator;
+  }
+
+  if (toggleShortcutsButton && shortcutList) {
+    const setExpandedHeight = () => {
+      const currentHeight = shortcutList.scrollHeight;
+      shortcutList.style.setProperty(
+        "--shortcuts-expanded-height",
+        `${currentHeight}px`,
+      );
+    };
+
+    setExpandedHeight();
+
+    const updateToggleState = (isOpen) => {
+      toggleShortcutsButton.setAttribute("aria-expanded", String(isOpen));
+      toggleShortcutsButton.classList.toggle("active", isOpen);
+      toggleShortcutsButton.textContent = isOpen
+        ? "Hide Shortcuts"
+        : "Show Shortcuts";
+      shortcutList.setAttribute("aria-hidden", String(!isOpen));
+    };
+
+    updateToggleState(false);
+
+    toggleShortcutsButton.addEventListener("click", () => {
+      const willOpen = !shortcutList.classList.contains("is-open");
+      if (willOpen) {
+        setExpandedHeight();
+        shortcutList.classList.add("is-open");
+      } else {
+        setExpandedHeight();
+        requestAnimationFrame(() => {
+          shortcutList.classList.remove("is-open");
+          shortcutList.style.setProperty("--shortcuts-expanded-height", "0px");
+        });
+      }
+
+      updateToggleState(willOpen);
+    });
+
+    window.addEventListener("resize", () => {
+      if (shortcutList.classList.contains("is-open")) {
+        setExpandedHeight();
+      }
+    });
   }
 
   function showSaveIndicator(message, color = "#4CAF50") {
@@ -657,28 +774,177 @@ window.addEventListener("DOMContentLoaded", () => {
   // Load images AFTER pages are created so assigned images are properly filtered
   // (rebuildPagesUI triggers this once the DOM is ready).
 
-  document.getElementById("uploadForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const input = document.getElementById("imageInput");
-    if (!input.files.length) return;
-    const formData = new FormData();
-    Array.from(input.files).forEach((file) =>
-      formData.append("images[]", file),
-    );
-    fetch("/upload", { method: "POST", body: formData })
-      .then((r) => r.json())
-      .then((imageList) => {
-        // Update the global image list
-        if (typeof initialImages !== "undefined") {
-          initialImages.length = 0;
-          initialImages.push(...imageList);
-        }
-        updateImages(imageList);
-      })
-      .finally(() => {
-        input.value = "";
+  if (uploadForm && imageInput) {
+    uploadForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (!imageInput.files.length) return;
+
+      uploadImages(imageInput.files).catch((error) => {
+        console.error(error);
+        showSaveIndicator("Upload failed ✗", "#f44336");
+        alert(`Failed to upload images: ${error.message}`);
+      }).finally(() => {
+        imageInput.value = "";
       });
-  });
+    });
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+      uploadForm.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        uploadForm.classList.add("drag-active");
+      });
+    });
+
+    ["dragleave", "dragend"].forEach((eventName) => {
+      uploadForm.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        uploadForm.classList.remove("drag-active");
+      });
+    });
+
+    uploadForm.addEventListener("drop", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      uploadForm.classList.remove("drag-active");
+
+      const files = event.dataTransfer ? event.dataTransfer.files : null;
+      if (files && files.length) {
+        uploadImages(files).catch((error) => {
+          console.error(error);
+          showSaveIndicator("Upload failed ✗", "#f44336");
+          alert(`Failed to upload images: ${error.message}`);
+        });
+      }
+    });
+  }
+
+  function applyLoadedState(payload) {
+    const pages = Array.isArray(payload && payload.pages) ? payload.pages : [];
+    const images = Array.isArray(payload && payload.images) ? payload.images : [];
+
+    setInitialImages(images);
+    rebuildPagesUI(pages);
+  }
+
+  if (resetButton) {
+    resetButton.addEventListener("click", () => {
+      const confirmed = window.confirm("Resetting will remove all images and pages. Continue?");
+      if (!confirmed) {
+        return;
+      }
+
+      resetButton.disabled = true;
+      showSaveIndicator("Resetting workspace...", "#2196F3");
+
+      fetch("/state/reset", { method: "POST" })
+        .then((response) =>
+          response
+            .json()
+            .catch(() => ({ error: "Reset failed" }))
+            .then((data) => {
+              if (!response.ok || (data && data.error)) {
+                const message = data && data.error ? data.error : "Reset failed";
+                throw new Error(message);
+              }
+
+              applyLoadedState(data);
+              showSaveIndicator("Workspace reset ✓", "#4CAF50");
+            }),
+        )
+        .catch((error) => {
+          console.error(error);
+          showSaveIndicator("Reset failed ✗", "#f44336");
+          alert(`Failed to reset workspace: ${error.message}`);
+        })
+        .finally(() => {
+          resetButton.disabled = false;
+        });
+    });
+  }
+
+  if (saveStateButton) {
+    saveStateButton.addEventListener("click", () => {
+      saveStateButton.disabled = true;
+      showSaveIndicator("Preparing state archive...", "#2196F3");
+
+      fetch("/state/export")
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Failed to export state (status ${response.status})`);
+          }
+
+          const disposition = response.headers.get("Content-Disposition");
+          return response.blob().then((blob) => ({ blob, disposition }));
+        })
+        .then(({ blob, disposition }) => {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = parseFilenameFromDisposition(disposition);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+
+          showSaveIndicator("State downloaded ✓", "#4CAF50");
+        })
+        .catch((error) => {
+          console.error(error);
+          showSaveIndicator("State download failed ✗", "#f44336");
+          alert(`Failed to download state: ${error.message}`);
+        })
+        .finally(() => {
+          saveStateButton.disabled = false;
+        });
+    });
+  }
+
+  if (loadStateButton && loadStateInput) {
+    loadStateButton.addEventListener("click", () => {
+      loadStateInput.click();
+    });
+
+    loadStateInput.addEventListener("change", () => {
+      const files = loadStateInput.files;
+      if (!files || !files.length) {
+        return;
+      }
+
+      const archive = files[0];
+      const formData = new FormData();
+      formData.append("state", archive);
+
+      loadStateButton.disabled = true;
+      showSaveIndicator("Loading state...", "#2196F3");
+
+      fetch("/state/import", { method: "POST", body: formData })
+        .then((response) =>
+          response
+            .json()
+            .catch(() => ({ error: "State import failed" }))
+            .then((data) => {
+              if (!response.ok || (data && data.error)) {
+                const message = data && data.error ? data.error : "State import failed";
+                throw new Error(message);
+              }
+
+              applyLoadedState(data);
+              showSaveIndicator("State loaded ✓", "#4CAF50");
+            }),
+        )
+        .catch((error) => {
+          console.error(error);
+          showSaveIndicator("State load failed ✗", "#f44336");
+          alert(`Failed to load state: ${error.message}`);
+        })
+        .finally(() => {
+          loadStateButton.disabled = false;
+          loadStateInput.value = "";
+        });
+    });
+  }
 
   function getAssignedImages(pages) {
     const assigned = new Set();

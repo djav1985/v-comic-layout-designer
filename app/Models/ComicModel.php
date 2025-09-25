@@ -48,11 +48,29 @@ class ComicModel
         return $this->db->getDbPath();
     }
 
+    public function getUploadDirectory(): string
+    {
+        return $this->uploadDir;
+    }
+
     public function getStateSnapshot(): array
     {
         return $this->state;
     }
 
+    public function listImageFiles(): array
+    {
+        $files = [];
+        if (is_dir($this->uploadDir)) {
+            foreach (glob($this->uploadDir . '/*.{jpg,jpeg,png,gif}', GLOB_BRACE) as $file) {
+                if (is_file($file)) {
+                    $files[] = $file;
+                }
+            }
+        }
+
+        return $files;
+    }
 
     public function getImages(): array
     {
@@ -64,6 +82,19 @@ class ComicModel
         $this->state['images'] = $files;
         $this->saveState();
         return $files;
+    }
+
+    private function removeAllUploads(): void
+    {
+        if (!is_dir($this->uploadDir)) {
+            return;
+        }
+
+        foreach (glob($this->uploadDir . '/*') as $file) {
+            if (is_file($file)) {
+                @unlink($file);
+            }
+        }
     }
 
     public function saveUpload(array $file): void
@@ -100,6 +131,21 @@ class ComicModel
             fn($img) => $img !== $name
         ));
         $this->saveState();
+    }
+
+    public function resetState(): array
+    {
+        $this->removeAllUploads();
+
+        $this->state = [
+            'images' => [],
+            'pages' => [],
+            'pageCount' => 0,
+        ];
+
+        $this->saveState();
+
+        return $this->state;
     }
 
     public function getLayouts(): array
@@ -160,5 +206,62 @@ class ComicModel
     public function getLastModified(): int
     {
         return $this->db->getLastModified();
+    }
+
+    public function importStateFromDatabase(string $databasePath): void
+    {
+        if (!is_file($databasePath)) {
+            throw new \RuntimeException('State database file not found.');
+        }
+
+        $pdo = new \PDO('sqlite:' . $databasePath);
+        $stmt = $pdo->query('SELECT key, value FROM state');
+        $state = [];
+
+        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $state[$row['key']] = json_decode($row['value'], true);
+        }
+
+        $pdo = null;
+
+        $this->state = array_merge([
+            'images' => [],
+            'pages' => [],
+            'pageCount' => 0,
+        ], $state);
+
+        $this->saveState();
+    }
+
+    public function replaceUploadsFromDirectory(string $sourceDir): void
+    {
+        $this->removeAllUploads();
+
+        if (!is_dir($sourceDir)) {
+            $this->state['images'] = [];
+            $this->saveState();
+            return;
+        }
+
+        if (!is_dir($this->uploadDir)) {
+            mkdir($this->uploadDir, 0777, true);
+        }
+
+        $directoryIterator = new \DirectoryIterator($sourceDir);
+        foreach ($directoryIterator as $fileInfo) {
+            if ($fileInfo->isDot() || !$fileInfo->isFile()) {
+                continue;
+            }
+
+            $extension = strtolower($fileInfo->getExtension());
+            if (!in_array($extension, ['jpg', 'jpeg', 'png', 'gif'], true)) {
+                continue;
+            }
+
+            $target = $this->uploadDir . DIRECTORY_SEPARATOR . $fileInfo->getFilename();
+            copy($fileInfo->getPathname(), $target);
+        }
+
+        $this->getImages();
     }
 }

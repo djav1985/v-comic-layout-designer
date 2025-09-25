@@ -15,6 +15,9 @@ class Router
             $r->addRoute('POST', '/save-pages', ['PageController', 'save']);
             $r->addRoute('GET', '/get-pages', ['PageController', 'get']);
             $r->addRoute('GET', '/pages/stream', ['PageController', 'stream']);
+            $r->addRoute('POST', '/state/reset', ['StateController', 'reset']);
+            $r->addRoute('GET', '/state/export', ['StateController', 'export']);
+            $r->addRoute('POST', '/state/import', ['StateController', 'import']);
         });
     }
 

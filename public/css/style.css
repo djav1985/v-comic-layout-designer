@@ -148,6 +148,18 @@ body {
     padding: 18px 20px 20px;
 }
 
+#uploadForm.drag-active {
+    border-style: dashed;
+    border-color: var(--accent);
+    background: rgba(99, 102, 241, 0.12);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.18);
+}
+
+#uploadForm.drag-active input[type="file"] {
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
 .field-label {
     font-size: 0.85rem;
     letter-spacing: 0.06em;
@@ -233,6 +245,26 @@ button.ghost:focus {
     border-color: rgba(99, 102, 241, 0.4);
     transform: translateY(-1px);
     outline: none;
+}
+
+button.ghost.active {
+    background: rgba(99, 102, 241, 0.24);
+    border-color: rgba(99, 102, 241, 0.6);
+    color: #fff;
+}
+
+button.danger {
+    background: rgba(239, 68, 68, 0.16);
+    color: #fee2e2;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+button.danger:hover,
+button.danger:focus {
+    background: rgba(239, 68, 68, 0.24);
+    border-color: rgba(239, 68, 68, 0.6);
+    color: #fff5f5;
+    transform: translateY(-1px);
 }
 
 #imageList {
@@ -321,6 +353,13 @@ button.ghost:focus {
     gap: 18px;
 }
 
+.toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
 .shortcuts {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -328,6 +367,20 @@ button.ghost:focus {
     padding: 0;
     margin: 0;
     gap: 12px;
+    --shortcuts-expanded-height: 0px;
+    max-height: 0;
+    opacity: 0;
+    visibility: hidden;
+    overflow: hidden;
+    transform: translateY(-6px);
+    transition: max-height var(--transition), opacity var(--transition), transform var(--transition);
+}
+
+.shortcuts.is-open {
+    max-height: var(--shortcuts-expanded-height, 520px);
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
 }
 
 .shortcuts li {
@@ -352,6 +405,12 @@ button.ghost:focus {
     color: var(--text-primary);
     font-weight: 600;
     font-size: 0.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .shortcuts {
+        transition: none;
+    }
 }
 
 #pages {
