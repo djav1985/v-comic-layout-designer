@@ -1089,7 +1089,6 @@ window.addEventListener("DOMContentLoaded", () => {
           }
           const pageHeight = PDF_PAGE_HEIGHT;
           const slotWidth = PDF_COLUMN_WIDTH;
-
           const canvases = [canvas1, canvas2];
           const images = [img1, img2];
 
