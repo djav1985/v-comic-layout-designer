@@ -26,6 +26,12 @@ window.addEventListener("DOMContentLoaded", () => {
   let selectedImageName = null;
   let selectedImageWrapper = null;
 
+  function isPageLocked(node) {
+    if (!node) return false;
+    const page = node.closest(".page");
+    return page ? page.classList.contains("is-locked") : false;
+  }
+
   function isMobileViewport() {
     return window.matchMedia("(max-width: 768px)").matches;
   }
@@ -302,7 +308,8 @@ window.addEventListener("DOMContentLoaded", () => {
           };
         }
       });
-      pages.push({ layout, gutterColor, slots, transforms });
+      const locked = pageDiv.classList.contains("is-locked");
+      pages.push({ layout, gutterColor, slots, transforms, locked });
     });
     return pages;
   }
@@ -375,6 +382,10 @@ window.addEventListener("DOMContentLoaded", () => {
     let translateY = parseFloat(initial.translateY || 0);
     let rafId = null;
 
+    function updateCursor() {
+      img.style.cursor = isPageLocked(img) ? "not-allowed" : "move";
+    }
+
     function updateTransform() {
       if (rafId) return; // Prevent multiple simultaneous updates
 
@@ -391,6 +402,10 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     img.addEventListener("wheel", (e) => {
+      if (isPageLocked(img)) {
+        e.preventDefault();
+        return;
+      }
       e.preventDefault();
       const delta = e.deltaY < 0 ? 0.1 : -0.1;
       scale = Math.min(3, Math.max(0.5, scale + delta));
@@ -401,6 +416,11 @@ window.addEventListener("DOMContentLoaded", () => {
     let dragging = false;
     let startX, startY;
     img.addEventListener("mousedown", (e) => {
+      if (isPageLocked(img)) {
+        e.preventDefault();
+        updateCursor();
+        return;
+      }
       e.preventDefault();
       dragging = true;
       startX = e.clientX - translateX;
@@ -424,6 +444,7 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 
     updateTransform();
+    updateCursor();
   }
 
   function returnImagesFromPage(container) {
@@ -527,6 +548,10 @@ window.addEventListener("DOMContentLoaded", () => {
 
     function placeImageInPanel(panel, slot, imageName, options = {}) {
       if (!panel || !imageName) return false;
+      const { overrideLock = false } = options;
+      if (!overrideLock && isPageLocked(panel)) {
+        return false;
+      }
       const content = getPanelContent(panel);
       if (!content) return false;
 
@@ -559,6 +584,7 @@ window.addEventListener("DOMContentLoaded", () => {
       container.appendChild(hidden);
 
       content.appendChild(clone);
+      clone.style.cursor = isPageLocked(panel) ? "not-allowed" : "move";
 
       if (!skipLibraryUpdate) {
         setTimeout(() => {
@@ -576,6 +602,9 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     function handleSelectedImagePlacement(panel, slot) {
+      if (isPageLocked(panel)) {
+        return false;
+      }
       if (!selectedImageName) {
         if (isMobileViewport()) {
           openImageLibrary();
@@ -593,6 +622,10 @@ window.addEventListener("DOMContentLoaded", () => {
       const slot = panel.getAttribute("data-slot");
 
       panel.addEventListener("dragover", (e) => {
+        if (isPageLocked(panel)) {
+          panel.classList.remove("drag-over");
+          return;
+        }
         e.preventDefault();
         panel.classList.add("drag-over");
       });
@@ -602,6 +635,10 @@ window.addEventListener("DOMContentLoaded", () => {
       });
 
       panel.addEventListener("drop", (e) => {
+        if (isPageLocked(panel)) {
+          panel.classList.remove("drag-over");
+          return;
+        }
         e.preventDefault();
         panel.classList.remove("drag-over");
 
@@ -628,6 +665,7 @@ window.addEventListener("DOMContentLoaded", () => {
           initialTransform: initial,
           skipLibraryUpdate: true,
           skipSave: true,
+          overrideLock: true,
         });
       }
 
@@ -635,6 +673,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
       panel.addEventListener("touchend", (event) => {
         if (event.touches && event.touches.length > 0) return;
+        if (isPageLocked(panel)) {
+          return;
+        }
         const now = Date.now();
         if (now - lastTouchTime < 300) {
           event.preventDefault();
@@ -645,6 +686,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
       panel.addEventListener("dblclick", (event) => {
         event.preventDefault();
+        if (isPageLocked(panel)) {
+          return;
+        }
         handleSelectedImagePlacement(panel, slot);
       });
     });
@@ -653,12 +697,19 @@ window.addEventListener("DOMContentLoaded", () => {
   function createPage(data, pagesContainer = document.getElementById("pages")) {
     const page = document.createElement("div");
     page.className = "page";
-    // Add delete button
+    // Add page controls
     const deleteBtn = document.createElement("button");
     deleteBtn.type = "button";
     deleteBtn.className = "delete-page-btn";
     deleteBtn.innerHTML = '<span aria-hidden="true">✕</span>';
     deleteBtn.setAttribute("aria-label", "Remove page");
+
+    const lockBtn = document.createElement("button");
+    lockBtn.type = "button";
+    lockBtn.className = "page-lock-btn";
+    lockBtn.textContent = "U";
+    lockBtn.setAttribute("aria-label", "Lock page");
+    lockBtn.setAttribute("aria-pressed", "false");
 
     // Layout selector
     const select = document.createElement("select");
@@ -684,20 +735,13 @@ window.addEventListener("DOMContentLoaded", () => {
     gutterGroup.className = "gutter-selector";
     gutterGroup.appendChild(gutterColor);
 
-    const controlsDiv = document.createElement("div");
-    controlsDiv.className = "page-controls";
-    controlsDiv.appendChild(layoutGroup);
-    controlsDiv.appendChild(gutterGroup);
-    
-    // Create a container for controls and delete button
     const controlsContainer = document.createElement("div");
-    controlsContainer.style.display = "flex";
-    controlsContainer.style.gap = "18px";
-    controlsContainer.style.alignItems = "flex-start";
-    
-    controlsContainer.appendChild(controlsDiv);
+    controlsContainer.className = "page-controls";
+    controlsContainer.appendChild(layoutGroup);
     controlsContainer.appendChild(deleteBtn);
-    
+    controlsContainer.appendChild(lockBtn);
+    controlsContainer.appendChild(gutterGroup);
+
     page.appendChild(controlsContainer);
 
     const container = document.createElement("div");
@@ -756,6 +800,26 @@ window.addEventListener("DOMContentLoaded", () => {
     if (!data) {
       debouncedSave(); // Use debounced save for new pages
     }
+
+    const applyLockState = (locked) => {
+      page.classList.toggle("is-locked", locked);
+      lockBtn.classList.toggle("is-locked", locked);
+      lockBtn.textContent = locked ? "L" : "U";
+      lockBtn.setAttribute("aria-pressed", String(locked));
+      lockBtn.setAttribute("aria-label", locked ? "Unlock page" : "Lock page");
+      lockBtn.title = locked ? "Page locked" : "Page unlocked";
+      page.querySelectorAll(".panel-image").forEach((img) => {
+        img.style.cursor = locked ? "not-allowed" : "move";
+      });
+    };
+
+    lockBtn.addEventListener("click", () => {
+      const shouldLock = !page.classList.contains("is-locked");
+      applyLockState(shouldLock);
+      debouncedSave();
+    });
+
+    applyLockState(Boolean(data && data.locked));
 
     // Delete page logic
     deleteBtn.addEventListener("click", () => {

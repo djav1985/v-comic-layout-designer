@@ -6,6 +6,7 @@
 - Support drag-and-drop uploads with visual feedback in the asset library.
 - Provide reset, save state, and load state controls that archive the SQLite database with uploaded images in a downloadable ZIP.
 - Introduce a workspace help toggle that reveals the keyboard shortcut reference with a smooth animated transition.
+- Add a lock toggle next to each page so spreads can be frozen (yellow “L”) or unlocked (green “U”) to prevent accidental image edits.
 
 ### Changed
 - Rebuilt the entire interface with a modern glassmorphism aesthetic, refreshed typography, and responsive layout cards to separate the asset library from the page builder.

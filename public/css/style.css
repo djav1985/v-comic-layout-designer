@@ -345,6 +345,40 @@ button.danger:focus {
     outline: none;
 }
 
+.page-lock-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    background: rgba(34, 197, 94, 0.16);
+    color: #bbf7d0;
+    border: 1px solid rgba(34, 197, 94, 0.42);
+    transition: background var(--transition), border var(--transition), transform var(--transition);
+}
+
+.page-lock-btn:hover,
+.page-lock-btn:focus {
+    background: rgba(34, 197, 94, 0.28);
+    border-color: rgba(34, 197, 94, 0.58);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.page-lock-btn.is-locked {
+    background: rgba(250, 204, 21, 0.26);
+    color: #facc15;
+    border-color: rgba(234, 179, 8, 0.55);
+}
+
+.page-lock-btn.is-locked:hover,
+.page-lock-btn.is-locked:focus {
+    background: rgba(250, 204, 21, 0.36);
+    border-color: rgba(202, 138, 4, 0.75);
+}
+
 .workspace-toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -445,7 +479,7 @@ button.danger:focus {
 
 .page-controls {
     display: grid;
-    grid-template-columns: 1fr 44px;
+    grid-template-columns: minmax(0, 1fr) repeat(3, 44px);
     gap: 20px;
     align-items: stretch;
     width: 100%;
@@ -499,26 +533,28 @@ button.danger:focus {
     height: 44px;
 }
 
-.page-controls .delete-page-btn {
-    width: 100%;
-    min-height: 44px;
-    font-size: 1.25rem;
-    line-height: 1;
-}
-
-/* New layout-specific styles */
 .page-controls .delete-page-btn,
-.page-controls .gutter-selector input[type="color"] {
+.page-controls .gutter-selector input[type="color"],
+.page-controls .page-lock-btn {
     width: 44px;
     height: 44px;
     padding: 0;
     aspect-ratio: 1 / 1;
 }
 
+.page-controls .delete-page-btn {
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
 .page-controls .layout-selector select {
     width: 100%;
     height: 44px;
     padding: 10px 14px;
+}
+
+.page.is-locked .panel-image {
+    cursor: not-allowed !important;
 }
 
 .page select:focus,
