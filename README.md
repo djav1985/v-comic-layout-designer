@@ -25,6 +25,23 @@ A modern MVC PHP application for crafting comic spreads. Upload artwork, drag it
 
 Uploaded images are stored in `public/uploads/`. Generated exports live in `public/storage/generated/`.
 
+## Development
+
+- Run the automated test suite:
+  ```bash
+  composer test
+  ```
+- Lint the codebase:
+  ```bash
+  composer lint
+  ```
+- Auto-format PHP files:
+  ```bash
+  composer format
+  ```
+
+The upload workflow now supports both browser requests and CLI-driven tests. When running in a non-HTTP context (such as PHPUnit), temporary files are safely moved into the upload directory so tests can assert on the resulting state without triggering `is_uploaded_file()` failures.
+
 ## Keyboard Shortcuts
 
 | Shortcut | Action |
