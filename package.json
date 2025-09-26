@@ -1,6 +1,6 @@
 {
-  "name": "v-comic-layout-designer-electron",
-  "version": "0.1.0",
+  "name": "Comic Layout Designer",
+  "version": "v1.0.0",
   "description": "Electron wrapper with embedded PHP server for the V Comic Layout Designer application.",
   "main": "electron/main.js",
   "scripts": {
@@ -55,6 +55,7 @@
       "artifactName": "v-comic-layout-designer-Setup-${version}.exe"
     },
     "nsis": {
+      "oneClick": false,
       "perMachine": true,
       "allowToChangeInstallationDirectory": true
     }
