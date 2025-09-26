@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 ### Added
-- Stream live page updates over Server-Sent Events so any open workspace reacts immediately when `state.json` is modified.
+- Stream live page updates over Server-Sent Events so any open workspace reacts immediately when the SQLite `state.db` is modified.
 - Support drag-and-drop uploads with visual feedback in the asset library.
 - Provide reset, save state, and load state controls that archive the SQLite database with uploaded images in a downloadable ZIP.
 - Introduce a workspace help toggle that reveals the keyboard shortcut reference with a smooth animated transition.
@@ -28,7 +28,8 @@
 - Restore the classic 5.5" × 8.5" workspace aspect ratio so on-screen previews and exported files fill vertically without trimming the bottom or right-hand panels.
 - Eliminate duplicate PDF export constants that triggered a `pageWidth` redeclaration error in the browser console.
 - Reload saved spreads directly from the persisted state file so previously authored pages render immediately after refresh.
-- Treat `public/storage/state.json` as the single source of truth when rehydrating pages, removing the fallback to embedded data bundled in the HTML.
+- Treat `public/storage/state.db` as the single source of truth when rehydrating pages, removing the fallback to embedded data bundled in the HTML.
 
 ### Documentation
 - Replace the README with an in-depth, highly visual guide covering architecture, workflows, testing commands, and troubleshooting tips.
+- Add workspace screenshots and clarify README sections to keep the documentation accurate and actionable.
