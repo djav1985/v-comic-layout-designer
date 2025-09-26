@@ -66,10 +66,11 @@ async function startPhpServer() {
     ? path.join(process.resourcesPath, "app")
     : path.join(__dirname, "..");
   const publicDir = path.join(projectRoot, "public");
+  const routerScript = path.join(publicDir, "index.php");
 
   phpProcess = spawn(
     phpBinary,
-    ["-S", `127.0.0.1:${serverPort}`, "-t", publicDir],
+    ["-S", `127.0.0.1:${serverPort}`, "-t", publicDir, routerScript],
     {
       cwd: projectRoot,
       stdio: "pipe",
