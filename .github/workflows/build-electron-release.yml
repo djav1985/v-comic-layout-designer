@@ -7,11 +7,6 @@ on:
         description: "Semantic version for this release (e.g. 1.0.0 or v1.0.0)"
         required: true
 
-permissions:
-  contents: write      # needed for release creation
-  id-token: write      # needed for attest-build-provenance
-  actions: read
-
 jobs:
   build:
     runs-on: windows-latest
@@ -63,7 +58,7 @@ jobs:
       - name: Install PHP dependencies
         run: composer install --no-dev --optimize-autoloader
 
-      - name: Cache Electron (restore)
+      - name: Cache Electron
         uses: actions/cache@v4
         with:
           path: |
@@ -108,28 +103,11 @@ jobs:
             ForEach-Object { $_.Hash } |
             Out-File -Encoding ASCII dist/renamed/v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64.sha256
 
-      - name: Generate build provenance attestation
-        uses: actions/attest-build-provenance@v1
-        with:
-          subject-path: dist/renamed/v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64.exe
-
-      - name: Save Electron cache (post)
-        if: always()
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/electron
-            ~/.cache/electron-builder
-          key: electron-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-          save-always: true
-
-      - name: Upload clean artifacts
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64
-          path: |
-            dist/renamed/*.exe
-            dist/renamed/*.sha256
+          path: dist/renamed/*
 
   release:
     needs: build
@@ -145,8 +123,6 @@ jobs:
         with:
           tag_name: ${{ needs.build.outputs.tag }}
           name: V Comic Layout Designer ${{ needs.build.outputs.tag }}
-          files: |
-            dist/**/*.exe
-            dist/**/*.sha256
+          files: dist/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
