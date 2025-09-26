@@ -16,7 +16,7 @@ function resolvePhpBinary() {
 
   if (app.isPackaged) {
     const executable = process.platform === "win32" ? "php.exe" : "php";
-    return path.join(process.resourcesPath, "resources", "php", executable);
+    return path.join(process.resourcesPath, "php", executable);
   }
 
   return "php";
