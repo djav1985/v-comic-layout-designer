@@ -69,7 +69,7 @@ async function startPhpServer() {
     ? path.join(process.resourcesPath, "app")
     : path.join(__dirname, "..");
   const publicDir = path.join(projectRoot, "public");
-  const routerScript = path.join(publicDir, "index.php");
+  const routerScript = path.join(publicDir, "server-router.php");
 
   phpProcess = spawn(
     phpBinary,
