@@ -148,6 +148,7 @@ async function startPhpServer() {
         ...process.env,
         APP_ENV: app.isPackaged ? "production" : "development",
         ELECTRON_APP: "1", // Flag to indicate running in Electron
+        ELECTRON_USER_DATA: app.getPath("userData"), // Pass user data path to PHP
       },
     },
   );
