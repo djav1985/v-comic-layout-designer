@@ -4,15 +4,20 @@ on:
   workflow_dispatch:
     inputs:
       release_version:
-        description: 'Semantic version for this release (e.g. 1.0.0 or v1.0.0)'
+        description: "Semantic version for this release (e.g. 1.0.0 or v1.0.0)"
         required: true
 
 jobs:
   build:
     runs-on: windows-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      semver: ${{ steps.version.outputs.semver }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: dev
 
       - name: Prepare version metadata
         id: version
@@ -33,14 +38,19 @@ jobs:
           "tag=$tag" | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
           "semver=$semver" | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-      - name: Use Node.js 20
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: npm
 
-      - name: Configure npm version
-        run: npm pkg set version=${{ steps.version.outputs.semver }}
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-
 
       - name: Install Node.js dependencies
         run: npm ci
@@ -48,10 +58,20 @@ jobs:
       - name: Install PHP dependencies
         run: composer install --no-dev --optimize-autoloader
 
-      - name: Download PHP runtime
+      - name: Cache Electron
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron
+            ~/.cache/electron-builder
+          key: electron-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            electron-${{ runner.os }}-
+
+      - name: Download and extract PHP runtime (Windows)
         shell: pwsh
         run: |
-          $phpUrl = 'https://windows.php.net/downloads/releases/php-8.2.12-nts-Win32-vs16-x64.zip'
+          $phpUrl = 'https://downloads.php.net/~windows/releases/latest/php-8.2-nts-Win32-vs16-x64-latest.zip'
           $phpZip = "$Env:RUNNER_TEMP\php-runtime.zip"
           Invoke-WebRequest -Uri $phpUrl -OutFile $phpZip
           $extractPath = "$Env:RUNNER_TEMP\php-runtime"
@@ -66,20 +86,82 @@ jobs:
           New-Item -ItemType Directory -Path "resources\php" -Force | Out-Null
           Copy-Item -Path (Join-Path $phpSource.FullName '*') -Destination "resources\php" -Recurse -Force
 
-      - name: Build Windows installer
-        run: npm run dist
+      - name: Build Electron app
+        run: npx electron-builder --win --x64
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v3
+      - name: Rename build artifact
+        shell: bash
+        run: |
+          mkdir -p dist/renamed
+          file=$(ls dist/*.exe)
+          mv "$file" "dist/renamed/v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64.exe"
+
+      - name: Generate SHA256 checksum
+        shell: pwsh
+        run: |
+          Get-FileHash dist/renamed/v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64.exe -Algorithm SHA256 |
+            ForEach-Object { $_.Hash } |
+            Out-File -Encoding ASCII dist/renamed/v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64.sha256
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign binary with cosign (keyless)
+        shell: pwsh
+        run: |
+          cosign sign-blob --yes `
+            --output-signature dist/renamed/v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64.sig `
+            dist/renamed/v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64.exe
+
+      - name: Verify cosign signature
+        shell: pwsh
+        run: |
+          cosign verify-blob `
+            --signature dist/renamed/v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64.sig `
+            dist/renamed/v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64.exe
+
+      - name: Verify SHA256 checksum
+        shell: pwsh
+        run: |
+          $expected = Get-Content dist/renamed/v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64.sha256
+          $actual = (Get-FileHash dist/renamed/v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64.exe -Algorithm SHA256).Hash
+          if ($expected.Trim() -ne $actual.Trim()) {
+            throw "Checksum verification failed: expected $expected but got $actual"
+          } else {
+            Write-Host "Checksum verification passed."
+          }
+
+      - name: Generate build provenance attestation
+        uses: actions/attest-build-provenance@v1
         with:
-          name: v-comic-layout-designer-${{ steps.version.outputs.semver }}
-          path: dist/v-comic-layout-designer-Setup-${{ steps.version.outputs.semver }}.exe
+          subject-path: dist/renamed/v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64.exe
+
+      - name: Upload clean artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64
+          path: |
+            dist/renamed/*.exe
+            dist/renamed/*.sha256
+            dist/renamed/*.sig
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./dist
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: V Comic Layout Designer ${{ steps.version.outputs.tag }}
-          files: dist/v-comic-layout-designer-Setup-${{ steps.version.outputs.semver }}.exe
+          tag_name: ${{ needs.build.outputs.tag }}
+          name: V Comic Layout Designer ${{ needs.build.outputs.tag }}
+          files: |
+            dist/**/*.exe
+            dist/**/*.sha256
+            dist/**/*.sig
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
