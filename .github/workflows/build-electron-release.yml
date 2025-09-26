@@ -87,7 +87,7 @@ jobs:
           Copy-Item -Path (Join-Path $phpSource.FullName '*') -Destination "resources\php" -Recurse -Force
 
       - name: Build Electron app
-        run: npx electron-builder --win --x64
+        run: npx electron-builder --win --x64 --publish never
 
       - name: Rename build artifact
         shell: bash
