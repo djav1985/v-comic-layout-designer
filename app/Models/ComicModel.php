@@ -29,7 +29,7 @@ class ComicModel
         
         // Ensure upload directory exists and is writable
         if (!is_dir($this->uploadDir)) {
-            if (!mkdir($this->uploadDir, 0777, true) && !is_dir($this->uploadDir)) {
+            if (!mkdir($this->uploadDir, 0755, true) && !is_dir($this->uploadDir)) {
                 throw new \RuntimeException("Failed to create upload directory: {$this->uploadDir}");
             }
         }
