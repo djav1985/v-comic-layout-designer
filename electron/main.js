@@ -9,6 +9,9 @@ let serverPort = null;
 
 const PHP_BINARY_ENV = "PHP_BINARY_PATH";
 
+// Check for development mode flag
+const isDevelopment = process.argv.includes("--dev") || !app.isPackaged;
+
 function resolvePhpBinary() {
   if (process.env[PHP_BINARY_ENV]) {
     return process.env[PHP_BINARY_ENV];
@@ -166,7 +169,7 @@ async function createWindow() {
   const appUrl = `http://127.0.0.1:${port}`;
   await mainWindow.loadURL(appUrl);
 
-  if (!app.isPackaged) {
+  if (!app.isPackaged || isDevelopment) {
     mainWindow.webContents.openDevTools({ mode: "detach" });
   }
 
