@@ -9,6 +9,26 @@ import {
 import { setupExportButtons, setupKeyboardShortcuts } from "./exporters.js";
 
 window.addEventListener("DOMContentLoaded", () => {
+  // Detect if running in Electron and set up appropriate handlers
+  if (window.electronAPI) {
+    console.log("Running in Electron environment");
+    
+    // Set up Electron-specific error handlers
+    window.electronAPI.onServerError((error) => {
+      console.error("Server error from Electron:", error);
+      // Show user-friendly error message
+      if (error.type === "launch_error") {
+        alert("Failed to start the application server. Please check the installation and try again.");
+      } else if (error.type === "exit_error") {
+        alert("The application server stopped unexpectedly. The app will now close.");
+      }
+    });
+
+    window.electronAPI.onServerReady((info) => {
+      console.log("Server ready:", info);
+    });
+  }
+
   const imageList = document.getElementById("imageList");
   const uploadForm = document.getElementById("uploadForm");
   const imageInput = document.getElementById("imageInput");

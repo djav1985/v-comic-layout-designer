@@ -16,15 +16,63 @@ class ComicModel
 
     public function __construct()
     {
-        $this->uploadDir = __DIR__ . '/../../public/uploads';
-        $this->layoutDir = __DIR__ . '/../../layouts';
-        $this->db = new Database();
+        // Better path resolution for Electron environment
+        $this->uploadDir = $this->resolveUploadDir();
+        $this->layoutDir = $this->resolveLayoutDir();
         
+        try {
+            $this->db = new Database();
+        } catch (\Exception $e) {
+            error_log("Failed to initialize database: " . $e->getMessage());
+            throw $e;
+        }
+        
+        // Ensure upload directory exists and is writable
         if (!is_dir($this->uploadDir)) {
-            mkdir($this->uploadDir, 0777, true);
+            if (!mkdir($this->uploadDir, 0755, true) && !is_dir($this->uploadDir)) {
+                throw new \RuntimeException("Failed to create upload directory: {$this->uploadDir}");
+            }
+        }
+        
+        if (!is_writable($this->uploadDir)) {
+            throw new \RuntimeException("Upload directory is not writable: {$this->uploadDir}");
         }
         
         $this->loadState();
+    }
+
+    private function resolveUploadDir(): string
+    {
+        // Check if running in Electron environment
+        if (isset($_ENV['ELECTRON_APP']) || getenv('ELECTRON_APP')) {
+            // In Electron, use a user data directory for uploads
+            $userDataDir = $this->getElectronUserDataPath();
+            return $userDataDir . DIRECTORY_SEPARATOR . 'uploads';
+        }
+        
+        // Default path for regular web server
+        return __DIR__ . '/../../public/uploads';
+    }
+
+    private function resolveLayoutDir(): string
+    {
+        // Layouts directory should always be in the app structure
+        return __DIR__ . '/../../layouts';
+    }
+
+    private function getElectronUserDataPath(): string
+    {
+        // Try to get user data path from environment or use fallback
+        if ($userDataPath = getenv('ELECTRON_USER_DATA')) {
+            return $userDataPath;
+        }
+        
+        // Fallback to public directory
+        $baseDir = __DIR__ . '/../../public';
+        if (!is_dir($baseDir)) {
+            mkdir($baseDir, 0777, true);
+        }
+        return $baseDir;
     }
 
     private function loadState(): void

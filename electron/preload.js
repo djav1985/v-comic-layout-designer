@@ -26,6 +26,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // PHP server status (if needed for debugging)
   getServerStatus: () => ipcRenderer.invoke("php:getStatus"),
 
+  // Environment detection
+  isElectron: () => true,
+  isPackaged: () => process.env.NODE_ENV === "production",
+
   // Event listeners for main process events
   onServerReady: (callback) => {
     const wrappedCallback = (event, ...args) => callback(...args);
@@ -40,5 +44,14 @@ contextBridge.exposeInMainWorld("electronAPI", {
   },
 });
 
+// Add error handling for the renderer process
+window.addEventListener("error", (event) => {
+  console.error("Renderer error:", event.error);
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  console.error("Unhandled promise rejection:", event.reason);
+});
+
 // Log that preload script has loaded (for debugging)
-console.log("Electron preload script loaded");
+console.log("Electron preload script loaded successfully");

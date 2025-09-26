@@ -5,8 +5,8 @@
   "main": "electron/main.js",
   "scripts": {
     "electron:dev": "npm run start",
-    "start": "electron .",
-    "dev": "electron . --dev",
+    "start": "electron . --no-sandbox",
+    "dev": "electron . --dev --no-sandbox",
     "lint": "prettier --check \"electron/**/*.js\"",
     "format": "prettier --write \"electron/**/*.js\"",
     "build": "electron-builder --dir",
