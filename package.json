@@ -42,7 +42,7 @@
     "extraResources": [
       {
         "from": "resources/php",
-        "to": "resources/php"
+        "to": "php"
       }
     ],
     "win": {

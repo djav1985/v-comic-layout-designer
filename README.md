@@ -154,7 +154,7 @@ This starts the PHP development server on a random open port and automatically l
 ```bash
 npm run dist
 ```
-The build process expects a PHP runtime in `resources/php`. During CI this directory is populated automatically; for manual builds download the [official PHP non-thread-safe build for Windows](https://windows.php.net/download) and extract it into `resources/php` so that `php.exe` and its DLLs sit directly inside that folder.
+The build process expects a PHP runtime in `resources/php`. During CI this directory is populated automatically; for manual builds download the [official PHP non-thread-safe build for Windows](https://windows.php.net/download) and extract it into `resources/php` so that `php.exe` and its DLLs sit directly inside that folder. Electron Builder now copies this directory straight into `resources/php` inside the packaged app (dropping the previous redundant `resources/resources/php` nesting), so the runtime lands exactly where the launcher searches for it.
 
 > [!NOTE]
 > The installer now targets per-user installs by default, so Windows writes to `%LOCALAPPDATA%\Programs\V Comic Layout Designer` without requesting elevation. Advanced users can still opt into a different path during setup.
