@@ -54,12 +54,56 @@ async function startPhpServer() {
 
   if (!ensurePhpBinaryExists(phpBinary)) {
     const message = [
-      "The bundled PHP runtime could not be located.",
+      "The PHP runtime could not be located.",
       "If you are running a development build, make sure PHP is installed and available on your PATH.",
       "If you are running a packaged build, ensure the PHP binary is placed in resources/php inside the app folder.",
+      `Searched for PHP at: ${phpBinary}`,
     ].join("\n");
 
     dialog.showErrorBox("PHP Runtime Missing", message);
+    app.quit();
+    return null;
+  }
+
+  // Verify PHP version compatibility
+  try {
+    const { spawn: syncSpawn } = require("child_process");
+    const versionCheck = syncSpawn(phpBinary, ["--version"], { stdio: "pipe" });
+    let versionOutput = "";
+
+    versionCheck.stdout.on("data", (data) => {
+      versionOutput += data.toString();
+    });
+
+    await new Promise((resolve, reject) => {
+      versionCheck.on("close", (code) => {
+        if (code !== 0) {
+          reject(new Error(`PHP version check failed with code ${code}`));
+        } else {
+          resolve();
+        }
+      });
+      versionCheck.on("error", reject);
+    });
+
+    console.log(`PHP version check: ${versionOutput.split("\n")[0]}`);
+
+    // Check if PHP version is >= 8.0
+    const versionMatch = versionOutput.match(/PHP (\d+)\.(\d+)/);
+    if (versionMatch) {
+      const [, major, minor] = versionMatch;
+      if (parseInt(major) < 8) {
+        throw new Error(
+          `PHP ${major}.${minor} is not supported. PHP 8.0+ is required.`,
+        );
+      }
+    }
+  } catch (error) {
+    console.error("PHP compatibility check failed:", error);
+    dialog.showErrorBox(
+      "PHP Compatibility Error",
+      `PHP version check failed: ${error.message}`,
+    );
     app.quit();
     return null;
   }
@@ -71,6 +115,29 @@ async function startPhpServer() {
   const publicDir = path.join(projectRoot, "public");
   const routerScript = path.join(publicDir, "server-router.php");
 
+  // Verify required files exist
+  if (!fs.existsSync(publicDir)) {
+    dialog.showErrorBox(
+      "Application Files Missing",
+      `Public directory not found: ${publicDir}`,
+    );
+    app.quit();
+    return null;
+  }
+
+  if (!fs.existsSync(routerScript)) {
+    dialog.showErrorBox(
+      "Application Files Missing",
+      `Server router script not found: ${routerScript}`,
+    );
+    app.quit();
+    return null;
+  }
+
+  console.log(
+    `Starting PHP server on port ${serverPort} with root: ${projectRoot}`,
+  );
+
   phpProcess = spawn(
     phpBinary,
     ["-S", `127.0.0.1:${serverPort}`, "-t", publicDir, routerScript],
@@ -80,6 +147,7 @@ async function startPhpServer() {
       env: {
         ...process.env,
         APP_ENV: app.isPackaged ? "production" : "development",
+        ELECTRON_APP: "1", // Flag to indicate running in Electron
       },
     },
   );
@@ -160,19 +228,45 @@ async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
+    show: false, // Don't show until ready-to-show
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
+      enableRemoteModule: false,
+      allowRunningInsecureContent: false,
+      experimentalFeatures: false,
       preload: path.join(__dirname, "preload.js"),
+      // Add security configurations for Electron
+      webSecurity: true,
+      sandbox: false, // Required for PHP server communication
     },
   });
 
   const appUrl = `http://127.0.0.1:${port}`;
-  await mainWindow.loadURL(appUrl);
 
-  if (!app.isPackaged || isDevelopment) {
-    mainWindow.webContents.openDevTools({ mode: "detach" });
-  }
+  // Set security headers before loading URL
+  mainWindow.webContents.session.webRequest.onHeadersReceived(
+    (details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          "Content-Security-Policy": [
+            "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com;",
+          ],
+        },
+      });
+    },
+  );
+
+  // Show window only when ready
+  mainWindow.once("ready-to-show", () => {
+    mainWindow.show();
+    if (!app.isPackaged || isDevelopment) {
+      mainWindow.webContents.openDevTools({ mode: "detach" });
+    }
+  });
+
+  await mainWindow.loadURL(appUrl);
 
   mainWindow.on("closed", () => {
     mainWindow = null;
@@ -248,6 +342,21 @@ function setupIpcHandlers() {
 }
 
 app.on("ready", () => {
+  // Handle command line arguments for better compatibility
+  const argv = process.argv;
+
+  // Add sandbox disabling for CI environments
+  if (argv.includes("--no-sandbox") || process.env.CI) {
+    app.commandLine.appendSwitch("--no-sandbox");
+    app.commandLine.appendSwitch("--disable-setuid-sandbox");
+  }
+
+  // Disable GPU acceleration in headless environments
+  if (process.env.CI || !process.env.DISPLAY) {
+    app.commandLine.appendSwitch("--disable-gpu");
+    app.commandLine.appendSwitch("--disable-software-rasterizer");
+  }
+
   setupIpcHandlers();
   createWindow();
 });

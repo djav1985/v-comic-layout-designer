@@ -23,9 +23,22 @@ class Router
 
     public static function run(): void
     {
+        // Handle session configuration for Electron environment
         if (session_status() === PHP_SESSION_NONE) {
+            // Configure session for Electron environment
+            if (isset($_ENV['ELECTRON_APP']) || getenv('ELECTRON_APP')) {
+                // Use file-based sessions with a secure path
+                $sessionPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'v-comic-sessions';
+                if (!is_dir($sessionPath)) {
+                    mkdir($sessionPath, 0700, true);
+                }
+                session_save_path($sessionPath);
+                session_name('v_comic_session');
+            }
+            
             session_start();
         }
+        
         $dispatcher = self::getDispatcher();
         $httpMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
         $uri = $_SERVER['REQUEST_URI'] ?? '/';
@@ -49,12 +62,27 @@ class Router
                 $fqcn = 'App\\Controllers\\' . $class;
                 
                 try {
+                    if (!class_exists($fqcn)) {
+                        throw new \Exception("Controller class {$fqcn} not found");
+                    }
+                    
                     $controller = new $fqcn();
+                    
+                    if (!method_exists($controller, $method)) {
+                        throw new \Exception("Method {$method} not found in {$fqcn}");
+                    }
+                    
                     call_user_func_array([$controller, $method], $vars);
                 } catch (\Throwable $e) {
                     error_log('Router error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
                     http_response_code(500);
-                    echo 'Something broke.';
+                    
+                    // More detailed error in development
+                    if (getenv('APP_ENV') === 'development') {
+                        echo 'Error: ' . $e->getMessage();
+                    } else {
+                        echo 'Something broke.';
+                    }
                 }
                 break;
         }

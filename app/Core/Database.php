@@ -8,17 +8,57 @@ class Database
 
     public function __construct()
     {
-        $this->dbPath = __DIR__ . '/../../public/storage/state.db';
+        // Better path resolution for Electron environment
+        $this->dbPath = $this->resolveStoragePath();
         
         // Ensure storage directory exists
         $storageDir = dirname($this->dbPath);
         if (!is_dir($storageDir)) {
-            mkdir($storageDir, 0777, true);
+            if (!mkdir($storageDir, 0777, true) && !is_dir($storageDir)) {
+                throw new \RuntimeException("Failed to create storage directory: {$storageDir}");
+            }
         }
         
-        $this->pdo = new \PDO('sqlite:' . $this->dbPath);
-        $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        $this->initSchema();
+        // Verify directory is writable
+        if (!is_writable($storageDir)) {
+            throw new \RuntimeException("Storage directory is not writable: {$storageDir}");
+        }
+        
+        try {
+            $this->pdo = new \PDO('sqlite:' . $this->dbPath);
+            $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+            $this->initSchema();
+        } catch (\Exception $e) {
+            throw new \RuntimeException("Failed to initialize database at {$this->dbPath}: " . $e->getMessage());
+        }
+    }
+
+    private function resolveStoragePath(): string
+    {
+        // Check if running in Electron environment
+        if (isset($_ENV['ELECTRON_APP']) || getenv('ELECTRON_APP')) {
+            // In Electron, use a user data directory for persistence
+            $userDataDir = $this->getElectronUserDataPath();
+            return $userDataDir . DIRECTORY_SEPARATOR . 'state.db';
+        }
+        
+        // Default path for regular web server
+        return __DIR__ . '/../../public/storage/state.db';
+    }
+
+    private function getElectronUserDataPath(): string
+    {
+        // Try to get user data path from environment or use fallback
+        if ($userDataPath = getenv('ELECTRON_USER_DATA')) {
+            return $userDataPath;
+        }
+        
+        // Fallback to public/storage for now
+        $storageDir = __DIR__ . '/../../public/storage';
+        if (!is_dir($storageDir)) {
+            mkdir($storageDir, 0777, true);
+        }
+        return $storageDir;
     }
 
     private function initSchema(): void
