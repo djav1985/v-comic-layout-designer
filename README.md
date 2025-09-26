@@ -157,7 +157,7 @@ npm run dist
 The build process expects a PHP runtime in `resources/php`. During CI this directory is populated automatically; for manual builds download the [official PHP non-thread-safe build for Windows](https://windows.php.net/download) and extract it into `resources/php` so that `php.exe` and its DLLs sit directly inside that folder.
 
 > [!NOTE]
-> The installer now targets per-machine installs by default, so Windows will request elevation and prefill the destination directory with `C:\Program Files`. Advanced users can still opt into a different path during setup.
+> The installer now targets per-user installs by default, so Windows writes to `%LOCALAPPDATA%\Programs\V Comic Layout Designer` without requesting elevation. Advanced users can still opt into a different path during setup.
 
 Packaged builds on every platform now resolve the embedded PHP binary from `resources/php/<platform executable>`, matching the layout emitted by `electron-builder`'s `extraResources` copy step. If the file is missing the app will prompt the user to reinstall or restore the bundled runtime.
 
