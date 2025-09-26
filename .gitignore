@@ -6,3 +6,7 @@
 *.png
 # SQLite database files
 public/storage/*.db
+
+# Go executables  
+*.exe
+comic-designer*

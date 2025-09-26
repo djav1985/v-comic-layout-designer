@@ -43,15 +43,21 @@ func (h *HomeController) Index(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Convert layouts map to keys array like PHP array_keys()
+	layoutKeys := make([]string, 0, len(layouts))
+	for k := range layouts {
+		layoutKeys = append(layoutKeys, k)
+	}
+
 	data := struct {
 		Images    []interface{} `json:"images"`
-		Layouts   map[string]string `json:"layouts"`
+		Layouts   []string      `json:"layouts"`
 		Templates map[string]string `json:"templates"`
 		Styles    map[string]string `json:"styles"`
 		Pages     []interface{} `json:"pages"`
 	}{
 		Images:    interfaceSlice(images),
-		Layouts:   layouts,
+		Layouts:   layoutKeys,
 		Templates: templates,
 		Styles:    styles,
 		Pages:     interfaceSlice(pages),
@@ -66,9 +72,9 @@ func (h *HomeController) Index(w http.ResponseWriter, r *http.Request) {
 
 	// Create template with custom functions
 	funcMap := template.FuncMap{
-		"toJSON": func(v interface{}) string {
+		"toJSON": func(v interface{}) template.JS {
 			bytes, _ := json.Marshal(v)
-			return string(bytes)
+			return template.JS(bytes)
 		},
 	}
 
