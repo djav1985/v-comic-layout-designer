@@ -1,0 +1,16 @@
+{
+  "name": "v-comic-layout-designer-dev-tools",
+  "version": "1.0.0",
+  "description": "Development tools for running PHP tests and handling process output",
+  "main": "run-tests.js",
+  "scripts": {
+    "test": "node run-tests.js",
+    "test:php": "node run-tests.js"
+  },
+  "keywords": ["php", "testing", "development", "comic-layout"],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

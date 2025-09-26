@@ -208,6 +208,21 @@ php tests/ImportStateFromDatabaseTest.php
 php tests/SessionLockTest.php
 ```
 
+### Node.js Development Tools
+For development convenience, a Node.js test runner is available:
+
+```bash
+# Install Node.js dependencies
+npm install
+
+# Run all PHP tests through Node.js test runner
+npm test
+# or
+node run-tests.js
+```
+
+The Node.js test runner properly handles PHP process stdout and stderr streams, converting buffer data to strings before trimming whitespace.
+
 All tests exit with status code `0` on success and emit a descriptive message on failure.
 
 ---
