@@ -7,6 +7,11 @@ on:
         description: "Semantic version for this release (e.g. 1.0.0 or v1.0.0)"
         required: true
 
+permissions:
+  contents: write      # needed for release creation
+  id-token: write      # needed for attest-build-provenance
+  actions: read
+
 jobs:
   build:
     runs-on: windows-latest
@@ -58,7 +63,7 @@ jobs:
       - name: Install PHP dependencies
         run: composer install --no-dev --optimize-autoloader
 
-      - name: Cache Electron
+      - name: Cache Electron (restore)
         uses: actions/cache@v4
         with:
           path: |
@@ -107,6 +112,16 @@ jobs:
         uses: actions/attest-build-provenance@v1
         with:
           subject-path: dist/renamed/v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64.exe
+
+      - name: Save Electron cache (post)
+        if: always()
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron
+            ~/.cache/electron-builder
+          key: electron-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          save-always: true
 
       - name: Upload clean artifacts
         uses: actions/upload-artifact@v4
