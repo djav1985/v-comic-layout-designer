@@ -41,6 +41,15 @@ jobs:
           node-version: 20
           cache: 'npm'
 
+      # Cache Composer packages
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-
+
       - name: Configure npm version
         run: npm pkg set version=${{ steps.version.outputs.semver }}
 
@@ -55,7 +64,14 @@ jobs:
         run: |
           $phpUrl = 'https://downloads.php.net/~windows/releases/latest/php-8.2-nts-Win32-vs16-x64-latest.zip'
           $phpZip = "$Env:RUNNER_TEMP\php-runtime.zip"
-          Invoke-WebRequest -Uri $phpUrl -OutFile $phpZip
+
+          try {
+            Invoke-WebRequest -Uri $phpUrl -OutFile $phpZip
+          } catch {
+            Write-Host "Latest link failed, falling back to pinned 8.2.29..."
+            Invoke-WebRequest -Uri 'https://downloads.php.net/~windows/releases/php-8.2.29-nts-Win32-vs16-x64.zip' -OutFile $phpZip
+          }
+
           $extractPath = "$Env:RUNNER_TEMP\php-runtime"
           if (Test-Path $extractPath) {
             Remove-Item -Path $extractPath -Recurse -Force
@@ -69,7 +85,7 @@ jobs:
           Copy-Item -Path (Join-Path $phpSource.FullName '*') -Destination "resources\php" -Recurse -Force
 
       - name: Build Windows installer
-        run: npm run dist
+        run: npm run dist -- --publish=never
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -85,3 +101,8 @@ jobs:
           files: dist/v-comic-layout-designer-Setup-${{ steps.version.outputs.semver }}.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate build attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: dist/v-comic-layout-designer-Setup-${{ steps.version.outputs.semver }}.exe
