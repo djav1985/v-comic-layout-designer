@@ -16,21 +16,19 @@ func NewImageController(model *models.ComicModel) *ImageController {
 }
 
 func (i *ImageController) Delete(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		ImageID string `json:"imageId"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	// Parse form data
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
 		return
 	}
 
-	if req.ImageID == "" {
+	imageID := r.FormValue("name")
+	if imageID == "" {
 		http.Error(w, "Image ID is required", http.StatusBadRequest)
 		return
 	}
 
-	if err := i.model.DeleteImage(req.ImageID); err != nil {
+	if err := i.model.DeleteImage(imageID); err != nil {
 		http.Error(w, "Failed to delete image", http.StatusInternalServerError)
 		return
 	}
