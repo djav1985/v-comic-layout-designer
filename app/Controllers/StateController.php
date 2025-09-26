@@ -97,7 +97,7 @@ class StateController
             return;
         }
 
-        $extractDir = sys_get_temp_dir() . '/state_' . bin2hex(random_bytes(8));
+        $extractDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'state_' . bin2hex(random_bytes(8));
         if (!mkdir($extractDir, 0777, true) && !is_dir($extractDir)) {
             $zip->close();
             http_response_code(500);

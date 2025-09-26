@@ -119,10 +119,30 @@ flowchart LR
 ---
 
 ## 🚀 Getting started
+
 ### Prerequisites
 - PHP **8.0+** with SQLite extension enabled
-- Composer
+- Composer  
 - Modern browser (Chrome, Firefox, Safari, Edge)
+
+### Windows Desktop App
+For Windows users, a complete Electron desktop application is available with embedded PHP server - no manual PHP installation required!
+
+**Download from GitHub Releases:**
+1. Go to [Releases](../../releases)
+2. Download the latest `v-comic-layout-designer-Setup-{version}.exe` 
+3. Run the installer (no admin rights required)
+4. Launch and start creating!
+
+**Build from source:**
+```bash
+npm install
+npm run dist  # Creates Windows installer in dist/
+```
+
+See [WINDOWS_COMPATIBILITY.md](WINDOWS_COMPATIBILITY.md) for detailed Windows-specific information.
+
+### Web Application Setup
 
 ### Install dependencies
 ```bash
