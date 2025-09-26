@@ -8,6 +8,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use App\Models\ComicModel;
 use App\Controllers\StateController;
+use App\Core\Database;
 
 echo "🪟 Testing Windows compatibility...\n";
 
@@ -46,7 +47,7 @@ try {
 
     // Test 4: Database path handling 
     echo "🗄️ Testing database path handling...\n";
-    $db = new App\Core\Database();
+    $db = new Database();
     $dbPath = $db->getDbPath();
     
     if (!file_exists($dbPath)) {
