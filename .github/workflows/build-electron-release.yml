@@ -42,20 +42,6 @@ jobs:
         run: npm ci
         shell: pwsh
 
-      # Ensure Composer cache directory exists before caching
-      - name: Ensure Composer cache dir exists
-        shell: pwsh
-        run: |
-          $composerCache = Join-Path $env:USERPROFILE ".composer\cache"
-          New-Item -ItemType Directory -Force -Path $composerCache | Out-Null
-
-      - name: Cache Composer
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.USERPROFILE }}\.composer\cache
-          key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
-          restore-keys: composer-${{ runner.os }}-
-
       - name: Install PHP dependencies and runtime
         run: |
           composer install --no-dev --optimize-autoloader
@@ -70,24 +56,6 @@ jobs:
           New-Item -ItemType Directory -Path "resources\php" -Force | Out-Null
           Copy-Item -Path (Join-Path $phpSource.FullName '*') -Destination "resources\php" -Recurse -Force
         shell: pwsh
-
-      # Ensure Electron cache directories exist before caching
-      - name: Ensure Electron cache dirs exist
-        shell: pwsh
-        run: |
-          $electronCache = Join-Path $env:USERPROFILE ".cache\electron"
-          $builderCache  = Join-Path $env:USERPROFILE ".cache\electron-builder"
-          New-Item -ItemType Directory -Force -Path $electronCache | Out-Null
-          New-Item -ItemType Directory -Force -Path $builderCache  | Out-Null
-
-      - name: Cache Electron
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.USERPROFILE }}\.cache\electron
-            ${{ env.USERPROFILE }}\.cache\electron-builder
-          key: electron-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-          restore-keys: electron-${{ runner.os }}-
 
       - name: Build Electron app
         run: npx electron-builder --win --x64 --publish never
