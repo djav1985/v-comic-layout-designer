@@ -53,7 +53,7 @@ jobs:
       - name: Download PHP runtime
         shell: pwsh
         run: |
-          $phpUrl = 'https://windows.php.net/downloads/releases/php-8.2-nts-Win32-vs16-x64-latest.zip'
+          $phpUrl = 'https://downloads.php.net/~windows/releases/latest/php-8.2-nts-Win32-vs16-x64-latest.zip. 
           $phpZip = "$Env:RUNNER_TEMP\php-runtime.zip"
           Invoke-WebRequest -Uri $phpUrl -OutFile $phpZip
           $extractPath = "$Env:RUNNER_TEMP\php-runtime"
