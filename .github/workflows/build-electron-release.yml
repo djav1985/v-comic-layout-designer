@@ -106,9 +106,20 @@ jobs:
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
             npm run dist -- --linux AppImage
           elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            npm run dist -- --mac arm64
+            npm run dist -- --mac dmg --arch=universal
           else
             npm run dist -- --win --x64 --publish=never
+          fi
+        shell: bash
+
+      - name: Rename artifacts with OS + CPU suffix
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            mv dist/*.AppImage dist/v-comic-layout-designer-${{ steps.version.outputs.semver }}-linux-x64.AppImage
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            mv dist/*.dmg dist/v-comic-layout-designer-${{ steps.version.outputs.semver }}-mac-universal.dmg
+          else
+            mv dist/*.exe dist/v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64.exe
           fi
         shell: bash
 
