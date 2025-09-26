@@ -60,10 +60,7 @@ func (u *UploadController) Upload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"status": "ok",
-		"images": uploadedImages,
-	})
+	json.NewEncoder(w).Encode(uploadedImages)
 }
 
 func readFile(file multipart.File) ([]byte, error) {
