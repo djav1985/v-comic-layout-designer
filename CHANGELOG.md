@@ -4,6 +4,7 @@
 ### Added
 - Wrap the application in an Electron shell that automatically boots an embedded PHP server for desktop use.
 - Ship npm scripts for local Electron development builds and Windows installer packaging via `electron-builder`.
+- Configure the NSIS Windows installer for per-machine setups so it defaults to `C:\\Program Files`, requests elevation, and still allows opting into a custom directory.
 - Provide a manually triggered GitHub Actions workflow that bundles a PHP runtime, builds the Electron installer, uploads it as an artifact, and publishes a release.
 
 - Stream live page updates over Server-Sent Events so any open workspace reacts immediately when the SQLite `state.db` is modified.

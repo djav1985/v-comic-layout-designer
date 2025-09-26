@@ -53,6 +53,10 @@
         }
       ],
       "artifactName": "v-comic-layout-designer-Setup-${version}.exe"
+    },
+    "nsis": {
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true
     }
   }
 }
