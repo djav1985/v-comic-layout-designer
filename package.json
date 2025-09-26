@@ -1,0 +1,58 @@
+{
+  "name": "v-comic-layout-designer-electron",
+  "version": "0.1.0",
+  "description": "Electron wrapper with embedded PHP server for the V Comic Layout Designer application.",
+  "main": "electron/main.js",
+  "scripts": {
+    "electron:dev": "npm run start",
+    "start": "electron .",
+    "lint": "prettier --check \"electron/**/*.js\"",
+    "format": "prettier --write \"electron/**/*.js\"",
+    "build": "electron-builder --dir",
+    "dist": "electron-builder --win --x64"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.2.0",
+    "electron-builder": "^24.6.4",
+    "prettier": "^3.1.1"
+  },
+  "dependencies": {
+    "get-port": "^7.0.0",
+    "wait-on": "^7.0.1"
+  },
+  "build": {
+    "appId": "com.v.comiclayoutdesigner",
+    "productName": "V Comic Layout Designer",
+    "asar": false,
+    "directories": {
+      "buildResources": "resources"
+    },
+    "files": [
+      "app/**/*",
+      "public/**/*",
+      "layouts/**/*",
+      "composer.json",
+      "composer.lock",
+      "vendor/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/php",
+        "to": "resources/php"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "v-comic-layout-designer-Setup-${version}.exe"
+    }
+  }
+}

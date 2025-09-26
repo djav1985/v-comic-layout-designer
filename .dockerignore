@@ -3,3 +3,4 @@ public/uploads/
 public/storage/
 node_modules/
 *.log
+dist/

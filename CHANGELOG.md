@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 ### Added
+- Wrap the application in an Electron shell that automatically boots an embedded PHP server for desktop use.
+- Ship npm scripts for local Electron development builds and Windows installer packaging via `electron-builder`.
+- Provide a manually triggered GitHub Actions workflow that bundles a PHP runtime, builds the Electron installer, uploads it as an artifact, and publishes a release.
+
 - Stream live page updates over Server-Sent Events so any open workspace reacts immediately when the SQLite `state.db` is modified.
 - Support drag-and-drop uploads with visual feedback in the asset library.
 - Provide reset, save state, and load state controls that archive the SQLite database with uploaded images in a downloadable ZIP.
