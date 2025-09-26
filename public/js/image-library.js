@@ -67,7 +67,11 @@ export function getSelectedImageName() {
 }
 
 export function setInitialImages(list) {
-  if (typeof initialImages === "undefined" || !Array.isArray(initialImages)) {
+  if (typeof initialImages === "undefined") {
+    return;
+  }
+  
+  if (!Array.isArray(initialImages)) {
     return;
   }
 
