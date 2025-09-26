@@ -25,6 +25,7 @@
 - Removed the remaining angled panel styling and export helpers so every layout now uses straightforward rectangular frames.
 
 ### Fixed
+- Avoid `TypeError: getPort.makeRange is not a function` by switching to the supported `portNumbers()` helper when reserving the embedded PHP server port.
 - Execute layout PHP templates on the server before sending them to the browser so panels render correctly in both the editor and exports.
 - Release the PHP session lock before streaming live updates so refreshing the workspace no longer hangs behind an open EventSource connection.
 - Strip library thumbnail styling from dropped artwork so newly placed panels render at full size without waiting for a page refresh.
