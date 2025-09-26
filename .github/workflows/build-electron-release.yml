@@ -32,24 +32,24 @@ jobs:
           "tag=$tag" | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
           "semver=$semver" | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-      - name: Cache Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
-      - name: Install Node.js
+      - name: Install Node.js dependencies
         run: npm ci
         shell: pwsh
 
-      - name: Cache PHP
+      - name: Cache Composer
         uses: actions/cache@v4
         with:
           path: ~/.composer/cache
           key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
           restore-keys: composer-${{ runner.os }}-
 
-      - name: Install PHP
+      - name: Install PHP dependencies and runtime
         run: |
           composer install --no-dev --optimize-autoloader
           $phpUrl = 'https://downloads.php.net/~windows/releases/latest/php-8.2-nts-Win32-vs16-x64-latest.zip'
@@ -73,11 +73,11 @@ jobs:
           key: electron-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
           restore-keys: electron-${{ runner.os }}-
 
-      - name: Build Electron
+      - name: Build Electron app
         run: npx electron-builder --win --x64 --publish never
         shell: pwsh
 
-      - name: Build artifacts
+      - name: Prepare artifacts
         shell: pwsh
         run: |
           mkdir dist/renamed
@@ -90,17 +90,29 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64
+          name: build-artifacts
           path: dist/renamed/*
+          retention-days: 7
 
   release:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Download artifacts
+      - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          path: ./dist
+          name: build-artifacts
+          path: dist/renamed
+          merge-multiple: true # <--- This flattens artifacts into dist/renamed/!
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.build.outputs.tag }}
+          name: V Comic Layout Designer ${{ needs.build.outputs.tag }}
+          files: dist/renamed/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          path: ./dist
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
