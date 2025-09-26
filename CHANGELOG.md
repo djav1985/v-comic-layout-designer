@@ -6,6 +6,7 @@
 - Ship npm scripts for local Electron development builds and Windows installer packaging via `electron-builder`.
 - Configure the NSIS Windows installer for per-machine setups so it defaults to `C:\\Program Files`, requests elevation, and still allows opting into a custom directory.
 - Provide a manually triggered GitHub Actions workflow that bundles a PHP runtime, builds the Electron installer, uploads it as an artifact, and publishes a release.
+- Introduce a dedicated PHP built-in server router that preserves static asset delivery while bootstrapping the FastRoute front controller.
 
 - Stream live page updates over Server-Sent Events so any open workspace reacts immediately when the SQLite `state.db` is modified.
 - Support drag-and-drop uploads with visual feedback in the asset library.
@@ -28,7 +29,7 @@
 
 ### Fixed
 - Ensure packaged Electron builds copy the bundled PHP runtime directly to `resources/php` so the launcher can resolve the executable without a missing `resources/resources/php` hop.
-- Serve the packaged desktop build through `public/index.php` so clean routes like `/upload` and `/pages/stream` resolve correctly when using the embedded PHP server.
+- Route packaged desktop builds through `public/server-router.php` so clean endpoints like `/upload` and `/pages/stream` resolve while CSS, JavaScript, and uploads continue to stream from the PHP static handler.
 - Avoid `TypeError: getPort.makeRange is not a function` by switching to the supported `portNumbers()` helper when reserving the embedded PHP server port.
 - Execute layout PHP templates on the server before sending them to the browser so panels render correctly in both the editor and exports.
 - Release the PHP session lock before streaming live updates so refreshing the workspace no longer hangs behind an open EventSource connection.

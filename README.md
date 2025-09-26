@@ -109,6 +109,7 @@ flowchart LR
 ├── public
 │   ├── css / js          # Styled workspace shell and vanilla JS interactions
 │   ├── index.php         # Front controller that boots the router
+│   ├── server-router.php # PHP built-in server router that preserves static asset handling
 │   └── storage           # state.db and snapshot archives live here
 ├── tests                 # Lightweight smoke tests for models, layouts, and SSE helpers
 ├── composer.json         # Autoload + dependency metadata (PHP ≥ 8.0, FastRoute)
@@ -130,7 +131,7 @@ composer install
 
 ### Serve the application
 ```bash
-php -S localhost:8000 -t public
+php -S localhost:8000 -t public public/server-router.php
 ```
 
 Then visit **http://localhost:8000** and start crafting spreads. Uploaded files land in `public/uploads/`, and exports download straight to your browser.
@@ -148,7 +149,7 @@ npm install
 composer install
 npm run electron:dev
 ```
-This starts the PHP development server on a random open port and automatically loads it inside an Electron browser window.
+This starts the PHP development server on a random open port, pointing it at the custom `server-router.php` so bundled assets are still served by PHP's static file handler, and automatically loads it inside an Electron browser window.
 
 #### Build a Windows installer locally
 ```bash
@@ -160,7 +161,7 @@ The build process expects a PHP runtime in `resources/php`. During CI this direc
 > The installer now targets per-user installs by default, so Windows writes to `%LOCALAPPDATA%\Programs\V Comic Layout Designer` without requesting elevation. Advanced users can still opt into a different path during setup.
 
 > [!IMPORTANT]
-> Packaged desktop builds now route all requests through `public/index.php`, so URLs like `/upload` and `/pages/stream` resolve just as they do in development.
+> Packaged desktop builds now route all requests through `public/server-router.php`, so URLs like `/upload` and `/pages/stream` resolve just as they do in development while static assets continue to stream from PHP's built-in server handler.
 
 Packaged builds on every platform now resolve the embedded PHP binary from `resources/php/<platform executable>`, matching the layout emitted by `electron-builder`'s `extraResources` copy step. If the file is missing the app will prompt the user to reinstall or restore the bundled runtime.
 
