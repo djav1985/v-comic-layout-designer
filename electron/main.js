@@ -341,22 +341,22 @@ function setupIpcHandlers() {
   });
 }
 
+// Handle command line arguments for better compatibility
+const argv = process.argv;
+
+// Add sandbox disabling for CI environments
+if (argv.includes("--no-sandbox") || process.env.CI) {
+  app.commandLine.appendSwitch("--no-sandbox");
+  app.commandLine.appendSwitch("--disable-setuid-sandbox");
+}
+
+// Disable GPU acceleration in headless environments
+if (process.env.CI || !process.env.DISPLAY) {
+  app.commandLine.appendSwitch("--disable-gpu");
+  app.commandLine.appendSwitch("--disable-software-rasterizer");
+}
+
 app.on("ready", () => {
-  // Handle command line arguments for better compatibility
-  const argv = process.argv;
-
-  // Add sandbox disabling for CI environments
-  if (argv.includes("--no-sandbox") || process.env.CI) {
-    app.commandLine.appendSwitch("--no-sandbox");
-    app.commandLine.appendSwitch("--disable-setuid-sandbox");
-  }
-
-  // Disable GPU acceleration in headless environments
-  if (process.env.CI || !process.env.DISPLAY) {
-    app.commandLine.appendSwitch("--disable-gpu");
-    app.commandLine.appendSwitch("--disable-software-rasterizer");
-  }
-
   setupIpcHandlers();
   createWindow();
 });
