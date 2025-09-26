@@ -14,6 +14,7 @@
 - Add a lock toggle next to each page so spreads can be frozen (yellow “L”) or unlocked (green “U”) to prevent accidental image edits.
 
 ### Changed
+- Revert the Windows NSIS installer to per-user mode so packages default to `%LOCALAPPDATA%\\Programs` without elevation prompts.
 - Load the Electron main process utilities (`get-port`, `wait-on`) with dynamic `import()` calls to avoid top-level CommonJS require warnings in modern runtimes.
 - Split the monolithic `app.js` client script into focused ES modules for the image library, page management, exports, and shared state to simplify maintenance.
 - Rebuilt the entire interface with a modern glassmorphism aesthetic, refreshed typography, and responsive layout cards to separate the asset library from the page builder.
