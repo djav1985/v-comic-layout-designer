@@ -159,6 +159,9 @@ The build process expects a PHP runtime in `resources/php`. During CI this direc
 > [!NOTE]
 > The installer now targets per-user installs by default, so Windows writes to `%LOCALAPPDATA%\Programs\V Comic Layout Designer` without requesting elevation. Advanced users can still opt into a different path during setup.
 
+> [!IMPORTANT]
+> Packaged desktop builds now route all requests through `public/index.php`, so URLs like `/upload` and `/pages/stream` resolve just as they do in development.
+
 Packaged builds on every platform now resolve the embedded PHP binary from `resources/php/<platform executable>`, matching the layout emitted by `electron-builder`'s `extraResources` copy step. If the file is missing the app will prompt the user to reinstall or restore the bundled runtime.
 
 ### Automated desktop releases

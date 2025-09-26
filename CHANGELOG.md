@@ -28,6 +28,7 @@
 
 ### Fixed
 - Ensure packaged Electron builds copy the bundled PHP runtime directly to `resources/php` so the launcher can resolve the executable without a missing `resources/resources/php` hop.
+- Serve the packaged desktop build through `public/index.php` so clean routes like `/upload` and `/pages/stream` resolve correctly when using the embedded PHP server.
 - Avoid `TypeError: getPort.makeRange is not a function` by switching to the supported `portNumbers()` helper when reserving the embedded PHP server port.
 - Execute layout PHP templates on the server before sending them to the browser so panels render correctly in both the editor and exports.
 - Release the PHP session lock before streaming live updates so refreshing the workspace no longer hangs behind an open EventSource connection.
