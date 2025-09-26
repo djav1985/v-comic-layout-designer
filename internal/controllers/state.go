@@ -80,7 +80,7 @@ func (s *StateController) Import(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Save uploaded file temporarily
-	tempPath := filepath.Join("/tmp", fileHeader.Filename)
+	tempPath := filepath.Join(os.TempDir(), fileHeader.Filename)
 	tempFile, err := os.Create(tempPath)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
