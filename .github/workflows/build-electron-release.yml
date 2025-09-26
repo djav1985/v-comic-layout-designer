@@ -9,7 +9,11 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,18 +25,12 @@ jobs:
         shell: pwsh
         run: |
           $inputVersion = '${{ github.event.inputs.release_version }}'
-          if (-not $inputVersion) {
-            throw 'release_version input is required.'
-          }
+          if (-not $inputVersion) { throw 'release_version input is required.' }
           $tag = $inputVersion
-          if (-not $tag.StartsWith('v')) {
-            $tag = 'v' + $tag
-          }
+          if (-not $tag.StartsWith('v')) { $tag = 'v' + $tag }
           $semver = $inputVersion
-          if ($semver.StartsWith('v')) {
-            $semver = $semver.Substring(1)
-          }
-          "tag=$tag" | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
+          if ($semver.StartsWith('v')) { $semver = $semver.Substring(1) }
+          "tag=$tag"   | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
           "semver=$semver" | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Use Node.js 20
@@ -41,14 +39,15 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      # Cache Composer packages
       - name: Cache Composer dependencies
+        if: matrix.os == 'windows-latest'
         uses: actions/cache@v4
         with:
           path: vendor
           key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
             composer-${{ runner.os }}-
+          retention-days: 14
 
       - name: Configure npm version
         run: npm pkg set version=${{ steps.version.outputs.semver }}
@@ -57,52 +56,90 @@ jobs:
         run: npm ci
 
       - name: Install PHP dependencies
+        if: matrix.os == 'windows-latest'
         run: composer install --no-dev --optimize-autoloader
 
+      - name: Cache PHP runtime
+        if: matrix.os == 'windows-latest'
+        id: cache-php
+        uses: actions/cache@v4
+        with:
+          path: resources/php
+          key: php-runtime-8.2-nts-vs16-x64
+          retention-days: 14
+
       - name: Download PHP runtime
+        if: matrix.os == 'windows-latest' && steps.cache-php.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
           $phpUrl = 'https://downloads.php.net/~windows/releases/latest/php-8.2-nts-Win32-vs16-x64-latest.zip'
           $phpZip = "$Env:RUNNER_TEMP\php-runtime.zip"
-
           try {
             Invoke-WebRequest -Uri $phpUrl -OutFile $phpZip
           } catch {
             Write-Host "Latest link failed, falling back to pinned 8.2.29..."
             Invoke-WebRequest -Uri 'https://downloads.php.net/~windows/releases/php-8.2.29-nts-Win32-vs16-x64.zip' -OutFile $phpZip
           }
-
           $extractPath = "$Env:RUNNER_TEMP\php-runtime"
-          if (Test-Path $extractPath) {
-            Remove-Item -Path $extractPath -Recurse -Force
-          }
+          if (Test-Path $extractPath) { Remove-Item -Path $extractPath -Recurse -Force }
           Expand-Archive -Path $phpZip -DestinationPath $extractPath -Force
           $phpSource = Get-ChildItem -Path $extractPath -Directory | Select-Object -First 1
-          if (-not $phpSource) {
-            $phpSource = Get-Item -Path $extractPath
-          }
+          if (-not $phpSource) { $phpSource = Get-Item -Path $extractPath }
           New-Item -ItemType Directory -Path "resources\php" -Force | Out-Null
           Copy-Item -Path (Join-Path $phpSource.FullName '*') -Destination "resources\php" -Recurse -Force
 
-      - name: Build Windows installer
-        run: npm run dist -- --publish=never
+      - name: Cache Electron binaries
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron
+            ~/.cache/electron-builder
+            C:\Users\runneradmin\AppData\Local\electron
+            C:\Users\runneradmin\AppData\Local\electron-builder
+          key: electron-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            electron-${{ runner.os }}-
+          retention-days: 14
+
+      - name: Build installer
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            npm run dist -- --linux AppImage
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            npm run dist -- --mac arm64
+          else
+            npm run dist -- --win --x64 --publish=never
+          fi
+        shell: bash
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: v-comic-layout-designer-${{ steps.version.outputs.semver }}
-          path: dist/v-comic-layout-designer-Setup-${{ steps.version.outputs.semver }}.exe
+          name: v-comic-layout-designer-${{ steps.version.outputs.semver }}-${{ matrix.os }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.AppImage
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: V Comic Layout Designer ${{ steps.version.outputs.tag }}
-          files: dist/v-comic-layout-designer-Setup-${{ steps.version.outputs.semver }}.exe
+          tag_name: v${{ github.event.inputs.release_version }}
+          name: V Comic Layout Designer v${{ github.event.inputs.release_version }}
+          files: dist/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate build attestation
         uses: actions/attest-build-provenance@v1
         with:
-          subject-path: dist/v-comic-layout-designer-Setup-${{ steps.version.outputs.semver }}.exe
+          subject-path: dist/**/*
