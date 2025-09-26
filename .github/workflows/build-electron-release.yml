@@ -112,13 +112,4 @@ jobs:
           name: V Comic Layout Designer ${{ needs.build.outputs.tag }}
           files: dist/renamed/*
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          path: ./dist
-
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ needs.build.outputs.tag }}
-          name: V Comic Layout Designer ${{ needs.build.outputs.tag }}
-          files: dist/renamed/*
-        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
