@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Added
+- Introduce a **Build Electron Release** GitHub Actions workflow that packages Windows installers from the `dev` branch and publishes versioned releases on demand.
 - Stream live page updates over Server-Sent Events so any open workspace reacts immediately when the SQLite `state.db` is modified.
 - Support drag-and-drop uploads with visual feedback in the asset library.
 - Provide reset, save state, and load state controls that archive the SQLite database with uploaded images in a downloadable ZIP.

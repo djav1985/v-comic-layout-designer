@@ -225,6 +225,15 @@ The Node.js test runner properly handles PHP process stdout and stderr streams, 
 
 All tests exit with status code `0` on success and emit a descriptive message on failure.
 
+### Release automation
+Manual Windows builds of the Electron shell can be produced directly from GitHub using the **Build Electron Release** workflow:
+
+1. Navigate to **Actions → Build Electron Release**.
+2. Trigger **Run workflow** on the `dev` branch and supply the semantic version (for example, `1.2.0`).
+3. Wait for the workflow to finish building the installer, uploading the artifact, and publishing a draft release tagged with the provided version.
+
+The workflow installs PHP and Node.js dependencies, runs the Electron packager via `npm run dist`, bundles a PHP runtime into `resources/php`, and attaches the generated installer to the GitHub release so QA can validate it before promotion.
+
 ---
 
 ## 🧱 Frontend architecture
