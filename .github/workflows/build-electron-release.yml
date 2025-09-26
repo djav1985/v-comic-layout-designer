@@ -84,4 +84,4 @@ jobs:
           name: V Comic Layout Designer ${{ steps.version.outputs.tag }}
           files: dist/v-comic-layout-designer-Setup-${{ steps.version.outputs.semver }}.exe
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
