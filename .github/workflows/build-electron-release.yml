@@ -42,6 +42,10 @@ jobs:
         run: npm ci
         shell: pwsh
 
+      # Ensure Composer cache directory exists before caching
+      - name: Ensure Composer cache dir exists
+        run: mkdir -p ~/.composer/cache
+
       - name: Cache Composer
         uses: actions/cache@v4
         with:
@@ -63,6 +67,10 @@ jobs:
           New-Item -ItemType Directory -Path "resources\php" -Force | Out-Null
           Copy-Item -Path (Join-Path $phpSource.FullName '*') -Destination "resources\php" -Recurse -Force
         shell: pwsh
+
+      # Ensure Electron cache directories exist before caching
+      - name: Ensure Electron cache dirs exist
+        run: mkdir -p ~/.cache/electron ~/.cache/electron-builder
 
       - name: Cache Electron
         uses: actions/cache@v4
@@ -101,6 +109,18 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
+          name: build-artifacts
+          path: dist/renamed
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.build.outputs.tag }}
+          name: V Comic Layout Designer ${{ needs.build.outputs.tag }}
+          files: dist/renamed/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}        with:
           name: build-artifacts
           path: dist/renamed
           merge-multiple: true # <--- This flattens artifacts into dist/renamed/!
