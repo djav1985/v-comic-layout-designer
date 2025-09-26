@@ -2,8 +2,6 @@ const { app, BrowserWindow, dialog } = require("electron");
 const path = require("path");
 const { spawn } = require("child_process");
 const fs = require("fs");
-const getPort = require("get-port");
-const waitOn = require("wait-on");
 
 let mainWindow = null;
 let phpProcess = null;
@@ -46,6 +44,9 @@ function terminatePhpServer() {
 }
 
 async function startPhpServer() {
+  const { default: getPort } = await import("get-port");
+  const { default: waitOn } = await import("wait-on");
+
   const phpBinary = resolvePhpBinary();
 
   if (!ensurePhpBinaryExists(phpBinary)) {

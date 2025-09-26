@@ -263,6 +263,7 @@ When contributing frontend features, choose the module that matches the responsi
 | --- | --- |
 | **Uploads fail silently** | Confirm `public/uploads/` is writable by your PHP process. |
 | **Event stream never resolves** | Ensure your PHP installation supports `stream_select` and that `PageController::stream()` is reachable over HTTP/1.1. |
+| **Electron dev console shows missing CommonJS modules** | The main process now pulls `get-port` and `wait-on` via dynamic `import()` calls; upgrade to Electron 28+ or Node 18+ so async imports are supported in the runtime. |
 | **Exports look misaligned** | Clear the workspace state, then verify each layout CSS file still includes matching `.panel` and `.panel-inner` wrappers. |
 | **Importing a snapshot throws an error** | The ZIP must include both `state.db` and the `uploads/` directory. Run `php tests/ImportStateFromDatabaseTest.php` locally to sanity-check the importer. |
 
