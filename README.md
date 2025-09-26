@@ -159,6 +159,8 @@ The build process expects a PHP runtime in `resources/php`. During CI this direc
 > [!NOTE]
 > The installer now targets per-machine installs by default, so Windows will request elevation and prefill the destination directory with `C:\Program Files`. Advanced users can still opt into a different path during setup.
 
+Packaged builds on every platform now resolve the embedded PHP binary from `resources/php/<platform executable>`, matching the layout emitted by `electron-builder`'s `extraResources` copy step. If the file is missing the app will prompt the user to reinstall or restore the bundled runtime.
+
 ### Automated desktop releases
 A workflow named **Build Electron Release** lives at `.github/workflows/build-electron.yml`. Trigger it manually from GitHub with the desired semantic version (for example `1.2.0` or `v1.2.0`) to:
 1. Install PHP and Node dependencies
