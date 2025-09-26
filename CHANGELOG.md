@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Added
+- Bundle jsPDF locally under `public/vendor/` with a CDN fallback so PDF exports keep working offline.
 - Wrap the application in an Electron shell that automatically boots an embedded PHP server for desktop use.
 - Ship npm scripts for local Electron development builds and Windows installer packaging via `electron-builder`.
 - Configure the NSIS Windows installer for per-machine setups so it defaults to `C:\\Program Files`, requests elevation, and still allows opting into a custom directory.

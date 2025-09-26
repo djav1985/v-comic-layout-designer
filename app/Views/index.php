@@ -86,8 +86,27 @@ const layoutStyles = <?= json_encode($styles) ?>;
 const savedPages = <?= json_encode($pages) ?>;
 const initialImages = <?= json_encode($images) ?>;
 </script>
-<!-- jsPDF CDN -->
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script>
+    (function () {
+        window.__ensureJsPdf = function (forceCdn) {
+            if (!forceCdn && typeof window.jspdf !== "undefined") {
+                return;
+            }
+
+            if (window.__jspdfFallbackRequested) {
+                return;
+            }
+
+            window.__jspdfFallbackRequested = true;
+            const script = document.createElement("script");
+            script.src = "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js";
+            script.crossOrigin = "anonymous";
+            document.head.appendChild(script);
+        };
+    })();
+</script>
+<script src="/vendor/jspdf.umd.min.js" onerror="window.__ensureJsPdf(true)"></script>
+<script>window.__ensureJsPdf(false);</script>
 <script type="module" src="/js/app.js"></script>
 </body>
 </html>

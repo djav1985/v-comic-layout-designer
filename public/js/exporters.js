@@ -10,6 +10,18 @@ import {
   createPage,
 } from "./pages.js";
 
+function getJsPdfConstructor() {
+  const namespace = window.jspdf;
+
+  if (!namespace || typeof namespace.jsPDF !== "function") {
+    throw new Error(
+      "jsPDF failed to load. Verify that /vendor/jspdf.umd.min.js is accessible.",
+    );
+  }
+
+  return namespace.jsPDF;
+}
+
 export async function exportPdf(exportBtn) {
   if (!exportBtn) return;
 
@@ -36,8 +48,8 @@ export async function exportPdf(exportBtn) {
       return;
     }
 
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({
+    const JsPdf = getJsPdfConstructor();
+    const pdf = new JsPdf({
       orientation: "landscape",
       unit: "pt",
       format: [PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT],
