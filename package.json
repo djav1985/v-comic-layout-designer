@@ -6,10 +6,16 @@
   "scripts": {
     "electron:dev": "npm run start",
     "start": "electron .",
+    "dev": "electron . --dev",
     "lint": "prettier --check \"electron/**/*.js\"",
     "format": "prettier --write \"electron/**/*.js\"",
     "build": "electron-builder --dir",
-    "dist": "electron-builder --win --x64"
+    "build:linux": "electron-builder --linux",
+    "build:win": "electron-builder --win --x64",
+    "dist": "electron-builder --win --x64",
+    "dist:linux": "electron-builder --linux",
+    "test": "npm run lint && npm run build",
+    "clean": "rm -rf dist node_modules/.cache"
   },
   "author": "",
   "license": "MIT",
