@@ -44,7 +44,7 @@ function terminatePhpServer() {
 }
 
 async function startPhpServer() {
-  const { default: getPort } = await import("get-port");
+  const { default: getPort, portNumbers } = await import("get-port");
   const { default: waitOn } = await import("wait-on");
 
   const phpBinary = resolvePhpBinary();
@@ -61,7 +61,7 @@ async function startPhpServer() {
     return null;
   }
 
-  serverPort = await getPort({ port: getPort.makeRange(9000, 9100) });
+  serverPort = await getPort({ port: portNumbers(9000, 9100) });
   const projectRoot = app.isPackaged
     ? path.join(process.resourcesPath, "app")
     : path.join(__dirname, "..");
