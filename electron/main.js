@@ -80,11 +80,11 @@ async function startPhpServer() {
   );
 
   phpProcess.stdout.on("data", (data) => {
-    console.log(`[php] ${data}`.trim());
+    console.log(`[php] ${data.toString()}`.trim());
   });
 
   phpProcess.stderr.on("data", (data) => {
-    console.error(`[php] ${data}`.trim());
+    console.error(`[php] ${data.toString()}`.trim());
   });
 
   phpProcess.on("error", (error) => {
