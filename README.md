@@ -135,6 +135,35 @@ php -S localhost:8000 -t public
 
 Then visit **http://localhost:8000** and start crafting spreads. Uploaded files land in `public/uploads/`, and exports download straight to your browser.
 
+### Desktop (Electron) experience
+To work entirely offline or provide a native-like experience, the project now ships with an Electron shell that boots an embedded PHP development server.
+
+#### Extra prerequisites
+- Node.js 20+ and npm
+- PHP 8.0+ available on your PATH when running in development mode
+
+#### Run the desktop shell locally
+```bash
+npm install
+composer install
+npm run electron:dev
+```
+This starts the PHP development server on a random open port and automatically loads it inside an Electron browser window.
+
+#### Build a Windows installer locally
+```bash
+npm run dist
+```
+The build process expects a PHP runtime in `resources/php`. During CI this directory is populated automatically; for manual builds download the [official PHP non-thread-safe build for Windows](https://windows.php.net/download) and extract it into `resources/php` so that `php.exe` and its DLLs sit directly inside that folder.
+
+### Automated desktop releases
+A workflow named **Build Electron Release** lives at `.github/workflows/build-electron.yml`. Trigger it manually from GitHub with the desired semantic version (for example `1.2.0` or `v1.2.0`) to:
+1. Install PHP and Node dependencies
+2. Download the PHP runtime and bundle it with the Electron app
+3. Generate a signed Windows installer via `electron-builder`
+4. Upload the installer as a workflow artifact and publish it as a GitHub Release
+
+
 ---
 
 ## 🔄 Daily workflow
