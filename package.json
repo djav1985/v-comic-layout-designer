@@ -1,5 +1,5 @@
 {
-  "name": "Comic Layout Designer",
+  "name": "comic-layout-designer",
   "version": "v1.0.0",
   "description": "Electron wrapper with embedded PHP server for the V Comic Layout Designer application.",
   "main": "electron/main.js",
