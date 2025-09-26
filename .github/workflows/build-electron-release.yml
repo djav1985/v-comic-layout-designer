@@ -103,6 +103,40 @@ jobs:
             ForEach-Object { $_.Hash } |
             Out-File -Encoding ASCII dist/renamed/v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64.sha256
 
+      - name: Generate build provenance attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: dist/renamed/v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64.exe
+
+      - name: Upload clean artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64
+          path: |
+            dist/renamed/*.exe
+            dist/renamed/*.sha256
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./dist
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.build.outputs.tag }}
+          name: V Comic Layout Designer ${{ needs.build.outputs.tag }}
+          files: |
+            dist/**/*.exe
+            dist/**/*.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}            ForEach-Object { $_.Hash } |
+            Out-File -Encoding ASCII dist/renamed/v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64.sha256
+
       - name: Install cosign
         uses: sigstore/cosign-installer@v3
 
