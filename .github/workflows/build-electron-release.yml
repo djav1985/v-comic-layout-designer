@@ -32,24 +32,24 @@ jobs:
           "tag=$tag" | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
           "semver=$semver" | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-      - name: Setup Node.js
+      - name: Cache Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
-      - name: Install Node.js dependencies
+      - name: Install Node.js
         run: npm ci
         shell: pwsh
 
-      - name: Cache Composer
+      - name: Cache PHP
         uses: actions/cache@v4
         with:
           path: ~/.composer/cache
           key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
           restore-keys: composer-${{ runner.os }}-
 
-      - name: Install PHP dependencies and prepare runtime
+      - name: Install PHP
         run: |
           composer install --no-dev --optimize-autoloader
           $phpUrl = 'https://downloads.php.net/~windows/releases/latest/php-8.2-nts-Win32-vs16-x64-latest.zip'
@@ -73,11 +73,11 @@ jobs:
           key: electron-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
           restore-keys: electron-${{ runner.os }}-
 
-      - name: Build Electron app
+      - name: Build Electron
         run: npx electron-builder --win --x64 --publish never
         shell: pwsh
 
-      - name: Manage artifacts
+      - name: Build artifacts
         shell: pwsh
         run: |
           mkdir dist/renamed
@@ -87,7 +87,7 @@ jobs:
           Get-FileHash $renamed -Algorithm SHA256 | ForEach-Object { $_.Hash } |
             Out-File -Encoding ASCII "$renamed.sha256"
 
-      - name: Upload build artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: v-comic-layout-designer-${{ steps.version.outputs.semver }}-win-x64
