@@ -10,6 +10,7 @@
 ---
 
 ## 🧭 Table of Contents
+- [Screenshots](#-screenshots)
 - [Why you'll love it](#-why-youll-love-it)
 - [System architecture at a glance](#-system-architecture-at-a-glance)
 - [Feature tour](#-feature-tour)
@@ -20,9 +21,20 @@
 - [State, sync, and persistence](#-state-sync-and-persistence)
 - [Keyboard shortcuts](#-keyboard-shortcuts)
 - [Testing and quality gates](#-testing-and-quality-gates)
+- [Frontend architecture](#-frontend-architecture)
 - [Troubleshooting](#-troubleshooting)
 - [Contributing](#-contributing)
 - [License](#-license)
+
+---
+
+## 🖼️ Screenshots
+<p align="center">
+  <img src="./493917672-f7d427ae-2b7f-4567-b76a-79c3b0f23918.png" alt="Screenshot of the Comic Layout Designer workspace with the asset library and canvas" width="45%" style="max-width: 360px; margin: 0 12px;" />
+  <img src="./493918302-bf04f69c-b59c-4835-9d19-cf09ff196bd0.png" alt="Screenshot showing the export modal and PDF preview controls" width="45%" style="max-width: 360px; margin: 0 12px;" />
+</p>
+
+These captures showcase the glassmorphism workspace, responsive asset library, and export tooling you will see after following the setup steps below.
 
 ---
 
@@ -31,7 +43,7 @@
 > Whether you're storyboarding a zine or shipping episodic comics, the workspace keeps your flow state front-and-center. Upload assets, drag them into responsive layouts, lock pages between revisions, and export in a single sitting.
 
 - **Clarity-first UI** – A responsive two-column layout separates the asset library from the canvas, adapting from mobile to ultra-wide without ever clipping panels.
-- **Live collaboration vibe** – Server-Sent Events keep every open tab in sync with the canonical `state.json`, so collaborators instantly see page updates.
+- **Live collaboration vibe** – Server-Sent Events keep every open tab in sync with the canonical `state.db` SQLite store, so collaborators instantly see page updates.
 - **Export confidence** – One-click PDF and PNG exports mirror the in-browser transform math to avoid misaligned gutters or ghosted panels.
 - **Snapshot safety** – Download or restore ZIP archives that bundle the SQLite state database alongside uploaded artwork for frictionless versioning.
 
@@ -56,7 +68,7 @@ flowchart LR
 
     subgraph Storage
         UploadDir[public/uploads]
-        StateJson[public/storage/state.json]
+        StateDb[public/storage/state.db]
         Snapshots[ZIP Snapshots]
         Layouts[layouts/*.php]
     end
@@ -66,7 +78,7 @@ flowchart LR
     Uploads -->|POST /upload| Router
     Controllers -->|Render| Views --> UI
     Model --> UploadDir
-    Model --> StateJson
+    Model --> StateDb
     Model <--> Snapshots
     Model --> Layouts
     Exports -->|Canvas capture| UI
@@ -79,7 +91,7 @@ flowchart LR
 | --- | --- |
 | **Asset library** | Multi-file uploads with drag-and-drop, inline deletion, touch-friendly modal on small screens. |
 | **Storyboard workspace** | Dynamic layout selector, gutter color picker, page locking (green **U**/**L** toggle), autosave banner, keyboard shortcut helper. |
-| **Real-time sync** | Browser EventSource streams push notifications whenever `state.json` changes on disk, so multiple sessions stay mirrored. |
+| **Real-time sync** | Browser EventSource streams push notifications whenever the SQLite `state.db` changes on disk, so multiple sessions stay mirrored. |
 | **State management** | Reset the world in one click, or save/load ZIP archives (`state.db` + uploads) to branch, share, or roll back progress. |
 | **Exports** | Generate high-resolution PDFs or per-page PNGs. Export dimensions respect the live panel transforms and preserve the 1:1.545 aspect ratio. |
 | **Mobile experience** | A docked **Images** pill reveals the full-screen library, double-tap panels to place art without precision dragging. |
@@ -97,7 +109,7 @@ flowchart LR
 ├── public
 │   ├── css / js          # Styled workspace shell and vanilla JS interactions
 │   ├── index.php         # Front controller that boots the router
-│   └── storage           # state.json and generated exports live here
+│   └── storage           # state.db and snapshot archives live here
 ├── tests                 # Lightweight smoke tests for models, layouts, and SSE helpers
 ├── composer.json         # Autoload + dependency metadata (PHP ≥ 8.0, FastRoute)
 └── README.md             # You are here ✨
@@ -121,7 +133,7 @@ composer install
 php -S localhost:8000 -t public
 ```
 
-Then visit **http://localhost:8000** and start crafting spreads. Uploaded files land in `public/uploads/`, and generated exports appear in `public/storage/generated/`.
+Then visit **http://localhost:8000** and start crafting spreads. Uploaded files land in `public/uploads/`, and exports download straight to your browser.
 
 ---
 
@@ -129,7 +141,7 @@ Then visit **http://localhost:8000** and start crafting spreads. Uploaded files 
 1. **Upload assets** via drag-and-drop or the file picker. The library will show thumbnails instantly.
 2. **Compose pages** by selecting a layout, dragging assets into panels, tweaking gutter colors, and zooming imagery with the scroll wheel.
 3. **Lock spreads** once they look right using the **U/L** toggle to avoid accidental edits.
-4. **Autosave** keeps progress persistent by streaming every change to `public/storage/state.json` and broadcasting updates via SSE.
+4. **Autosave** keeps progress persistent by streaming every change into `public/storage/state.db` and broadcasting updates via SSE.
 5. **Snapshot** progress with **Save State** (download ZIP) or roll back with **Load State** (upload ZIP). Each archive bundles the SQLite database plus any referenced uploads.
 6. **Export** to PDF or PNG when you're ready to share; the high-resolution canvas ensures print-ready fidelity without aspect ratio drift.
 
@@ -158,7 +170,7 @@ Add your own by creating matching `.php` and `.css` files inside `layouts/`; `Ap
 ---
 
 ## 🧠 State, sync, and persistence
-- **Single source of truth** – `public/storage/state.json` mirrors the current layout, locked status, gutter settings, and image assignments.
+- **Single source of truth** – `public/storage/state.db` mirrors the current layout, locked status, gutter settings, and image assignments.
 - **Server-Sent Events** – `PageController::stream()` releases the PHP session lock before long-polling to ensure refreshes never stall behind an open stream.
 - **Database imports** – Uploading a ZIP snapshot restores `state.db` and all referenced artwork, guaranteeing a perfect recreation of past sessions.
 - **Filesystem hygiene** – Reset operations purge orphaned uploads to keep disk usage predictable.
@@ -198,10 +210,11 @@ php tests/SessionLockTest.php
 
 All tests exit with status code `0` on success and emit a descriptive message on failure.
 
-te-files
-## Frontend architecture
+---
 
-The browser code is now organized as ES modules so individual concerns can evolve without navigating a 1,700-line script:
+## 🧱 Frontend architecture
+
+The browser code is organized as ES modules so individual concerns can evolve without navigating a 1,700-line script:
 
 - `public/js/image-library.js` handles the asset gallery, uploads, and selection state.
 - `public/js/pages.js` owns layout rendering, persistence, state streaming, and shared constants.
@@ -210,9 +223,6 @@ The browser code is now organized as ES modules so individual concerns can evolv
 - `public/js/app.js` wires the modules together on `DOMContentLoaded`.
 
 When contributing frontend features, choose the module that matches the responsibility above or create a new one for any major concern rather than expanding `app.js` again.
-
-## Keyboard Shortcuts
-
 
 ---
 
