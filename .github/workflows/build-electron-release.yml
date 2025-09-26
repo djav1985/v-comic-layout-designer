@@ -72,7 +72,7 @@ jobs:
         run: npm run dist
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: v-comic-layout-designer-${{ steps.version.outputs.semver }}
           path: dist/v-comic-layout-designer-Setup-${{ steps.version.outputs.semver }}.exe
