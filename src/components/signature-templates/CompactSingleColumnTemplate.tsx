@@ -21,16 +21,16 @@ export const CompactSingleColumnTemplate = (templateVars: TemplateVars): string 
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="text-align: center;">
       <tr>
         <td style="padding-bottom: ${verticalSpacing};">
-          <img src="${logoUrl}" alt="${company.businessName} Logo" width="120" style="display: block; margin: 0 auto ${verticalSpacing} auto; max-width: 120px; height: auto;" />
+          <img src="${logoUrl}" alt="${company.businessName} Logo" width="120" style="display: block; margin: 0 auto ${verticalSpacing} auto; max-width: 120px; max-height: 120px; height: auto;" />
           ${headshotHtml ? `<div style="margin: 0 auto ${verticalSpacing} auto; width: ${headshotPxSize}px;">${headshotHtml}</div>` : ''}
-          <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary}; line-height: ${textStyling.baseLineHeight};">${identity.fullName}</p>
-          <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText}; line-height: ${textStyling.baseLineHeight};">${identity.jobTitle}</p>
+          <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: 700; color: ${company.brandColorPrimary}; line-height: ${textStyling.baseLineHeight};">${identity.fullName}</p>
+          <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText}; line-height: ${textStyling.baseLineHeight}; font-weight: 500;">${identity.jobTitle}</p>
           ${identity.department ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777; line-height: ${textStyling.baseLineHeight};">${identity.department}</p>` : ''}
           ${identity.pronouns ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777; line-height: ${textStyling.baseLineHeight};">${identity.pronouns}</p>` : ''}
-          <p style="margin-top: ${verticalSpacing}; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary}; line-height: ${textStyling.baseLineHeight};">${company.businessName}</p>
+          <p style="margin-top: ${verticalSpacing}; font-size: ${textStyling.baseFontSize + 2}px; font-weight: 700; color: ${company.brandColorPrimary}; line-height: ${textStyling.baseLineHeight};">${company.businessName}</p>
           ${company.tagline ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText}; line-height: ${textStyling.baseLineHeight};">${company.tagline}</p>` : ''}
           <p style="margin-top: ${verticalSpacing}; font-size: ${textStyling.baseFontSize}px; line-height: ${textStyling.baseLineHeight};">
-            ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers.replace(/\s/g, '')}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a>` : ''}
+            ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers.replace(/\s/g, '')}" style="color: ${linkColor}; text-decoration: none; font-weight: 500;">${contact.phoneNumbers}</a>` : ''}
             ${contact.phoneNumbers && contact.emailAddress ? ` &bull; ` : ''}
             ${contact.emailAddress ? `<a href="mailto:${contact.emailAddress}" style="color: ${linkColor}; text-decoration: none;">${contact.emailAddress}</a>` : ''}
           </p>
