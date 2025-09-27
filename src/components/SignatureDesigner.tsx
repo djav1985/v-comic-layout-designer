@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -21,7 +21,10 @@ import { LegalForm } from "./forms/LegalForm";
 import { CallToActionForm } from "./forms/CallToActionForm";
 import { TextStylingForm } from "./forms/TextStylingForm";
 import { DividerForm } from "./forms/DividerForm";
-import { GlobalSpacingForm } from "./forms/GlobalSpacingForm"; // Import GlobalSpacingForm
+import { GlobalSpacingForm } from "./forms/GlobalSpacingForm";
+import { SignatureOutputActions } from "./SignatureOutputActions"; // Import SignatureOutputActions
+import { showSuccess, showError } from "@/utils/toast"; // Import toast utilities
+import { generateVCard } from "@/utils/vcard"; // Import vCard utility
 
 // Define a type for the signature data
 export type SignatureData = {
@@ -84,8 +87,7 @@ export type SignatureData = {
     thickness: number;
     color: string;
   };
-  spacing: "tight" | "normal" | "roomy"; // Added spacing control
-  // Add other sections as we implement them
+  spacing: "tight" | "normal" | "roomy";
 };
 
 const SignatureDesigner = () => {
@@ -100,9 +102,9 @@ const SignatureDesigner = () => {
     company: {
       businessName: "Innovate Solutions",
       tagline: "Driving Tomorrow's Technology",
-      logoUrl: "https://via.placeholder.com/120x60/4285F4/FFFFFF?text=YourLogo", // More distinct placeholder
-      brandColorPrimary: "#4285F4", // Google Blue
-      brandColorAccent: "#34A853", // Google Green
+      logoUrl: "https://via.placeholder.com/120x60/4285F4/FFFFFF?text=YourLogo",
+      brandColorPrimary: "#4285F4",
+      brandColorAccent: "#34A853",
       brandColorText: "#333333",
     },
     contact: {
@@ -118,13 +120,13 @@ const SignatureDesigner = () => {
       { id: "3", platform: "Facebook", url: "https://facebook.com/janedoe" },
     ],
     media: {
-      headshotUrl: "https://via.placeholder.com/100/FFD700/FFFFFF?text=JD", // Gold background placeholder
+      headshotUrl: "https://via.placeholder.com/100/FFD700/FFFFFF?text=JD",
       showHeadshot: true,
       headshotShape: "circle",
       headshotSize: "medium",
-      bannerUrl: "https://via.placeholder.com/600x100/FF6347/FFFFFF?text=PromotionalBanner", // Tomato background placeholder
+      bannerUrl: "https://via.placeholder.com/600x100/FF6347/FFFFFF?text=PromotionalBanner",
       showBanner: false,
-      socialIconShape: "circle", // Default social icon shape
+      socialIconShape: "circle",
     },
     legal: {
       disclaimerText: "This message is intended only for the use of the individual or entity to which it is addressed and may contain information that is confidential and privileged.",
@@ -149,8 +151,10 @@ const SignatureDesigner = () => {
       thickness: 1,
       color: "#cccccc",
     },
-    spacing: "normal", // Default spacing
+    spacing: "normal",
   });
+
+  const [generatedHtml, setGeneratedHtml] = useState<string>("");
 
   const handleIdentityChange = (field: keyof SignatureData['identity'], value: string) => {
     setSignatureData(prevData => ({
@@ -251,6 +255,48 @@ const SignatureDesigner = () => {
       ...prevData,
       template: value,
     }));
+  };
+
+  const handleHtmlContentReady = useCallback((html: string) => {
+    setGeneratedHtml(html);
+  }, []);
+
+  const handleCopyHtml = async () => {
+    if (!generatedHtml) {
+      showError("No signature HTML to copy.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(generatedHtml);
+      showSuccess("Signature HTML copied to clipboard!");
+    } catch (err) {
+      console.error("Failed to copy HTML: ", err);
+      showError("Failed to copy HTML. Please try again.");
+    }
+  };
+
+  const handleExportPng = () => {
+    showError("Export PNG functionality is not yet implemented.");
+    // This will be implemented in a future step, likely using html2canvas
+  };
+
+  const handleGenerateVCard = () => {
+    try {
+      const vcard = generateVCard(signatureData.identity, signatureData.contact, signatureData.company.businessName);
+      const blob = new Blob([vcard], { type: "text/vcard" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${signatureData.identity.fullName.replace(/\s/g, '_')}.vcf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showSuccess("vCard generated and downloaded!");
+    } catch (err) {
+      console.error("Failed to generate vCard: ", err);
+      showError("Failed to generate vCard. Please check your contact info.");
+    }
   };
 
   return (
@@ -361,12 +407,17 @@ const SignatureDesigner = () => {
                 <TabsTrigger value="mobile">Mobile</TabsTrigger>
               </TabsList>
               <TabsContent value="desktop" className="flex-grow flex flex-col data-[state=inactive]:hidden">
-                <SignaturePreview signatureData={signatureData} previewMode="desktop" />
+                <SignaturePreview signatureData={signatureData} previewMode="desktop" onHtmlContentReady={handleHtmlContentReady} />
               </TabsContent>
               <TabsContent value="mobile" className="flex-grow flex flex-col data-[state=inactive]:hidden">
-                <SignaturePreview signatureData={signatureData} previewMode="mobile" />
+                <SignaturePreview signatureData={signatureData} previewMode="mobile" onHtmlContentReady={handleHtmlContentReady} />
               </TabsContent>
             </Tabs>
+            <SignatureOutputActions
+              onCopyHtml={handleCopyHtml}
+              onExportPng={handleExportPng}
+              onGenerateVCard={handleGenerateVCard}
+            />
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>

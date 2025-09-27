@@ -7,6 +7,7 @@ import { Linkedin, X, Facebook, Instagram, Youtube, Globe, Github, Share2 } from
 interface SignaturePreviewProps {
   signatureData: SignatureData;
   previewMode: "desktop" | "mobile";
+  onHtmlContentReady: (html: string) => void; // New prop to pass HTML back
 }
 
 const getSocialIconSvg = (platform: string, color: string, shape: SignatureData['media']['socialIconShape']) => {
@@ -323,7 +324,7 @@ const generateSignatureHtml = (data: SignatureData): string => {
   `;
 };
 
-export const SignaturePreview: React.FC<SignaturePreviewProps> = ({ signatureData, previewMode }) => {
+export const SignaturePreview: React.FC<SignaturePreviewProps> = ({ signatureData, previewMode, onHtmlContentReady }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeContent, setIframeContent] = useState("");
   const [iframeHeight, setIframeHeight] = useState("auto"); // State to control iframe height
@@ -339,8 +340,10 @@ export const SignaturePreview: React.FC<SignaturePreviewProps> = ({ signatureDat
   };
 
   useEffect(() => {
-    setIframeContent(generateSignatureHtml(signatureData));
-  }, [signatureData]);
+    const html = generateSignatureHtml(signatureData);
+    setIframeContent(html);
+    onHtmlContentReady(html); // Pass the generated HTML back to the parent
+  }, [signatureData, onHtmlContentReady]);
 
   useEffect(() => {
     if (iframeRef.current && iframeContent) {
