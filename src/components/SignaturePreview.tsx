@@ -51,7 +51,7 @@ const getSocialIconSvg = (platform: string, color: string, shape: SignatureData[
   `;
 };
 
-const generateSignatureHtml = (data: SignatureData): string => {
+const generateSignatureHtml = (data: SignatureData, previewMode: "desktop" | "mobile"): string => {
   const { identity, company, contact, socialMedia, media, legal, cta, textStyling, divider, template, spacing } = data;
 
   // Determine spacing values
@@ -165,6 +165,10 @@ const generateSignatureHtml = (data: SignatureData): string => {
     </table>
   ` : '';
 
+  // Mobile-specific styles for column stacking
+  const mobileColumnTdStyle = `width: 100%; display: block; padding-right: 0; text-align: center;`;
+  const mobileHeadshotWrapperStyle = `margin: 0 auto ${verticalSpacing} auto;`; // Center headshot on mobile
+
   let contentHtml = '';
 
   switch (template) {
@@ -176,11 +180,13 @@ const generateSignatureHtml = (data: SignatureData): string => {
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
                   ${headshotHtml ? `
-                    <td valign="top" style="padding-right: ${horizontalSpacing}; width: ${headshotPxSize}px;">
-                      ${headshotHtml}
+                    <td valign="top" style="${previewMode === 'mobile' ? mobileColumnTdStyle : `padding-right: ${horizontalSpacing}; width: ${headshotPxSize}px;`}">
+                      <div style="${previewMode === 'mobile' ? mobileHeadshotWrapperStyle : ''}">
+                        ${headshotHtml}
+                      </div>
                     </td>
                   ` : ''}
-                  <td valign="top">
+                  <td valign="top" style="${previewMode === 'mobile' ? mobileColumnTdStyle : ''}">
                     <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
                     <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText}; padding-bottom: ${verticalSpacing};">${identity.jobTitle} ${identity.department ? `| ${identity.department}` : ''}</p>
                     ${identity.pronouns ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777; padding-bottom: ${verticalSpacing};">${identity.pronouns}</p>` : ''}
@@ -206,8 +212,8 @@ const generateSignatureHtml = (data: SignatureData): string => {
             </td>
           </tr>
           <tr>
-            <td style="padding-top: ${verticalSpacing};">
-              <img src="${logoUrl}" alt="${company.businessName} Logo" width="120" style="display: block; max-width: 120px; height: auto; margin: 0 0 ${verticalSpacing} 0;" />
+            <td style="padding-top: ${verticalSpacing}; ${previewMode === 'mobile' ? 'text-align: center;' : ''}">
+              <img src="${logoUrl}" alt="${company.businessName} Logo" width="120" style="display: block; max-width: 120px; height: auto; margin: ${previewMode === 'mobile' ? '0 auto' : '0 0'} ${verticalSpacing} ${previewMode === 'mobile' ? 'auto' : '0'};" />
               ${bannerImageHtml}
               ${ctaButtonHtml}
               ${dividerHtml}
@@ -258,10 +264,10 @@ const generateSignatureHtml = (data: SignatureData): string => {
             <td style="background-color: ${company.brandColorAccent || '#f0f0f0'}; padding: ${verticalSpacing} ${horizontalSpacing};">
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
-                  <td valign="middle" style="width: 80px; padding-right: ${horizontalSpacing};">
-                    <img src="${logoUrl}" alt="${company.businessName} Logo" width="80" style="display: block; max-width: 80px; height: auto; margin: 0;" />
+                  <td valign="middle" style="width: 80px; padding-right: ${horizontalSpacing}; ${previewMode === 'mobile' ? 'width: 100%; display: block; padding-right: 0; text-align: center; margin-bottom: ' + verticalSpacing + ';' : ''}">
+                    <img src="${logoUrl}" alt="${company.businessName} Logo" width="80" style="display: block; max-width: 80px; height: auto; margin: ${previewMode === 'mobile' ? '0 auto' : '0'};" />
                   </td>
-                  <td valign="middle">
+                  <td valign="middle" style="${previewMode === 'mobile' ? 'width: 100%; display: block; text-align: center;' : ''}">
                     <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
                     <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText}; padding-bottom: ${verticalSpacing};">${identity.jobTitle}</p>
                     <p style="margin: 0; font-size: ${textStyling.baseFontSize}px;">
@@ -276,7 +282,7 @@ const generateSignatureHtml = (data: SignatureData): string => {
             </td>
           </tr>
           <tr>
-            <td style="padding: ${verticalSpacing} ${horizontalSpacing};">
+            <td style="padding: ${verticalSpacing} ${horizontalSpacing}; ${previewMode === 'mobile' ? 'text-align: center;' : ''}">
               ${bannerImageHtml}
               ${ctaButtonHtml}
               ${dividerHtml}
@@ -337,20 +343,20 @@ const generateSignatureHtml = (data: SignatureData): string => {
       contentHtml = `
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="${baseStyles} max-width: 600px;">
           <tr>
-            <td style="padding-bottom: ${verticalSpacing};">
+            <td style="padding-bottom: ${verticalSpacing}; ${previewMode === 'mobile' ? 'text-align: center;' : ''}">
               <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
               <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">${identity.jobTitle} at ${company.businessName}</p>
               ${identity.pronouns ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">${identity.pronouns}</p>` : ''}
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top: ${verticalSpacing};">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top: ${verticalSpacing}; ${previewMode === 'mobile' ? 'margin-left: auto; margin-right: auto;' : ''}">
                 <tr>
                   ${contact.phoneNumbers ? `<td style="padding-right: ${horizontalSpacing}; font-size: ${textStyling.baseFontSize}px;"><a href="tel:${contact.phoneNumbers.replace(/\s/g, '')}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a></td>` : ''}
                   ${contact.emailAddress ? `<td style="padding-right: ${horizontalSpacing}; font-size: ${textStyling.baseFontSize}px;"><a href="mailto:${contact.emailAddress}" style="color: ${linkColor}; text-decoration: none;">${contact.emailAddress}</a></td>` : ''}
                   ${contact.websiteLink ? `<td style="font-size: ${textStyling.baseFontSize}px;"><a href="${contact.websiteLink}" style="color: ${linkColor}; text-decoration: none;">${contact.websiteLink.replace(/^(https?:\/\/)/, '')}</a></td>` : ''}
                 </tr>
               </table>
-              ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing};">${socialIconsHtml}</p>` : ''}
+              ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; ${previewMode === 'mobile' ? 'text-align: center;' : ''}">${socialIconsHtml}</p>` : ''}
               ${dividerHtml}
-              <img src="${logoUrl}" alt="${company.businessName} Logo" width="80" style="display: block; max-width: 80px; height: auto; margin-top: ${verticalSpacing};" />
+              <img src="${logoUrl}" alt="${company.businessName} Logo" width="80" style="display: block; max-width: 80px; height: auto; margin: ${verticalSpacing} ${previewMode === 'mobile' ? 'auto' : '0'} 0 ${previewMode === 'mobile' ? 'auto' : '0'};" />
               ${legalHtml}
             </td>
           </tr>
@@ -364,7 +370,7 @@ const generateSignatureHtml = (data: SignatureData): string => {
             <td style="padding-bottom: ${verticalSpacing};">
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
-                  <td valign="top" style="width: 60%; padding-right: ${horizontalSpacing};">
+                  <td valign="top" style="${previewMode === 'mobile' ? mobileColumnTdStyle : `width: 60%; padding-right: ${horizontalSpacing};`}">
                     <p style="margin: 0; font-size: ${textStyling.baseFontSize + 4}px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
                     <p style="margin: 0; font-size: ${textStyling.baseFontSize + 1}px; color: ${company.brandColorText};">${identity.jobTitle}</p>
                     ${identity.department ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: #777777;">${identity.department}</p>` : ''}
@@ -372,27 +378,27 @@ const generateSignatureHtml = (data: SignatureData): string => {
                     <p style="margin: ${verticalSpacing} 0 0 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${company.businessName}</p>
                     ${company.tagline ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">${company.tagline}</p>` : ''}
                   </td>
-                  <td valign="top" style="width: 40%; text-align: right;">
-                    <img src="${logoUrl}" alt="${company.businessName} Logo" width="100" style="display: block; max-width: 100px; height: auto; margin: 0 0 ${verticalSpacing} auto;" />
-                    ${headshotHtml ? `<div style="margin: 0 0 ${verticalSpacing} auto; width: ${headshotPxSize}px;">${headshotHtml}</div>` : ''}
+                  <td valign="top" style="${previewMode === 'mobile' ? mobileColumnTdStyle : `width: 40%; text-align: right;`}">
+                    <img src="${logoUrl}" alt="${company.businessName} Logo" width="100" style="display: block; max-width: 100px; height: auto; margin: ${previewMode === 'mobile' ? '0 auto' : '0 0'} ${verticalSpacing} ${previewMode === 'mobile' ? 'auto' : 'auto'};" />
+                    ${headshotHtml ? `<div style="margin: ${previewMode === 'mobile' ? '0 auto' : '0 0'} ${verticalSpacing} ${previewMode === 'mobile' ? 'auto' : 'auto'}; width: ${headshotPxSize}px;">${headshotHtml}</div>` : ''}
                   </td>
                 </tr>
               </table>
               ${dividerHtml}
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top: ${verticalSpacing};">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top: ${verticalSpacing}; ${previewMode === 'mobile' ? 'text-align: center;' : ''}">
                 <tr>
-                  <td valign="top" style="width: 50%; padding-right: ${horizontalSpacing};">
+                  <td valign="top" style="${previewMode === 'mobile' ? mobileColumnTdStyle : `width: 50%; padding-right: ${horizontalSpacing};`}">
                     ${contact.phoneNumbers ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px;"><a href="tel:${contact.phoneNumbers.replace(/\s/g, '')}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a></p>` : ''}
                     ${contact.emailAddress ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px;"><a href="mailto:${contact.emailAddress}" style="color: ${linkColor}; text-decoration: none;">${contact.emailAddress}</a></p>` : ''}
                   </td>
-                  <td valign="top" style="width: 50%;">
+                  <td valign="top" style="${previewMode === 'mobile' ? mobileColumnTdStyle : `width: 50%;`}">
                     ${contact.websiteLink ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px;"><a href="${contact.websiteLink}" style="color: ${linkColor}; text-decoration: none;">${contact.websiteLink.replace(/^(https?:\/\/)/, '')}</a></p>` : ''}
                     ${contact.officeAddress ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px;">${contact.officeAddress}</p>` : ''}
                   </td>
                 </tr>
               </table>
-              ${contact.bookingLink ? `<p style="margin-top: ${verticalSpacing}; font-size: ${textStyling.baseFontSize}px;"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
-              ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing};">${socialIconsHtml}</p>` : ''}
+              ${contact.bookingLink ? `<p style="margin-top: ${verticalSpacing}; font-size: ${textStyling.baseFontSize}px; ${previewMode === 'mobile' ? 'text-align: center;' : ''}"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
+              ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; ${previewMode === 'mobile' ? 'text-align: center;' : ''}">${socialIconsHtml}</p>` : ''}
               ${bannerImageHtml}
               ${ctaButtonHtml}
               ${legalHtml}
@@ -492,7 +498,7 @@ const generateSignatureHtml = (data: SignatureData): string => {
       <tr>
       <td align="center" valign="top" width="600">
       <![endif]-->
-      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto;">
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: ${previewMode === 'mobile' ? '320px' : '600px'}; margin: 0 auto;">
         <tr>
           <td style="padding: 20px 0;">
             ${contentHtml}
@@ -525,10 +531,10 @@ export const SignaturePreview: React.FC<SignaturePreviewProps> = ({ signatureDat
   };
 
   useEffect(() => {
-    const html = generateSignatureHtml(signatureData);
+    const html = generateSignatureHtml(signatureData, previewMode); // Pass previewMode to HTML generation
     setIframeContent(html);
     onHtmlContentReady(html); // Pass the generated HTML back to the parent
-  }, [signatureData, onHtmlContentReady]);
+  }, [signatureData, previewMode, onHtmlContentReady]); // Re-run when previewMode changes
 
   useEffect(() => {
     if (iframeRef.current && iframeContent) {
