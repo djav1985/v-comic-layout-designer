@@ -36,7 +36,7 @@ export const ContactInfoForm: React.FC<ContactInfoFormProps> = ({ contact, onUpd
 
   return (
     <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-xl bg-card transition-all duration-200 hover:shadow-2xl hover:translate-y-[-2px]">
-      <h3 className="text-lg font-semibold mb-4 text-primary-foreground">Contact Information</h3>
+      <h3 className="text-lg font-semibold mb-4 text-foreground">Contact Information</h3>
       <div>
         <Label htmlFor="phoneNumbers" className="mb-1 block text-muted-foreground">Phone Numbers</Label>
         <Input

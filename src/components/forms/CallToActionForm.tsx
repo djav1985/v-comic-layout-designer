@@ -43,7 +43,7 @@ export const CallToActionForm: React.FC<CallToActionFormProps> = ({ cta, onUpdat
 
   return (
     <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-xl bg-card transition-all duration-200 hover:shadow-2xl hover:translate-y-[-2px]">
-      <h3 className="text-lg font-semibold mb-4 text-primary-foreground">Call-to-Action Button</h3>
+      <h3 className="text-lg font-semibold mb-4 text-foreground">Call-to-Action Button</h3>
 
       <div className="flex items-center justify-between">
         <Label htmlFor="showCta" className="text-muted-foreground">Show Call-to-Action Button</Label>

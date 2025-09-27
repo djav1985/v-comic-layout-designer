@@ -66,7 +66,7 @@ export const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ socialMedia, o
 
   return (
     <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-xl bg-card transition-all duration-200 hover:shadow-2xl hover:translate-y-[-2px]">
-      <h3 className="text-lg font-semibold mb-4 text-primary-foreground">Social Media (Up to 10)</h3>
+      <h3 className="text-lg font-semibold mb-4 text-foreground">Social Media (Up to 10)</h3>
 
       <div className="mb-4">
         <Label htmlFor="socialIconShape" className="mb-1 block text-muted-foreground">Icon Shape</Label>
