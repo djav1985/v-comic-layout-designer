@@ -138,31 +138,18 @@ async function startPhpServer() {
     `Starting PHP server on port ${serverPort} with root: ${projectRoot}`,
   );
 
-  // Prepare PHP command arguments with configuration file if available
-  const phpArgs = [
-    "-S",
-    `127.0.0.1:${serverPort}`,
-    "-t",
-    publicDir,
-    routerScript,
-  ];
-
-  // Add PHP configuration file for packaged builds
-  if (app.isPackaged) {
-    const phpIniPath = path.join(process.resourcesPath, "php", "php.ini");
-    if (fs.existsSync(phpIniPath)) {
-      phpArgs.unshift("-c", phpIniPath);
-      console.log(`Using PHP configuration: ${phpIniPath}`);
-    }
-  }
-
-  phpProcess = spawn(phpBinary, phpArgs, {
-    cwd: projectRoot,
-    stdio: "pipe",
-    env: {
-      ...process.env,
-      APP_ENV: app.isPackaged ? "production" : "development",
-      ELECTRON_APP: "1", // Flag to indicate running in Electron
+  phpProcess = spawn(
+    phpBinary,
+    ["-S", `127.0.0.1:${serverPort}`, "-t", publicDir, routerScript],
+    {
+      cwd: projectRoot,
+      stdio: "pipe",
+      env: {
+        ...process.env,
+        APP_ENV: app.isPackaged ? "production" : "development",
+        ELECTRON_APP: "1", // Flag to indicate running in Electron
+        ELECTRON_USER_DATA: app.getPath("userData"), // Pass user data path to PHP
+      },
     },
   });
 
