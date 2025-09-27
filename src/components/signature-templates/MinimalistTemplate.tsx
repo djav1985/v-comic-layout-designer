@@ -13,7 +13,7 @@ export const MinimalistTemplate = (templateVars: TemplateVars): string => {
     legalHtml,
   } = templateVars;
 
-  const { identity, company, contact, textStyling } = signatureData;
+  const { identity, company, contact, socialMedia, textStyling } = signatureData;
 
   return `
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -29,7 +29,7 @@ export const MinimalistTemplate = (templateVars: TemplateVars): string => {
               ${contact.websiteLink ? `<td style="font-size: ${textStyling.baseFontSize}px;"><a href="${contact.websiteLink}" style="color: ${linkColor}; text-decoration: none;">${contact.websiteLink.replace(/^(https?:\/\/)/, '')}</a></td>` : ''}
             </tr>
           </table>
-          ${signatureData.socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; ${previewMode === 'mobile' ? 'text-align: center;' : ''}">${socialIconsHtml}</p>` : ''}
+          ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; ${previewMode === 'mobile' ? 'text-align: center;' : ''}">${socialIconsHtml}</p>` : ''}
           ${dividerHtml}
           <img src="${logoUrl}" alt="${company.businessName} Logo" width="80" style="display: block; max-width: 80px; height: auto; margin: ${verticalSpacing} ${previewMode === 'mobile' ? 'auto' : '0'} 0 ${previewMode === 'mobile' ? 'auto' : '0'};" />
           ${legalHtml}

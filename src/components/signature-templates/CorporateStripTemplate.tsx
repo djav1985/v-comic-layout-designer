@@ -16,7 +16,7 @@ export const CorporateStripTemplate = (templateVars: TemplateVars): string => {
     mobileColumnTdStyle,
   } = templateVars;
 
-  const { identity, company, contact, textStyling } = signatureData;
+  const { identity, company, contact, socialMedia, textStyling } = signatureData;
 
   return `
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -35,7 +35,7 @@ export const CorporateStripTemplate = (templateVars: TemplateVars): string => {
                   ${contact.emailAddress && contact.phoneNumbers ? ` &bull; ` : ''}
                   ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers.replace(/\s/g, '')}" style="color: ${company.brandColorPrimary}; text-decoration: none;">${contact.phoneNumbers}</a>` : ''}
                 </p>
-                ${signatureData.socialMedia.length > 0 ? `<p style="margin: ${verticalSpacing} 0 0 0;">${socialIconsHtml}</p>` : ''}
+                ${socialMedia.length > 0 ? `<p style="margin: ${verticalSpacing} 0 0 0;">${socialIconsHtml}</p>` : ''}
               </td>
             </tr>
           </table>

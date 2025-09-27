@@ -15,7 +15,7 @@ export const ImageCentricTemplate = (templateVars: TemplateVars): string => {
     legalHtml,
   } = templateVars;
 
-  const { identity, company, contact, textStyling } = signatureData;
+  const { identity, company, contact, socialMedia, textStyling } = signatureData;
 
   return `
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="text-align: center;">
@@ -38,7 +38,7 @@ export const ImageCentricTemplate = (templateVars: TemplateVars): string => {
             ${contact.officeAddress ? `<span>${contact.officeAddress}</span>` : ''}
           </p>
           ${contact.bookingLink ? `<p style="margin: ${verticalSpacing} 0 0 0; font-size: ${textStyling.baseFontSize}px;"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
-          ${signatureData.socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing};">${socialIconsHtml}</p>` : ''}
+          ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing};">${socialIconsHtml}</p>` : ''}
           <img src="${logoUrl}" alt="${company.businessName} Logo" width="120" style="display: block; max-width: 120px; height: auto; margin: ${verticalSpacing} auto 0 auto;" />
           ${ctaButtonHtml}
           ${legalHtml}

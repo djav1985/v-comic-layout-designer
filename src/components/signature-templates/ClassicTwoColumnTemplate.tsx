@@ -19,7 +19,7 @@ export const ClassicTwoColumnTemplate = (templateVars: TemplateVars): string => 
     mobileHeadshotWrapperStyle,
   } = templateVars;
 
-  const { identity, company, contact, textStyling } = signatureData;
+  const { identity, company, contact, socialMedia, textStyling } = signatureData;
 
   return `
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">

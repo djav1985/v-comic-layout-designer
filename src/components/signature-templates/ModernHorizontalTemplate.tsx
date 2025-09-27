@@ -19,7 +19,7 @@ export const ModernHorizontalTemplate = (templateVars: TemplateVars): string => 
     mobileHeadshotWrapperStyle,
   } = templateVars;
 
-  const { identity, company, contact, textStyling } = signatureData;
+  const { identity, company, contact, socialMedia, textStyling } = signatureData;
 
   return `
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -55,7 +55,7 @@ export const ModernHorizontalTemplate = (templateVars: TemplateVars): string => 
             </tr>
           </table>
           ${contact.bookingLink ? `<p style="margin-top: ${verticalSpacing}; font-size: ${textStyling.baseFontSize}px; ${previewMode === 'mobile' ? 'text-align: center;' : ''}"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
-          ${signatureData.socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; ${previewMode === 'mobile' ? 'text-align: center;' : ''}">${socialIconsHtml}</p>` : ''}
+          ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; ${previewMode === 'mobile' ? 'text-align: center;' : ''}">${socialIconsHtml}</p>` : ''}
           ${bannerImageHtml}
           ${ctaButtonHtml}
           ${legalHtml}

@@ -4,6 +4,7 @@ export const CardWithCtaTemplate = (templateVars: TemplateVars): string => {
   const {
     signatureData,
     verticalSpacing,
+    horizontalSpacing, // Added horizontalSpacing here
     headshotPxSize,
     headshotHtml,
     linkColor,
@@ -14,7 +15,7 @@ export const CardWithCtaTemplate = (templateVars: TemplateVars): string => {
     legalHtml,
   } = templateVars;
 
-  const { identity, company, contact, textStyling } = signatureData;
+  const { identity, company, contact, socialMedia, textStyling } = signatureData;
 
   return `
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border: 1px solid ${company.brandColorAccent || '#e0e0e0'}; border-radius: 8px; padding: ${verticalSpacing} ${horizontalSpacing}; background-color: #ffffff; text-align: center;">
@@ -28,7 +29,7 @@ export const CardWithCtaTemplate = (templateVars: TemplateVars): string => {
             ${contact.emailAddress && contact.phoneNumbers ? ` &bull; ` : ''}
             ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers.replace(/\s/g, '')}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a>` : ''}
           </p>
-          ${signatureData.socialMedia.length > 0 ? `<p style="margin: ${verticalSpacing} 0 0 0;">${socialIconsHtml}</p>` : ''}
+          ${socialMedia.length > 0 ? `<p style="margin: ${verticalSpacing} 0 0 0;">${socialIconsHtml}</p>` : ''}
           ${ctaButtonHtml}
           ${bannerImageHtml}
           ${dividerHtml}
