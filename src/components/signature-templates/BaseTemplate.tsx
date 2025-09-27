@@ -184,7 +184,7 @@ export const BaseTemplate = (props: { signatureData: SignatureData; previewMode:
       <![endif]-->
       <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: ${previewMode === 'mobile' ? '320px' : '600px'}; margin: 0 auto;">
         <tr>
-          <td style="padding: 20px 0;">
+          <td style="padding: 20px 0 0 0;">
             ${children(templateVars)}
           </td>
         </tr>
