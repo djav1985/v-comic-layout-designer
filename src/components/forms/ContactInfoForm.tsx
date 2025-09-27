@@ -35,7 +35,7 @@ export const ContactInfoForm: React.FC<ContactInfoFormProps> = ({ contact, onUpd
   };
 
   return (
-    <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-lg bg-card transition-all duration-200 hover:shadow-xl">
+    <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-xl bg-card transition-all duration-200 hover:shadow-2xl hover:translate-y-[-2px]">
       <h3 className="text-lg font-semibold mb-4 text-primary-foreground">Contact Information</h3>
       <div>
         <Label htmlFor="phoneNumbers" className="mb-1 block text-muted-foreground">Phone Numbers</Label>
@@ -44,7 +44,7 @@ export const ContactInfoForm: React.FC<ContactInfoFormProps> = ({ contact, onUpd
           value={contact.phoneNumbers}
           onChange={(e) => handleChange("phoneNumbers", e.target.value)}
           placeholder="e.g., +1 (555) 123-4567"
-          className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary"
+          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
         />
       </div>
       <div>
@@ -55,7 +55,7 @@ export const ContactInfoForm: React.FC<ContactInfoFormProps> = ({ contact, onUpd
           value={contact.emailAddress}
           onChange={(e) => handleChange("emailAddress", e.target.value)}
           placeholder="e.g., jane.doe@example.com"
-          className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary"
+          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
         />
         {errors.emailAddress && <p className="text-destructive text-sm mt-1">{errors.emailAddress}</p>}
       </div>
@@ -67,7 +67,7 @@ export const ContactInfoForm: React.FC<ContactInfoFormProps> = ({ contact, onUpd
           value={contact.websiteLink}
           onChange={(e) => handleChange("websiteLink", e.target.value)}
           placeholder="e.g., https://www.yourcompany.com"
-          className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary"
+          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
         />
       </div>
       <div>
@@ -77,7 +77,7 @@ export const ContactInfoForm: React.FC<ContactInfoFormProps> = ({ contact, onUpd
           value={contact.officeAddress}
           onChange={(e) => handleChange("officeAddress", e.target.value)}
           placeholder="e.g., 123 Main St, Anytown, USA"
-          className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary"
+          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
         />
       </div>
       <div>
@@ -88,7 +88,7 @@ export const ContactInfoForm: React.FC<ContactInfoFormProps> = ({ contact, onUpd
           value={contact.bookingLink}
           onChange={(e) => handleChange("bookingLink", e.target.value)}
           placeholder="e.g., https://calendly.com/janedoe"
-          className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary"
+          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
         />
       </div>
     </div>

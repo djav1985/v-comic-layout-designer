@@ -42,7 +42,7 @@ export const CallToActionForm: React.FC<CallToActionFormProps> = ({ cta, onUpdat
   };
 
   return (
-    <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-lg bg-card transition-all duration-200 hover:shadow-xl">
+    <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-xl bg-card transition-all duration-200 hover:shadow-2xl hover:translate-y-[-2px]">
       <h3 className="text-lg font-semibold mb-4 text-primary-foreground">Call-to-Action Button</h3>
 
       <div className="flex items-center justify-between">
@@ -64,7 +64,7 @@ export const CallToActionForm: React.FC<CallToActionFormProps> = ({ cta, onUpdat
               value={cta.ctaLabel}
               onChange={(e) => handleChange("ctaLabel", e.target.value)}
               placeholder="e.g., Learn More"
-              className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary"
+              className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
             />
             {errors.ctaLabel && <p className="text-destructive text-sm mt-1">{errors.ctaLabel}</p>}
           </div>
@@ -76,7 +76,7 @@ export const CallToActionForm: React.FC<CallToActionFormProps> = ({ cta, onUpdat
               value={cta.ctaLink}
               onChange={(e) => handleChange("ctaLink", e.target.value)}
               placeholder="e.g., https://www.yourcompany.com/learn"
-              className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary"
+              className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
             />
             {errors.ctaLink && <p className="text-destructive text-sm mt-1">{errors.ctaLink}</p>}
           </div>
@@ -86,10 +86,10 @@ export const CallToActionForm: React.FC<CallToActionFormProps> = ({ cta, onUpdat
               value={cta.ctaStyle}
               onValueChange={(value: SignatureData['cta']['ctaStyle']) => handleChange("ctaStyle", value)}
             >
-              <SelectTrigger id="ctaStyle" className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary">
+              <SelectTrigger id="ctaStyle" className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200">
                 <SelectValue placeholder="Select style" />
               </SelectTrigger>
-              <SelectContent className="bg-popover text-popover-foreground border-border">
+              <SelectContent className="bg-popover text-popover-foreground border-border shadow-lg">
                 <SelectItem value="filled">Filled</SelectItem>
                 <SelectItem value="outlined">Outlined</SelectItem>
               </SelectContent>
@@ -101,10 +101,10 @@ export const CallToActionForm: React.FC<CallToActionFormProps> = ({ cta, onUpdat
               value={cta.ctaCornerShape}
               onValueChange={(value: SignatureData['cta']['ctaCornerShape']) => handleChange("ctaCornerShape", value)}
             >
-              <SelectTrigger id="ctaCornerShape" className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary">
+              <SelectTrigger id="ctaCornerShape" className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200">
                 <SelectValue placeholder="Select shape" />
               </SelectTrigger>
-              <SelectContent className="bg-popover text-popover-foreground border-border">
+              <SelectContent className="bg-popover text-popover-foreground border-border shadow-lg">
                 <SelectItem value="rounded">Rounded</SelectItem>
                 <SelectItem value="square">Square</SelectItem>
               </SelectContent>

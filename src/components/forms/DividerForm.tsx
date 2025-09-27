@@ -19,7 +19,7 @@ export const DividerForm: React.FC<DividerFormProps> = ({ divider, onUpdate, onV
   }, [divider, onValidationChange]);
 
   return (
-    <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-lg bg-card transition-all duration-200 hover:shadow-xl">
+    <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-xl bg-card transition-all duration-200 hover:shadow-2xl hover:translate-y-[-2px]">
       <h3 className="text-lg font-semibold mb-4 text-primary-foreground">Divider</h3>
 
       <div className="flex items-center justify-between">
@@ -44,7 +44,7 @@ export const DividerForm: React.FC<DividerFormProps> = ({ divider, onUpdate, onV
               min={1}
               max={10}
               step={1}
-              className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary"
+              className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
             />
           </div>
           <div>
@@ -54,7 +54,7 @@ export const DividerForm: React.FC<DividerFormProps> = ({ divider, onUpdate, onV
               type="color"
               value={divider.color}
               onChange={(e) => onUpdate("color", e.target.value)}
-              className="h-10 w-full p-1 cursor-pointer rounded-md border border-input focus:ring-ring focus:border-primary"
+              className="h-10 w-full p-1 cursor-pointer rounded-md border border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
             />
           </div>
         </div>

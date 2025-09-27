@@ -18,7 +18,7 @@ export const GlobalSpacingForm: React.FC<GlobalSpacingFormProps> = ({ spacing, o
   }, [spacing, onValidationChange]);
 
   return (
-    <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-lg bg-card transition-all duration-200 hover:shadow-xl">
+    <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-xl bg-card transition-all duration-200 hover:shadow-2xl hover:translate-y-[-2px]">
       <h3 className="text-lg font-semibold mb-4 text-primary-foreground">Global Spacing</h3>
       <div>
         <Label htmlFor="spacing" className="mb-1 block text-muted-foreground">Density</Label>
@@ -26,10 +26,10 @@ export const GlobalSpacingForm: React.FC<GlobalSpacingFormProps> = ({ spacing, o
           value={spacing}
           onValueChange={(value: SignatureData['spacing']) => onUpdate(value)}
         >
-          <SelectTrigger id="spacing" className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary">
+          <SelectTrigger id="spacing" className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200">
             <SelectValue placeholder="Select spacing" />
           </SelectTrigger>
-          <SelectContent className="bg-popover text-popover-foreground border-border">
+          <SelectContent className="bg-popover text-popover-foreground border-border shadow-lg">
             <SelectItem value="tight">Tight</SelectItem>
             <SelectItem value="normal">Normal</SelectItem>
             <SelectItem value="roomy">Roomy</SelectItem>

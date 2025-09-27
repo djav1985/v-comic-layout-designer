@@ -323,23 +323,23 @@ const SignatureDesigner = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
-      <h1 className="text-3xl font-bold p-4 border-b border-border shadow-sm bg-card">Email Signature Designer</h1>
+      <h1 className="text-3xl font-extrabold p-4 border-b border-border shadow-md bg-card text-primary">Email Signature Designer</h1>
       <ResizablePanelGroup
         direction="horizontal"
         className="flex-grow"
       >
-        <ResizablePanel defaultSize={50} minSize={30} className="bg-muted/10">
+        <ResizablePanel defaultSize={50} minSize={30} className="bg-muted/5">
           <ScrollArea className="h-full p-6">
             <h2 className="text-2xl font-bold mb-6 text-primary">Design Controls</h2>
 
             {/* Template Selection */}
-            <div className="mb-6 p-4 border border-border rounded-lg shadow-lg bg-card transition-all duration-200 hover:shadow-xl">
+            <div className="mb-6 p-4 border border-border rounded-lg shadow-xl bg-card transition-all duration-200 hover:shadow-2xl hover:translate-y-[-2px]">
               <Label htmlFor="template-select" className="mb-2 block text-lg font-semibold text-primary-foreground">Select Template</Label>
               <Select onValueChange={handleTemplateChange} defaultValue={signatureData.template}>
-                <SelectTrigger id="template-select" className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary">
+                <SelectTrigger id="template-select" className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200">
                   <SelectValue placeholder="Select a template" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover text-popover-foreground border-border">
+                <SelectContent className="bg-popover text-popover-foreground border-border shadow-lg">
                   <SelectItem value="classic-two-column">Classic Two-Column</SelectItem>
                   <SelectItem value="compact-single-column">Compact Single-Column</SelectItem>
                   <SelectItem value="corporate-strip">Corporate Strip</SelectItem>
@@ -424,19 +424,19 @@ const SignatureDesigner = () => {
             />
 
             {/* Other sections will go here */}
-            <div className="mt-8 p-4 border border-border rounded-lg bg-muted/20 text-muted-foreground shadow-sm">
+            <div className="mt-8 p-4 border border-border rounded-lg bg-muted/20 text-muted-foreground shadow-md">
               <p className="text-sm">More design controls and sections will be added here!</p>
             </div>
           </ScrollArea>
         </ResizablePanel>
         <ResizableHandle withHandle className="bg-border hover:bg-primary transition-colors duration-200" />
-        <ResizablePanel defaultSize={50} minSize={30} className="bg-gray-50 dark:bg-gray-900">
+        <ResizablePanel defaultSize={50} minSize={30} className="bg-secondary/10">
           <div className="h-full flex flex-col p-6">
             <h2 className="text-2xl font-bold mb-4 text-primary">Live Preview</h2>
             <Tabs defaultValue="desktop" className="flex-grow flex flex-col">
-              <TabsList className="grid w-full grid-cols-2 mb-4 bg-card border border-border shadow-sm rounded-md overflow-hidden">
-                <TabsTrigger value="desktop" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-secondary data-[state=inactive]:text-secondary-foreground hover:bg-primary/90 hover:text-primary-foreground transition-colors duration-200">Desktop</TabsTrigger>
-                <TabsTrigger value="mobile" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-secondary data-[state=inactive]:text-secondary-foreground hover:bg-primary/90 hover:text-primary-foreground transition-colors duration-200">Mobile</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-4 bg-card border border-border shadow-md rounded-lg overflow-hidden">
+                <TabsTrigger value="desktop" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-secondary data-[state=inactive]:text-secondary-foreground hover:bg-primary/90 hover:text-primary-foreground transition-colors duration-200 font-medium">Desktop</TabsTrigger>
+                <TabsTrigger value="mobile" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-secondary data-[state=inactive]:text-secondary-foreground hover:bg-primary/90 hover:text-primary-foreground transition-colors duration-200 font-medium">Mobile</TabsTrigger>
               </TabsList>
               <TabsContent value="desktop" className="flex-grow flex flex-col data-[state=inactive]:hidden">
                 <SignaturePreview signatureData={signatureData} previewMode="desktop" onHtmlContentReady={handleHtmlContentReady} />
