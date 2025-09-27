@@ -345,6 +345,9 @@ const SignatureDesigner = () => {
                   <SelectItem value="corporate-strip">Corporate Strip</SelectItem>
                   <SelectItem value="card-with-cta">Card with Call-to-Action</SelectItem>
                   <SelectItem value="social-focused">Social-Focused Design</SelectItem>
+                  <SelectItem value="minimalist">Minimalist</SelectItem>
+                  <SelectItem value="modern-horizontal">Modern Horizontal</SelectItem>
+                  <SelectItem value="image-centric">Image-Centric</SelectItem>
                 </SelectContent>
               </Select>
             </div>
