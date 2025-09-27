@@ -22,11 +22,21 @@ export const MediaForm: React.FC<MediaFormProps> = ({ media, onUpdate, onValidat
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
-    if (media.showHeadshot && !media.headshotUrl.trim()) {
-      newErrors.headshotUrl = "Headshot URL is required when headshot is shown.";
+    const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i; // Basic URL format regex
+
+    if (media.showHeadshot) {
+      if (!media.headshotUrl.trim()) {
+        newErrors.headshotUrl = "Headshot URL is required when headshot is shown.";
+      } else if (!urlRegex.test(media.headshotUrl)) {
+        newErrors.headshotUrl = "Invalid URL format.";
+      }
     }
-    if (media.showBanner && !media.bannerUrl.trim()) {
-      newErrors.bannerUrl = "Banner URL is required when banner is shown.";
+    if (media.showBanner) {
+      if (!media.bannerUrl.trim()) {
+        newErrors.bannerUrl = "Banner URL is required when banner is shown.";
+      } else if (!urlRegex.test(media.bannerUrl)) {
+        newErrors.bannerUrl = "Invalid URL format.";
+      }
     }
     setErrors(newErrors);
     onValidationChange("MediaForm", Object.keys(newErrors).length === 0);
