@@ -100,9 +100,9 @@ const SignatureDesigner = () => {
     company: {
       businessName: "Innovate Solutions",
       tagline: "Driving Tomorrow's Technology",
-      logoUrl: "https://via.placeholder.com/120x60/4285F4/FFFFFF?text=YourLogo",
-      brandColorPrimary: "#4285F4",
-      brandColorAccent: "#34A853",
+      logoUrl: "https://via.placeholder.com/120x60/4285F4/FFFFFF?text=YourLogo", // More distinct placeholder
+      brandColorPrimary: "#4285F4", // Google Blue
+      brandColorAccent: "#34A853", // Google Green
       brandColorText: "#333333",
     },
     contact: {
@@ -118,13 +118,13 @@ const SignatureDesigner = () => {
       { id: "3", platform: "Facebook", url: "https://facebook.com/janedoe" },
     ],
     media: {
-      headshotUrl: "https://via.placeholder.com/100/FFD700/FFFFFF?text=JD",
+      headshotUrl: "https://via.placeholder.com/100/FFD700/FFFFFF?text=JD", // Gold background placeholder
       showHeadshot: true,
       headshotShape: "circle",
       headshotSize: "medium",
-      bannerUrl: "https://via.placeholder.com/600x100/FF6347/FFFFFF?text=PromotionalBanner",
+      bannerUrl: "https://via.placeholder.com/600x100/FF6347/FFFFFF?text=PromotionalBanner", // Tomato background placeholder
       showBanner: false,
-      socialIconShape: "circle",
+      socialIconShape: "circle", // Default social icon shape
     },
     legal: {
       disclaimerText: "This message is intended only for the use of the individual or entity to which it is addressed and may contain information that is confidential and privileged.",
