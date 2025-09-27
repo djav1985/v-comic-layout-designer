@@ -11,6 +11,8 @@ import { PlusCircle, XCircle, Linkedin, X, Facebook, Instagram, Youtube, Globe, 
 interface SocialMediaFormProps {
   socialMedia: SignatureData['socialMedia'];
   onUpdate: (socialMedia: SignatureData['socialMedia']) => void;
+  socialIconShape: SignatureData['media']['socialIconShape'];
+  onUpdateSocialIconShape: (shape: SignatureData['media']['socialIconShape']) => void;
 }
 
 const socialPlatforms = [
@@ -24,7 +26,7 @@ const socialPlatforms = [
   { name: "Other", icon: Share2 }, // Generic icon for other platforms
 ];
 
-export const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ socialMedia, onUpdate }) => {
+export const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ socialMedia, onUpdate, socialIconShape, onUpdateSocialIconShape }) => {
   const handleAddSocial = () => {
     if (socialMedia.length < 10) {
       onUpdate([...socialMedia, { id: String(Date.now()), platform: "LinkedIn", url: "" }]);
@@ -46,6 +48,24 @@ export const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ socialMedia, o
   return (
     <div className="space-y-4 mb-6 p-4 border rounded-md bg-card">
       <h3 className="text-lg font-medium mb-4">Social Media (Up to 10)</h3>
+
+      <div className="mb-4">
+        <Label htmlFor="socialIconShape" className="mb-1 block">Icon Shape</Label>
+        <Select
+          value={socialIconShape}
+          onValueChange={(value: SignatureData['media']['socialIconShape']) => onUpdateSocialIconShape(value)}
+        >
+          <SelectTrigger id="socialIconShape">
+            <SelectValue placeholder="Select icon shape" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="circle">Circle</SelectItem>
+            <SelectItem value="square">Square</SelectItem>
+            <SelectItem value="ghost">Ghost (No Background)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       {socialMedia.map((item) => {
         const IconComponent = socialPlatforms.find(p => p.name === item.platform)?.icon || Share2;
         return (

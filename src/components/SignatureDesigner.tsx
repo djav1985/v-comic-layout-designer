@@ -16,7 +16,9 @@ import { IdentityForm } from "./forms/IdentityForm";
 import { CompanyForm } from "./forms/CompanyForm";
 import { ContactInfoForm } from "./forms/ContactInfoForm";
 import { SocialMediaForm } from "./forms/SocialMediaForm";
-import { MediaForm } from "./forms/MediaForm"; // Import MediaForm
+import { MediaForm } from "./forms/MediaForm";
+import { LegalForm } from "./forms/LegalForm"; // Import LegalForm
+import { CallToActionForm } from "./forms/CallToActionForm"; // Import CallToActionForm
 
 // Define a type for the signature data
 export type SignatureData = {
@@ -54,6 +56,20 @@ export type SignatureData = {
     headshotSize: "small" | "medium" | "large";
     bannerUrl: string;
     showBanner: boolean;
+    socialIconShape: "circle" | "square" | "ghost"; // Added social icon shape
+  };
+  legal: {
+    disclaimerText: string;
+    confidentialityNotice: string;
+    showEqualHousingBadge: boolean;
+    showHipaaBadge: boolean;
+  };
+  cta: {
+    ctaLabel: string;
+    ctaLink: string;
+    ctaStyle: "filled" | "outlined";
+    ctaCornerShape: "rounded" | "square";
+    showCta: boolean;
   };
   // Add other sections as we implement them
 };
@@ -93,6 +109,20 @@ const SignatureDesigner = () => {
       headshotSize: "medium",
       bannerUrl: "",
       showBanner: false,
+      socialIconShape: "circle", // Default social icon shape
+    },
+    legal: {
+      disclaimerText: "This email and any files transmitted with it are confidential and intended solely for the use of the individual or entity to whom they are addressed.",
+      confidentialityNotice: "If you have received this email in error please notify the system manager.",
+      showEqualHousingBadge: false,
+      showHipaaBadge: false,
+    },
+    cta: {
+      ctaLabel: "Visit Our Website",
+      ctaLink: "https://www.example.com",
+      ctaStyle: "filled",
+      ctaCornerShape: "rounded",
+      showCta: false,
     },
   });
 
@@ -138,6 +168,26 @@ const SignatureDesigner = () => {
       ...prevData,
       media: {
         ...prevData.media,
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleLegalChange = (field: keyof SignatureData['legal'], value: any) => {
+    setSignatureData(prevData => ({
+      ...prevData,
+      legal: {
+        ...prevData.legal,
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleCtaChange = (field: keyof SignatureData['cta'], value: any) => {
+    setSignatureData(prevData => ({
+      ...prevData,
+      cta: {
+        ...prevData.cta,
         [field]: value,
       },
     }));
@@ -200,12 +250,28 @@ const SignatureDesigner = () => {
             <SocialMediaForm
               socialMedia={signatureData.socialMedia}
               onUpdate={handleSocialMediaChange}
+              socialIconShape={signatureData.media.socialIconShape}
+              onUpdateSocialIconShape={(shape) => handleMediaChange("socialIconShape", shape)}
             />
 
             {/* Media Section */}
             <MediaForm
               media={signatureData.media}
               onUpdate={handleMediaChange}
+            />
+
+            {/* Call-to-Action Section */}
+            <CallToActionForm
+              cta={signatureData.cta}
+              onUpdate={handleCtaChange}
+              brandColorPrimary={signatureData.company.brandColorPrimary}
+              brandColorText={signatureData.company.brandColorText}
+            />
+
+            {/* Legal Section */}
+            <LegalForm
+              legal={signatureData.legal}
+              onUpdate={handleLegalChange}
             />
 
             {/* Other sections will go here */}
