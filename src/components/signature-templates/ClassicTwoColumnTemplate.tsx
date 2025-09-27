@@ -34,10 +34,10 @@ export const ClassicTwoColumnTemplate = (templateVars: TemplateVars): string => 
                   </div>
                 </td>
               ` : ''}
-              <td valign="top" style="${previewMode === 'mobile' ? `${mobileColumnTdStyle} text-align: left;` : ''}">
-                <p style="margin: 0; font-size: ${textStyling.baseFontSize + 4}px; font-weight: 700; color: ${company.brandColorPrimary}; line-height: ${textStyling.baseLineHeight};">${identity.fullName}</p>
-                <p style="margin: 0; font-size: ${textStyling.baseFontSize + 1}px; color: ${company.brandColorText}; padding-bottom: ${verticalSpacing}; line-height: ${textStyling.baseLineHeight}; font-weight: 500;">${identity.jobTitle} ${identity.department ? `| ${identity.department}` : ''}</p>
-                ${identity.pronouns ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: #777777; padding-bottom: ${verticalSpacing}; line-height: ${textStyling.baseLineHeight};">${identity.pronouns}</p>` : ''}
+              <td valign="top" style="${previewMode === 'mobile' ? mobileColumnTdStyle : ''}">
+                <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: 700; color: ${company.brandColorPrimary}; line-height: ${textStyling.baseLineHeight};">${identity.fullName}</p>
+                <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText}; padding-bottom: ${verticalSpacing}; line-height: ${textStyling.baseLineHeight}; font-weight: 500;">${identity.jobTitle} ${identity.department ? `| ${identity.department}` : ''}</p>
+                ${identity.pronouns ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777; padding-bottom: ${verticalSpacing}; line-height: ${textStyling.baseLineHeight};">${identity.pronouns}</p>` : ''}
                 <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: 700; color: ${company.brandColorPrimary}; line-height: ${textStyling.baseLineHeight};">${company.businessName}</p>
                 ${company.tagline ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText}; padding-bottom: ${verticalSpacing}; line-height: ${textStyling.baseLineHeight};">${company.tagline}</p>` : ''}
                 <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; line-height: ${textStyling.baseLineHeight};">
