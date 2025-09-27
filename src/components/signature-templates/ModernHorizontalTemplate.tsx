@@ -36,7 +36,7 @@ export const ModernHorizontalTemplate = (templateVars: TemplateVars): string => 
                 ${company.tagline ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText}; line-height: ${textStyling.baseLineHeight};">${company.tagline}</p>` : ''}
               </td>
               <td valign="top" style="${previewMode === 'mobile' ? mobileColumnTdStyle : `width: 40%; text-align: right;`}">
-                <img src="${logoUrl}" alt="${company.businessName} Logo" width="100" style="display: block; max-width: 100px; height: auto; margin: ${previewMode === 'mobile' ? '0 auto' : '0 0'} ${verticalSpacing} ${previewMode === 'mobile' ? 'auto' : 'auto'};" />
+                <img src="${logoUrl}" alt="${company.businessName} Logo" width="120" style="display: block; max-width: 120px; height: auto; margin: ${previewMode === 'mobile' ? '0 auto' : '0 0'} ${verticalSpacing} ${previewMode === 'mobile' ? 'auto' : 'auto'};" />
                 ${headshotHtml ? `<div style="margin: ${previewMode === 'mobile' ? '0 auto' : '0 0'} ${verticalSpacing} ${previewMode === 'mobile' ? 'auto' : 'auto'}; width: ${headshotPxSize}px;">${headshotHtml}</div>` : ''}
               </td>
             </tr>

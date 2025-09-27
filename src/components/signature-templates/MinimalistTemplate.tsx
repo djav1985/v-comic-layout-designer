@@ -43,7 +43,7 @@ export const MinimalistTemplate = (templateVars: TemplateVars): string => {
           
           ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; ${previewMode === 'mobile' ? 'text-align: center;' : ''} line-height: ${textStyling.baseLineHeight};">${socialIconsHtml}</p>` : ''}
           ${dividerHtml}
-          <img src="${logoUrl}" alt="${company.businessName} Logo" width="80" style="display: block; max-width: 80px; height: auto; margin: ${verticalSpacing} ${previewMode === 'mobile' ? 'auto' : '0'} 0 ${previewMode === 'mobile' ? 'auto' : '0'};" />
+          <img src="${logoUrl}" alt="${company.businessName} Logo" width="120" style="display: block; max-width: 120px; height: auto; margin: ${verticalSpacing} ${previewMode === 'mobile' ? 'auto' : '0'} 0 ${previewMode === 'mobile' ? 'auto' : '0'};" />
           ${legalHtml}
         </td>
       </tr>

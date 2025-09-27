@@ -48,14 +48,14 @@ export const BaseTemplate = (props: { signatureData: SignatureData; previewMode:
   const dynamicBannerUrl = media.bannerUrl || `https://placehold.co/600x100/${company.brandColorAccent.substring(1)}/FFFFFF/png?text=${encodeURIComponent(company.tagline || 'Promotional Banner')}`;
 
   const headshotHtml = media.showHeadshot ? `
-    <img src="${dynamicHeadshotUrl}" alt="${identity.fullName} Headshot" width="${headshotPxSize}" height="${headshotPxSize}" style="display: block; border-radius: ${headshotBorderRadius}; max-width: ${headshotPxSize}px; height: auto; margin: 0;" />
+    <img src="${dynamicHeadshotUrl}" alt="${identity.fullName} Headshot" width="${headshotPxSize}" height="${headshotPxSize}" style="display: block; border-radius: ${headshotBorderRadius}; max-width: 100%; height: auto; margin: 0;" />
   ` : '';
 
   const bannerImageHtml = media.showBanner ? `
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
       <tr>
         <td style="padding-top: ${verticalSpacing}; padding-bottom: 0;">
-          <img src="${dynamicBannerUrl}" alt="${company.businessName} Banner" width="500" style="display: block; max-width: 100%; height: auto; margin: 0;" />
+          <img src="${dynamicBannerUrl}" alt="${company.businessName} Banner" width="600" style="display: block; max-width: 100%; height: auto; margin: 0;" />
         </td>
       </tr>
     </table>

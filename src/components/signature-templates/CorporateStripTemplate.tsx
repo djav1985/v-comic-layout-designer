@@ -24,8 +24,8 @@ export const CorporateStripTemplate = (templateVars: TemplateVars): string => {
         <td style="background-color: ${company.brandColorAccent || '#f0f0f0'}; padding: ${verticalSpacing} ${horizontalSpacing};">
           <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
             <tr>
-              <td valign="middle" style="width: 80px; padding-right: ${horizontalSpacing}; ${previewMode === 'mobile' ? mobileColumnTdStyle : ''}">
-                <img src="${logoUrl}" alt="${company.businessName} Logo" width="80" style="display: block; max-width: 80px; height: auto; margin: ${previewMode === 'mobile' ? `0 auto ${verticalSpacing} auto` : '0'};" />
+              <td valign="middle" style="width: 120px; padding-right: ${horizontalSpacing}; ${previewMode === 'mobile' ? mobileColumnTdStyle : ''}">
+                <img src="${logoUrl}" alt="${company.businessName} Logo" width="120" style="display: block; max-width: 120px; height: auto; margin: ${previewMode === 'mobile' ? `0 auto ${verticalSpacing} auto` : '0'};" />
               </td>
               <td valign="middle" style="${previewMode === 'mobile' ? mobileColumnTdStyle : ''}">
                 <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary}; line-height: ${textStyling.baseLineHeight};">${identity.fullName}</p>

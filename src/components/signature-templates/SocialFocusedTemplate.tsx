@@ -19,7 +19,7 @@ export const SocialFocusedTemplate = (templateVars: TemplateVars): string => {
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="text-align: center;">
       <tr>
         <td style="padding-bottom: ${verticalSpacing};">
-          <img src="${logoUrl}" alt="${company.businessName} Logo" width="100" style="display: block; margin: 0 auto ${verticalSpacing} auto; max-width: 100px; height: auto;" />
+          <img src="${logoUrl}" alt="${company.businessName} Logo" width="120" style="display: block; margin: 0 auto ${verticalSpacing} auto; max-width: 120px; height: auto;" />
           <p style="margin: 0; font-size: ${textStyling.baseFontSize + 4}px; font-weight: bold; color: ${company.brandColorPrimary}; line-height: ${textStyling.baseLineHeight};">${company.businessName}</p>
           ${company.tagline ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText}; padding-bottom: ${verticalSpacing}; line-height: ${textStyling.baseLineHeight};">${company.tagline}</p>` : ''}
           ${socialMedia.length > 0 ? `<p style="margin: 0; padding-bottom: ${verticalSpacing}; line-height: ${textStyling.baseLineHeight};">${socialIconsHtml}</p>` : ''}
