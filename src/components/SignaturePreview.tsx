@@ -9,15 +9,17 @@ interface SignaturePreviewProps {
 }
 
 const generateSignatureHtml = (data: SignatureData): string => {
-  const { identity, template } = data;
+  const { identity, company, contact, template } = data;
 
   // Basic inline CSS for email compatibility
   const baseStyles = `
     font-family: Arial, sans-serif;
     font-size: 14px;
-    color: #333333;
+    color: ${company.brandColorText || '#333333'};
     line-height: 1.4;
   `;
+
+  const linkColor = company.brandColorPrimary || '#1a73e8';
 
   let contentHtml = '';
 
@@ -33,10 +35,23 @@ const generateSignatureHtml = (data: SignatureData): string => {
               <p style="margin: 0; font-size: 16px; font-weight: bold;">${identity.fullName}</p>
               <p style="margin: 0; font-size: 13px; color: #555555;">${identity.jobTitle} | ${identity.department}</p>
               <p style="margin: 0; font-size: 12px; color: #777777;">${identity.pronouns}</p>
+              <p style="margin-top: 10px; margin-bottom: 5px; font-size: 14px; font-weight: bold;">${company.businessName}</p>
+              <p style="margin: 0; font-size: 12px; color: #555555;">${company.tagline}</p>
               <p style="margin-top: 10px; font-size: 12px;">
-                <a href="#" style="color: #1a73e8; text-decoration: none;">Website</a> |
-                <a href="#" style="color: #1a73e8; text-decoration: none;">LinkedIn</a>
+                ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a> | ` : ''}
+                ${contact.emailAddress ? `<a href="mailto:${contact.emailAddress}" style="color: ${linkColor}; text-decoration: none;">${contact.emailAddress}</a>` : ''}
               </p>
+              <p style="margin: 0; font-size: 12px;">
+                ${contact.websiteLink ? `<a href="${contact.websiteLink}" style="color: ${linkColor}; text-decoration: none;">Website</a>` : ''}
+                ${contact.websiteLink && contact.officeAddress ? ` | ` : ''}
+                ${contact.officeAddress ? `<span>${contact.officeAddress}</span>` : ''}
+              </p>
+              ${contact.bookingLink ? `<p style="margin-top: 5px; font-size: 12px;"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" style="padding-top: 10px;">
+              <img src="${company.logoUrl}" alt="${company.businessName} Logo" width="100" style="display: block; max-width: 100px; height: auto;" />
             </td>
           </tr>
         </table>
@@ -47,13 +62,24 @@ const generateSignatureHtml = (data: SignatureData): string => {
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="${baseStyles}">
           <tr>
             <td style="text-align: center;">
+              <img src="${company.logoUrl}" alt="${company.businessName} Logo" width="80" style="display: block; margin: 0 auto 10px auto; max-width: 80px; height: auto;" />
               <p style="margin: 0; font-size: 16px; font-weight: bold;">${identity.fullName}</p>
               <p style="margin: 0; font-size: 13px; color: #555555;">${identity.jobTitle}</p>
               <p style="margin: 0; font-size: 12px; color: #777777;">${identity.department}</p>
+              <p style="margin: 0; font-size: 12px; color: #777777;">${identity.pronouns}</p>
+              <p style="margin-top: 10px; margin-bottom: 5px; font-size: 14px; font-weight: bold;">${company.businessName}</p>
+              <p style="margin: 0; font-size: 12px; color: #555555;">${company.tagline}</p>
               <p style="margin-top: 10px; font-size: 12px;">
-                <a href="#" style="color: #1a73e8; text-decoration: none;">Email</a> |
-                <a href="#" style="color: #1a73e8; text-decoration: none;">Phone</a>
+                ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a>` : ''}
+                ${contact.phoneNumbers && contact.emailAddress ? ` | ` : ''}
+                ${contact.emailAddress ? `<a href="mailto:${contact.emailAddress}" style="color: ${linkColor}; text-decoration: none;">${contact.emailAddress}</a>` : ''}
               </p>
+              <p style="margin: 0; font-size: 12px;">
+                ${contact.websiteLink ? `<a href="${contact.websiteLink}" style="color: ${linkColor}; text-decoration: none;">Website</a>` : ''}
+                ${contact.websiteLink && contact.officeAddress ? ` | ` : ''}
+                ${contact.officeAddress ? `<span>${contact.officeAddress}</span>` : ''}
+              </p>
+              ${contact.bookingLink ? `<p style="margin-top: 5px; font-size: 12px;"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
             </td>
           </tr>
         </table>
@@ -82,6 +108,7 @@ const generateSignatureHtml = (data: SignatureData): string => {
       <style>
         body { margin: 0; padding: 0; }
         p { margin: 0; }
+        a { text-decoration: none; }
       </style>
     </head>
     <body>

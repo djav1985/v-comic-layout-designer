@@ -12,7 +12,9 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SignaturePreview } from "./SignaturePreview";
-import { IdentityForm } from "@/components/forms/IdentityForm"; // Changed to use @ alias
+import { IdentityForm } from "./forms/IdentityForm";
+import { CompanyForm } from "./forms/CompanyForm";
+import { ContactInfoForm } from "./forms/ContactInfoForm";
 
 // Define a type for the signature data
 export type SignatureData = {
@@ -22,6 +24,21 @@ export type SignatureData = {
     jobTitle: string;
     pronouns: string;
     department: string;
+  };
+  company: {
+    businessName: string;
+    tagline: string;
+    logoUrl: string;
+    brandColorPrimary: string;
+    brandColorAccent: string;
+    brandColorText: string;
+  };
+  contact: {
+    phoneNumbers: string;
+    emailAddress: string;
+    websiteLink: string;
+    officeAddress: string;
+    bookingLink: string;
   };
   // Add other sections as we implement them
 };
@@ -35,6 +52,21 @@ const SignatureDesigner = () => {
       pronouns: "he/him",
       department: "Engineering",
     },
+    company: {
+      businessName: "Acme Corp",
+      tagline: "Innovating the Future",
+      logoUrl: "https://via.placeholder.com/100x50?text=Logo",
+      brandColorPrimary: "#1a73e8",
+      brandColorAccent: "#4285f4",
+      brandColorText: "#333333",
+    },
+    contact: {
+      phoneNumbers: "+1 (555) 123-4567",
+      emailAddress: "john.doe@example.com",
+      websiteLink: "https://www.example.com",
+      officeAddress: "123 Main St, Anytown, USA",
+      bookingLink: "",
+    },
   });
 
   const handleIdentityChange = (field: keyof SignatureData['identity'], value: string) => {
@@ -42,6 +74,26 @@ const SignatureDesigner = () => {
       ...prevData,
       identity: {
         ...prevData.identity,
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleCompanyChange = (field: keyof SignatureData['company'], value: string) => {
+    setSignatureData(prevData => ({
+      ...prevData,
+      company: {
+        ...prevData.company,
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleContactChange = (field: keyof SignatureData['contact'], value: string) => {
+    setSignatureData(prevData => ({
+      ...prevData,
+      contact: {
+        ...prevData.contact,
         [field]: value,
       },
     }));
@@ -86,6 +138,18 @@ const SignatureDesigner = () => {
             <IdentityForm
               identity={signatureData.identity}
               onUpdate={handleIdentityChange}
+            />
+
+            {/* Company Section */}
+            <CompanyForm
+              company={signatureData.company}
+              onUpdate={handleCompanyChange}
+            />
+
+            {/* Contact Info Section */}
+            <ContactInfoForm
+              contact={signatureData.contact}
+              onUpdate={handleContactChange}
             />
 
             {/* Other sections will go here */}
