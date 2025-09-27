@@ -35,25 +35,25 @@ export const ClassicTwoColumnTemplate = (templateVars: TemplateVars): string => 
                 </td>
               ` : ''}
               <td valign="top" style="${previewMode === 'mobile' ? mobileColumnTdStyle : ''}">
-                <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
-                <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText}; padding-bottom: ${verticalSpacing};">${identity.jobTitle} ${identity.department ? `| ${identity.department}` : ''}</p>
-                ${identity.pronouns ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777; padding-bottom: ${verticalSpacing};">${identity.pronouns}</p>` : ''}
+                <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary}; line-height: ${textStyling.baseLineHeight};">${identity.fullName}</p>
+                <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText}; padding-bottom: ${verticalSpacing}; line-height: ${textStyling.baseLineHeight};">${identity.jobTitle} ${identity.department ? `| ${identity.department}` : ''}</p>
+                ${identity.pronouns ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777; padding-bottom: ${verticalSpacing}; line-height: ${textStyling.baseLineHeight};">${identity.pronouns}</p>` : ''}
                 
-                <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${company.businessName}</p>
-                ${company.tagline ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText}; padding-bottom: ${verticalSpacing};">${company.tagline}</p>` : ''}
+                <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary}; line-height: ${textStyling.baseLineHeight};">${company.businessName}</p>
+                ${company.tagline ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText}; padding-bottom: ${verticalSpacing}; line-height: ${textStyling.baseLineHeight};">${company.tagline}</p>` : ''}
                 
-                <p style="margin: 0; font-size: ${textStyling.baseFontSize}px;">
+                <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; line-height: ${textStyling.baseLineHeight};">
                   ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers.replace(/\s/g, '')}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a>` : ''}
                   ${contact.phoneNumbers && contact.emailAddress ? ` &bull; ` : ''}
                   ${contact.emailAddress ? `<a href="mailto:${contact.emailAddress}" style="color: ${linkColor}; text-decoration: none;">${contact.emailAddress}</a>` : ''}
                 </p>
-                <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; padding-bottom: ${verticalSpacing};">
+                <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; padding-bottom: ${verticalSpacing}; line-height: ${textStyling.baseLineHeight};">
                   ${contact.websiteLink ? `<a href="${contact.websiteLink}" style="color: ${linkColor}; text-decoration: none;">${contact.websiteLink.replace(/^(https?:\/\/)/, '')}</a>` : ''}
                   ${contact.websiteLink && contact.officeAddress ? ` &bull; ` : ''}
                   ${contact.officeAddress ? `<span>${contact.officeAddress}</span>` : ''}
                 </p>
-                ${contact.bookingLink ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px; padding-bottom: ${verticalSpacing};"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
-                ${socialMedia.length > 0 ? `<p style="margin: 0; padding-bottom: ${verticalSpacing};">${socialIconsHtml}</p>` : ''}
+                ${contact.bookingLink ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px; padding-bottom: ${verticalSpacing}; line-height: ${textStyling.baseLineHeight};"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
+                ${socialMedia.length > 0 ? `<p style="margin: 0; padding-bottom: ${verticalSpacing}; line-height: ${textStyling.baseLineHeight};">${socialIconsHtml}</p>` : ''}
               </td>
             </tr>
           </table>

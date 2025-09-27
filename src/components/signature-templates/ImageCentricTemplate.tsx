@@ -23,22 +23,22 @@ export const ImageCentricTemplate = (templateVars: TemplateVars): string => {
         <td style="padding-bottom: ${verticalSpacing};">
           ${headshotHtml ? `<div style="margin: 0 auto ${verticalSpacing} auto; width: ${headshotPxSize}px;">${headshotHtml}</div>` : ''}
           ${bannerImageHtml}
-          <p style="margin: ${verticalSpacing} 0 0 0; font-size: ${textStyling.baseFontSize + 4}px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
-          <p style="margin: 0; font-size: ${textStyling.baseFontSize + 1}px; color: ${company.brandColorText};">${identity.jobTitle} ${identity.department ? `| ${identity.department}` : ''}</p>
-          ${identity.pronouns ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 1}px; color: #777777;">${identity.pronouns}</p>` : ''}
+          <p style="margin: ${verticalSpacing} 0 0 0; font-size: ${textStyling.baseFontSize + 4}px; font-weight: bold; color: ${company.brandColorPrimary}; line-height: ${textStyling.baseLineHeight};">${identity.fullName}</p>
+          <p style="margin: 0; font-size: ${textStyling.baseFontSize + 1}px; color: ${company.brandColorText}; line-height: ${textStyling.baseLineHeight};">${identity.jobTitle} ${identity.department ? `| ${identity.department}` : ''}</p>
+          ${identity.pronouns ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 1}px; color: #777777; line-height: ${textStyling.baseLineHeight};">${identity.pronouns}</p>` : ''}
           ${dividerHtml}
-          <p style="margin: ${verticalSpacing} 0 0 0; font-size: ${textStyling.baseFontSize}px;">
+          <p style="margin: ${verticalSpacing} 0 0 0; font-size: ${textStyling.baseFontSize}px; line-height: ${textStyling.baseLineHeight};">
             ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers.replace(/\s/g, '')}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a>` : ''}
             ${contact.phoneNumbers && contact.emailAddress ? ` &bull; ` : ''}
             ${contact.emailAddress ? `<a href="mailto:${contact.emailAddress}" style="color: ${linkColor}; text-decoration: none;">${contact.emailAddress}</a>` : ''}
           </p>
-          <p style="margin: 0; font-size: ${textStyling.baseFontSize}px;">
+          <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; line-height: ${textStyling.baseLineHeight};">
             ${contact.websiteLink ? `<a href="${contact.websiteLink}" style="color: ${linkColor}; text-decoration: none;">${contact.websiteLink.replace(/^(https?:\/\/)/, '')}</a>` : ''}
             ${contact.websiteLink && contact.officeAddress ? ` &bull; ` : ''}
             ${contact.officeAddress ? `<span>${contact.officeAddress}</span>` : ''}
           </p>
-          ${contact.bookingLink ? `<p style="margin: ${verticalSpacing} 0 0 0; font-size: ${textStyling.baseFontSize}px;"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
-          ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing};">${socialIconsHtml}</p>` : ''}
+          ${contact.bookingLink ? `<p style="margin: ${verticalSpacing} 0 0 0; font-size: ${textStyling.baseFontSize}px; line-height: ${textStyling.baseLineHeight};"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
+          ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; line-height: ${textStyling.baseLineHeight};">${socialIconsHtml}</p>` : ''}
           <img src="${logoUrl}" alt="${company.businessName} Logo" width="120" style="display: block; max-width: 120px; height: auto; margin: ${verticalSpacing} auto 0 auto;" />
           ${ctaButtonHtml}
           ${legalHtml}

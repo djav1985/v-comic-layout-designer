@@ -4,7 +4,7 @@ export const CardWithCtaTemplate = (templateVars: TemplateVars): string => {
   const {
     signatureData,
     verticalSpacing,
-    horizontalSpacing, // Added horizontalSpacing here
+    horizontalSpacing,
     headshotPxSize,
     headshotHtml,
     linkColor,
@@ -22,14 +22,14 @@ export const CardWithCtaTemplate = (templateVars: TemplateVars): string => {
       <tr>
         <td style="padding-bottom: ${verticalSpacing};">
           ${headshotHtml ? `<div style="margin: 0 auto ${verticalSpacing} auto; width: ${headshotPxSize}px;">${headshotHtml}</div>` : ''}
-          <p style="margin: 0; font-size: ${textStyling.baseFontSize + 4}px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
-          <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText}; padding-bottom: ${verticalSpacing};">${identity.jobTitle}</p>
-          <p style="margin: 0; font-size: ${textStyling.baseFontSize}px;">
+          <p style="margin: 0; font-size: ${textStyling.baseFontSize + 4}px; font-weight: bold; color: ${company.brandColorPrimary}; line-height: ${textStyling.baseLineHeight};">${identity.fullName}</p>
+          <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText}; padding-bottom: ${verticalSpacing}; line-height: ${textStyling.baseLineHeight};">${identity.jobTitle}</p>
+          <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; line-height: ${textStyling.baseLineHeight};">
             ${contact.emailAddress ? `<a href="mailto:${contact.emailAddress}" style="color: ${linkColor}; text-decoration: none;">${contact.emailAddress}</a>` : ''}
             ${contact.emailAddress && contact.phoneNumbers ? ` &bull; ` : ''}
             ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers.replace(/\s/g, '')}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a>` : ''}
           </p>
-          ${socialMedia.length > 0 ? `<p style="margin: ${verticalSpacing} 0 0 0;">${socialIconsHtml}</p>` : ''}
+          ${socialMedia.length > 0 ? `<p style="margin: ${verticalSpacing} 0 0 0; line-height: ${textStyling.baseLineHeight};">${socialIconsHtml}</p>` : ''}
           ${ctaButtonHtml}
           ${bannerImageHtml}
           ${dividerHtml}

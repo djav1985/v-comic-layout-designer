@@ -20,13 +20,13 @@ export const SocialFocusedTemplate = (templateVars: TemplateVars): string => {
       <tr>
         <td style="padding-bottom: ${verticalSpacing};">
           <img src="${logoUrl}" alt="${company.businessName} Logo" width="100" style="display: block; margin: 0 auto ${verticalSpacing} auto; max-width: 100px; height: auto;" />
-          <p style="margin: 0; font-size: ${textStyling.baseFontSize + 4}px; font-weight: bold; color: ${company.brandColorPrimary};">${company.businessName}</p>
-          ${company.tagline ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText}; padding-bottom: ${verticalSpacing};">${company.tagline}</p>` : ''}
-          ${socialMedia.length > 0 ? `<p style="margin: 0; padding-bottom: ${verticalSpacing};">${socialIconsHtml}</p>` : ''}
-          <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">
+          <p style="margin: 0; font-size: ${textStyling.baseFontSize + 4}px; font-weight: bold; color: ${company.brandColorPrimary}; line-height: ${textStyling.baseLineHeight};">${company.businessName}</p>
+          ${company.tagline ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText}; padding-bottom: ${verticalSpacing}; line-height: ${textStyling.baseLineHeight};">${company.tagline}</p>` : ''}
+          ${socialMedia.length > 0 ? `<p style="margin: 0; padding-bottom: ${verticalSpacing}; line-height: ${textStyling.baseLineHeight};">${socialIconsHtml}</p>` : ''}
+          <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText}; line-height: ${textStyling.baseLineHeight};">
             ${identity.fullName} ${identity.jobTitle ? `| ${identity.jobTitle}` : ''}
           </p>
-          ${contact.websiteLink ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">
+          ${contact.websiteLink ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777; line-height: ${textStyling.baseLineHeight};">
             <a href="${contact.websiteLink}" style="color: ${linkColor}; text-decoration: none;">${contact.websiteLink.replace(/^(https?:\/\/)/, '')}</a>
           </p>` : ''}
           ${bannerImageHtml}
