@@ -336,7 +336,7 @@ const SignatureDesigner = () => {
             <div className="mb-6 p-4 border border-border rounded-lg shadow-xl bg-card transition-all duration-200 hover:shadow-2xl hover:translate-y-[-2px]">
               <Label htmlFor="template-select" className="mb-2 block text-lg font-semibold text-foreground">Select Template</Label>
               <Select onValueChange={handleTemplateChange} defaultValue={signatureData.template}>
-                <SelectTrigger id="template-select" className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200">
+                <SelectTrigger id="template-select" className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary">
                   <SelectValue placeholder="Select a template" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover text-popover-foreground border-border shadow-lg">

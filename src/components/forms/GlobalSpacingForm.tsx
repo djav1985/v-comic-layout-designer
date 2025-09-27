@@ -26,7 +26,7 @@ export const GlobalSpacingForm: React.FC<GlobalSpacingFormProps> = ({ spacing, o
           value={spacing}
           onValueChange={(value: SignatureData['spacing']) => onUpdate(value)}
         >
-          <SelectTrigger id="spacing" className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200">
+          <SelectTrigger id="spacing" className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary">
             <SelectValue placeholder="Select spacing" />
           </SelectTrigger>
           <SelectContent className="bg-popover text-popover-foreground border-border shadow-lg">

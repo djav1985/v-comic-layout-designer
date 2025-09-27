@@ -54,7 +54,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ company, onUpdate, onV
           value={company.businessName}
           onChange={(e) => handleChange("businessName", e.target.value)}
           placeholder="e.g., Acme Corp"
-          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
+          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary"
         />
         {errors.businessName && <p className="text-destructive text-sm mt-1">{errors.businessName}</p>}
       </div>
@@ -65,7 +65,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ company, onUpdate, onV
           value={company.tagline}
           onChange={(e) => handleChange("tagline", e.target.value)}
           placeholder="e.g., Innovating the Future"
-          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
+          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary"
         />
       </div>
       <div>
@@ -75,7 +75,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ company, onUpdate, onV
           value={company.logoUrl}
           onChange={(e) => handleChange("logoUrl", e.target.value)}
           placeholder="e.g., https://yourcompany.com/logo.png"
-          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
+          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary"
         />
         {errors.logoUrl && <p className="text-destructive text-sm mt-1">{errors.logoUrl}</p>}
         <p className="text-sm text-muted-foreground mt-1">
@@ -90,7 +90,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ company, onUpdate, onV
             type="color"
             value={company.brandColorPrimary}
             onChange={(e) => handleChange("brandColorPrimary", e.target.value)}
-            className="h-10 w-full p-1 cursor-pointer rounded-md border border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
+            className="h-10 w-full p-1 cursor-pointer rounded-md border border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary"
           />
           {errors.brandColorPrimary && <p className="text-destructive text-sm mt-1">{errors.brandColorPrimary}</p>}
         </div>
@@ -101,7 +101,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ company, onUpdate, onV
             type="color"
             value={company.brandColorAccent}
             onChange={(e) => handleChange("brandColorAccent", e.target.value)}
-            className="h-10 w-full p-1 cursor-pointer rounded-md border border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
+            className="h-10 w-full p-1 cursor-pointer rounded-md border border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary"
           />
           {errors.brandColorAccent && <p className="text-destructive text-sm mt-1">{errors.brandColorAccent}</p>}
         </div>
@@ -112,7 +112,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ company, onUpdate, onV
             type="color"
             value={company.brandColorText}
             onChange={(e) => handleChange("brandColorText", e.target.value)}
-            className="h-10 w-full p-1 cursor-pointer rounded-md border border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
+            className="h-10 w-full p-1 cursor-pointer rounded-md border border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary"
           />
           {errors.brandColorText && <p className="text-destructive text-sm mt-1">{errors.brandColorText}</p>}
         </div>

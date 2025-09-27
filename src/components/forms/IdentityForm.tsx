@@ -45,7 +45,7 @@ export const IdentityForm: React.FC<IdentityFormProps> = ({ identity, onUpdate, 
           value={identity.fullName}
           onChange={(e) => handleChange("fullName", e.target.value)}
           placeholder="e.g., Jane Doe"
-          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
+          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary"
         />
         {errors.fullName && <p className="text-destructive text-sm mt-1">{errors.fullName}</p>}
       </div>
@@ -56,7 +56,7 @@ export const IdentityForm: React.FC<IdentityFormProps> = ({ identity, onUpdate, 
           value={identity.jobTitle}
           onChange={(e) => handleChange("jobTitle", e.target.value)}
           placeholder="e.g., Senior Developer"
-          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
+          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary"
         />
         {errors.jobTitle && <p className="text-destructive text-sm mt-1">{errors.jobTitle}</p>}
       </div>
@@ -67,7 +67,7 @@ export const IdentityForm: React.FC<IdentityFormProps> = ({ identity, onUpdate, 
           value={identity.pronouns}
           onChange={(e) => handleChange("pronouns", e.target.value)}
           placeholder="e.g., she/her"
-          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
+          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary"
         />
       </div>
       <div>
@@ -77,7 +77,7 @@ export const IdentityForm: React.FC<IdentityFormProps> = ({ identity, onUpdate, 
           value={identity.department}
           onChange={(e) => handleChange("department", e.target.value)}
           placeholder="e.g., Marketing"
-          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
+          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary"
         />
       </div>
     </div>

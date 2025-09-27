@@ -44,7 +44,7 @@ export const DividerForm: React.FC<DividerFormProps> = ({ divider, onUpdate, onV
               min={1}
               max={10}
               step={1}
-              className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
+              className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary"
             />
           </div>
           <div>
@@ -54,7 +54,7 @@ export const DividerForm: React.FC<DividerFormProps> = ({ divider, onUpdate, onV
               type="color"
               value={divider.color}
               onChange={(e) => onUpdate("color", e.target.value)}
-              className="h-10 w-full p-1 cursor-pointer rounded-md border border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
+              className="h-10 w-full p-1 cursor-pointer rounded-md border border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary"
             />
           </div>
         </div>

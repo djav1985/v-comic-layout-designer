@@ -38,7 +38,7 @@ export const TextStylingForm: React.FC<TextStylingFormProps> = ({ textStyling, o
           value={textStyling.fontFamily}
           onValueChange={(value) => onUpdate("fontFamily", value)}
         >
-          <SelectTrigger id="fontFamily" className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200">
+          <SelectTrigger id="fontFamily" className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary">
             <SelectValue placeholder="Select a font" />
           </SelectTrigger>
           <SelectContent className="bg-popover text-popover-foreground border-border shadow-lg">
@@ -60,7 +60,7 @@ export const TextStylingForm: React.FC<TextStylingFormProps> = ({ textStyling, o
           min={8}
           max={24}
           step={1}
-          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
+          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary"
         />
       </div>
       <div>
@@ -73,7 +73,7 @@ export const TextStylingForm: React.FC<TextStylingFormProps> = ({ textStyling, o
           min={1.0}
           max={2.0}
           step={0.1}
-          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
+          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary"
         />
       </div>
     </div>

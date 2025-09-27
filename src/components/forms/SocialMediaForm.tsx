@@ -74,7 +74,7 @@ export const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ socialMedia, o
           value={socialIconShape}
           onValueChange={(value: SignatureData['media']['socialIconShape']) => onUpdateSocialIconShape(value)}
         >
-          <SelectTrigger id="socialIconShape" className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200">
+          <SelectTrigger id="socialIconShape" className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary">
             <SelectValue placeholder="Select icon shape" />
           </SelectTrigger>
           <SelectContent className="bg-popover text-popover-foreground border-border shadow-lg">
@@ -96,7 +96,7 @@ export const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ socialMedia, o
                   value={item.platform}
                   onValueChange={(value) => handleSocialPlatformChange(item.id, value)}
                 >
-                  <SelectTrigger id={`platform-${item.id}`} className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200">
+                  <SelectTrigger id={`platform-${item.id}`} className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary">
                     <SelectValue placeholder="Select platform" />
                   </SelectTrigger>
                   <SelectContent className="bg-popover text-popover-foreground border-border shadow-lg">
@@ -119,7 +119,7 @@ export const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ socialMedia, o
                   value={item.url}
                   onChange={(e) => handleSocialUrlChange(item.id, e.target.value)}
                   placeholder={`https://${item.platform.toLowerCase()}.com/yourprofile`}
-                  className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
+                  className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary"
                 />
                 {errors[item.id] && <p className="text-destructive text-sm mt-1">{errors[item.id]}</p>}
               </div>

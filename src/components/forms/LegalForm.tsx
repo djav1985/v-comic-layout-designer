@@ -29,7 +29,7 @@ export const LegalForm: React.FC<LegalFormProps> = ({ legal, onUpdate, onValidat
           onChange={(e) => onUpdate("disclaimerText", e.target.value)}
           placeholder="e.g., This email is confidential..."
           rows={4}
-          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
+          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary"
         />
       </div>
       <div>
@@ -40,7 +40,7 @@ export const LegalForm: React.FC<LegalFormProps> = ({ legal, onUpdate, onValidat
           onChange={(e) => onUpdate("confidentialityNotice", e.target.value)}
           placeholder="e.g., If you have received this email in error..."
           rows={3}
-          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
+          className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary"
         />
       </div>
       <div className="flex items-center justify-between mt-4">

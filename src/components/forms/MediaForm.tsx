@@ -70,7 +70,7 @@ export const MediaForm: React.FC<MediaFormProps> = ({ media, onUpdate, onValidat
               value={media.headshotUrl}
               onChange={(e) => handleChange("headshotUrl", e.target.value)}
               placeholder="e.g., https://yourcompany.com/headshot.jpg"
-              className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
+              className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary"
             />
             {errors.headshotUrl && <p className="text-destructive text-sm mt-1">{errors.headshotUrl}</p>}
           </div>
@@ -80,7 +80,7 @@ export const MediaForm: React.FC<MediaFormProps> = ({ media, onUpdate, onValidat
               value={media.headshotShape}
               onValueChange={(value: SignatureData['media']['headshotShape']) => handleChange("headshotShape", value)}
             >
-              <SelectTrigger id="headshotShape" className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200">
+              <SelectTrigger id="headshotShape" className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary">
                 <SelectValue placeholder="Select shape" />
               </SelectTrigger>
               <SelectContent className="bg-popover text-popover-foreground border-border shadow-lg">
@@ -96,7 +96,7 @@ export const MediaForm: React.FC<MediaFormProps> = ({ media, onUpdate, onValidat
               value={media.headshotSize}
               onValueChange={(value: SignatureData['media']['headshotSize']) => handleChange("headshotSize", value)}
             >
-              <SelectTrigger id="headshotSize" className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200">
+              <SelectTrigger id="headshotSize" className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary">
                 <SelectValue placeholder="Select size" />
               </SelectTrigger>
               <SelectContent className="bg-popover text-popover-foreground border-border shadow-lg">
@@ -128,7 +128,7 @@ export const MediaForm: React.FC<MediaFormProps> = ({ media, onUpdate, onValidat
               value={media.bannerUrl}
               onChange={(e) => handleChange("bannerUrl", e.target.value)}
               placeholder="e.g., https://yourcompany.com/banner.jpg"
-              className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200"
+              className="w-full bg-input text-foreground border-input focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-transparent transition-all duration-200 hover:border-primary"
             />
             {errors.bannerUrl && <p className="text-destructive text-sm mt-1">{errors.bannerUrl}</p>}
           </div>
