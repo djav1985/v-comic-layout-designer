@@ -58,8 +58,8 @@ export type SignatureData = {
   media: {
     headshotUrl: string;
     showHeadshot: boolean;
-    headshotShape: "circle" | "rounded" | "square";
-        headshotSize: "small" | "medium" | "large";
+        headshotShape: "circle" | "rounded" | "square";
+    headshotSize: "small" | "medium" | "large";
     bannerUrl: string;
     showBanner: boolean;
     socialIconShape: "circle" | "square" | "ghost";
