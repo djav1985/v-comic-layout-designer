@@ -51,7 +51,7 @@ const getSocialIconSvg = (platform: string, color: string, shape: SignatureData[
 };
 
 const generateSignatureHtml = (data: SignatureData): string => {
-  const { identity, company, contact, socialMedia, media, legal, cta, template } = data;
+  const { identity, company, contact, socialMedia, media, legal, cta, textStyling, divider, template } = data;
 
   // Determine headshot size
   let headshotPxSize = 80;
@@ -63,12 +63,12 @@ const generateSignatureHtml = (data: SignatureData): string => {
   if (media.headshotShape === "rounded") headshotBorderRadius = "8px";
   if (media.headshotShape === "square") headshotBorderRadius = "0";
 
-  // Basic inline CSS for email compatibility
+  // Base inline CSS for email compatibility, now including text styling
   const baseStyles = `
-    font-family: Arial, sans-serif;
-    font-size: 14px;
+    font-family: ${textStyling.fontFamily};
+    font-size: ${textStyling.baseFontSize}px;
     color: ${company.brandColorText || '#333333'};
-    line-height: 1.4;
+    line-height: ${textStyling.baseLineHeight};
   `;
 
   const linkColor = company.brandColorPrimary || '#4285F4'; // Use default if not set
@@ -106,6 +106,16 @@ const generateSignatureHtml = (data: SignatureData): string => {
     </p>
   ` : '';
 
+  const dividerHtml = divider.showDivider ? `
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top: 15px; margin-bottom: 15px;">
+      <tr>
+        <td style="padding: 0;">
+          <div style="height: ${divider.thickness}px; background-color: ${divider.color}; line-height: ${divider.thickness}px; font-size: ${divider.thickness}px;">&nbsp;</div>
+        </td>
+      </tr>
+    </table>
+  ` : '';
+
   const legalHtml = (legal.disclaimerText || legal.confidentialityNotice || legal.showEqualHousingBadge || legal.showHipaaBadge) ? `
     <p style="margin-top: 20px; font-size: 10px; color: #888888; line-height: 1.3;">
       ${legal.disclaimerText ? `<span>${legal.disclaimerText}</span><br/>` : ''}
@@ -125,20 +135,20 @@ const generateSignatureHtml = (data: SignatureData): string => {
             ${headshotHtml ? `<td valign="top" style="padding-right: 10px; width: ${headshotPxSize}px;">${headshotHtml}</td>` : ''}
             <td valign="top">
               <p style="margin: 0; font-size: 16px; font-weight: bold;">${identity.fullName}</p>
-              <p style="margin: 0; font-size: 13px; color: #555555;">${identity.jobTitle} | ${identity.department}</p>
-              <p style="margin: 0; font-size: 12px; color: #777777;">${identity.pronouns}</p>
-              <p style="margin-top: 10px; margin-bottom: 5px; font-size: 14px; font-weight: bold;">${company.businessName}</p>
-              <p style="margin: 0; font-size: 12px; color: #555555;">${company.tagline}</p>
-              <p style="margin-top: 10px; font-size: 12px;">
+              <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: #555555;">${identity.jobTitle} | ${identity.department}</p>
+              <p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">${identity.pronouns}</p>
+              <p style="margin-top: 10px; margin-bottom: 5px; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold;">${company.businessName}</p>
+              <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: #555555;">${company.tagline}</p>
+              <p style="margin-top: 10px; font-size: ${textStyling.baseFontSize}px;">
                 ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a> | ` : ''}
                 ${contact.emailAddress ? `<a href="mailto:${contact.emailAddress}" style="color: ${linkColor}; text-decoration: none;">${contact.emailAddress}</a>` : ''}
               </p>
-              <p style="margin: 0; font-size: 12px;">
+              <p style="margin: 0; font-size: ${textStyling.baseFontSize}px;">
                 ${contact.websiteLink ? `<a href="${contact.websiteLink}" style="color: ${linkColor}; text-decoration: none;">Website</a>` : ''}
                 ${contact.websiteLink && contact.officeAddress ? ` | ` : ''}
                 ${contact.officeAddress ? `<span>${contact.officeAddress}</span>` : ''}
               </p>
-              ${contact.bookingLink ? `<p style="margin-top: 5px; font-size: 12px;"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
+              ${contact.bookingLink ? `<p style="margin-top: 5px; font-size: ${textStyling.baseFontSize}px;"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
               ${socialMedia.length > 0 ? `<p style="margin-top: 10px;">${socialIconsHtml}</p>` : ''}
             </td>
           </tr>
@@ -147,6 +157,7 @@ const generateSignatureHtml = (data: SignatureData): string => {
               <img src="${company.logoUrl}" alt="${company.businessName} Logo" width="100" style="display: block; max-width: 100px; height: auto;" />
               ${bannerHtml}
               ${ctaButtonHtml}
+              ${dividerHtml}
               ${legalHtml}
             </td>
           </tr>
@@ -161,25 +172,26 @@ const generateSignatureHtml = (data: SignatureData): string => {
               <img src="${company.logoUrl}" alt="${company.businessName} Logo" width="80" style="display: block; margin: 0 auto 10px auto; max-width: 80px; height: auto;" />
               ${headshotHtml ? `<p style="margin-bottom: 10px; text-align: center;">${headshotHtml}</p>` : ''}
               <p style="margin: 0; font-size: 16px; font-weight: bold;">${identity.fullName}</p>
-              <p style="margin: 0; font-size: 13px; color: #555555;">${identity.jobTitle}</p>
-              <p style="margin: 0; font-size: 12px; color: #777777;">${identity.department}</p>
-              <p style="margin: 0; font-size: 12px; color: #777777;">${identity.pronouns}</p>
-              <p style="margin-top: 10px; margin-bottom: 5px; font-size: 14px; font-weight: bold;">${company.businessName}</p>
-              <p style="margin: 0; font-size: 12px; color: #555555;">${company.tagline}</p>
-              <p style="margin-top: 10px; font-size: 12px;">
+              <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: #555555;">${identity.jobTitle}</p>
+              <p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">${identity.department}</p>
+              <p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">${identity.pronouns}</p>
+              <p style="margin-top: 10px; margin-bottom: 5px; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold;">${company.businessName}</p>
+              <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: #555555;">${company.tagline}</p>
+              <p style="margin-top: 10px; font-size: ${textStyling.baseFontSize}px;">
                 ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a>` : ''}
                 ${contact.phoneNumbers && contact.emailAddress ? ` | ` : ''}
                 ${contact.emailAddress ? `<a href="mailto:${contact.emailAddress}" style="color: ${linkColor}; text-decoration: none;">${contact.emailAddress}</a>` : ''}
               </p>
-              <p style="margin: 0; font-size: 12px;">
+              <p style="margin: 0; font-size: ${textStyling.baseFontSize}px;">
                 ${contact.websiteLink ? `<a href="${contact.websiteLink}" style="color: ${linkColor}; text-decoration: none;">Website</a>` : ''}
                 ${contact.websiteLink && contact.officeAddress ? ` | ` : ''}
                 ${contact.officeAddress ? `<span>${contact.officeAddress}</span>` : ''}
               </p>
-              ${contact.bookingLink ? `<p style="margin-top: 5px; font-size: 12px;"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
+              ${contact.bookingLink ? `<p style="margin-top: 5px; font-size: ${textStyling.baseFontSize}px;"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
               ${socialMedia.length > 0 ? `<p style="margin-top: 10px; text-align: center;">${socialIconsHtml}</p>` : ''}
               ${bannerHtml}
               ${ctaButtonHtml}
+              ${dividerHtml}
               ${legalHtml}
             </td>
           </tr>
@@ -194,12 +206,13 @@ const generateSignatureHtml = (data: SignatureData): string => {
             <td>
               ${headshotHtml}
               <p style="margin: 0; font-size: 16px; font-weight: bold;">${identity.fullName}</p>
-              <p style="margin: 0; font-size: 13px; color: #555555;">${identity.jobTitle}</p>
-              <p style="margin: 0; font-size: 12px; color: #777777;">Template: ${template}</p>
-              <p style="margin-top: 10px; font-size: 12px;">More details coming soon!</p>
+              <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: #555555;">${identity.jobTitle}</p>
+              <p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">Template: ${template}</p>
+              <p style="margin-top: 10px; font-size: ${textStyling.baseFontSize}px;">More details coming soon!</p>
               ${socialMedia.length > 0 ? `<p style="margin-top: 10px;">${socialIconsHtml}</p>` : ''}
               ${bannerHtml}
               ${ctaButtonHtml}
+              ${dividerHtml}
               ${legalHtml}
             </td>
           </tr>

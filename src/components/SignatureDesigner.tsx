@@ -17,8 +17,10 @@ import { CompanyForm } from "./forms/CompanyForm";
 import { ContactInfoForm } from "./forms/ContactInfoForm";
 import { SocialMediaForm } from "./forms/SocialMediaForm";
 import { MediaForm } from "./forms/MediaForm";
-import { LegalForm } from "./forms/LegalForm"; // Import LegalForm
-import { CallToActionForm } from "./forms/CallToActionForm"; // Import CallToActionForm
+import { LegalForm } from "./forms/LegalForm";
+import { CallToActionForm } from "./forms/CallToActionForm";
+import { TextStylingForm } from "./forms/TextStylingForm"; // Import TextStylingForm
+import { DividerForm } from "./forms/DividerForm"; // Import DividerForm
 
 // Define a type for the signature data
 export type SignatureData = {
@@ -56,7 +58,7 @@ export type SignatureData = {
     headshotSize: "small" | "medium" | "large";
     bannerUrl: string;
     showBanner: boolean;
-    socialIconShape: "circle" | "square" | "ghost"; // Added social icon shape
+    socialIconShape: "circle" | "square" | "ghost";
   };
   legal: {
     disclaimerText: string;
@@ -70,6 +72,16 @@ export type SignatureData = {
     ctaStyle: "filled" | "outlined";
     ctaCornerShape: "rounded" | "square";
     showCta: boolean;
+  };
+  textStyling: {
+    fontFamily: string;
+    baseFontSize: number;
+    baseLineHeight: number;
+  };
+  divider: {
+    showDivider: boolean;
+    thickness: number;
+    color: string;
   };
   // Add other sections as we implement them
 };
@@ -86,9 +98,9 @@ const SignatureDesigner = () => {
     company: {
       businessName: "Innovate Solutions",
       tagline: "Driving Tomorrow's Technology",
-      logoUrl: "https://via.placeholder.com/120x60/4285F4/FFFFFF?text=YourLogo", // More distinct placeholder
-      brandColorPrimary: "#4285F4", // Google Blue
-      brandColorAccent: "#34A853", // Google Green
+      logoUrl: "https://via.placeholder.com/120x60/4285F4/FFFFFF?text=YourLogo",
+      brandColorPrimary: "#4285F4",
+      brandColorAccent: "#34A853",
       brandColorText: "#333333",
     },
     contact: {
@@ -104,13 +116,13 @@ const SignatureDesigner = () => {
       { id: "3", platform: "Facebook", url: "https://facebook.com/janedoe" },
     ],
     media: {
-      headshotUrl: "https://via.placeholder.com/100/FFD700/FFFFFF?text=JD", // Gold background placeholder
+      headshotUrl: "https://via.placeholder.com/100/FFD700/FFFFFF?text=JD",
       showHeadshot: true,
       headshotShape: "circle",
       headshotSize: "medium",
-      bannerUrl: "https://via.placeholder.com/600x100/FF6347/FFFFFF?text=PromotionalBanner", // Tomato background placeholder
+      bannerUrl: "https://via.placeholder.com/600x100/FF6347/FFFFFF?text=PromotionalBanner",
       showBanner: false,
-      socialIconShape: "circle", // Default social icon shape
+      socialIconShape: "circle",
     },
     legal: {
       disclaimerText: "This message is intended only for the use of the individual or entity to which it is addressed and may contain information that is confidential and privileged.",
@@ -124,6 +136,16 @@ const SignatureDesigner = () => {
       ctaStyle: "filled",
       ctaCornerShape: "rounded",
       showCta: true,
+    },
+    textStyling: {
+      fontFamily: "Arial, sans-serif",
+      baseFontSize: 14,
+      baseLineHeight: 1.4,
+    },
+    divider: {
+      showDivider: true,
+      thickness: 1,
+      color: "#cccccc",
     },
   });
 
@@ -194,6 +216,26 @@ const SignatureDesigner = () => {
     }));
   };
 
+  const handleTextStylingChange = (field: keyof SignatureData['textStyling'], value: any) => {
+    setSignatureData(prevData => ({
+      ...prevData,
+      textStyling: {
+        ...prevData.textStyling,
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleDividerChange = (field: keyof SignatureData['divider'], value: any) => {
+    setSignatureData(prevData => ({
+      ...prevData,
+      divider: {
+        ...prevData.divider,
+        [field]: value,
+      },
+    }));
+  };
+
   const handleTemplateChange = (value: string) => {
     setSignatureData(prevData => ({
       ...prevData,
@@ -228,6 +270,12 @@ const SignatureDesigner = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Text Styling Section */}
+            <TextStylingForm
+              textStyling={signatureData.textStyling}
+              onUpdate={handleTextStylingChange}
+            />
 
             {/* Identity Section */}
             <IdentityForm
@@ -267,6 +315,12 @@ const SignatureDesigner = () => {
               onUpdate={handleCtaChange}
               brandColorPrimary={signatureData.company.brandColorPrimary}
               brandColorText={signatureData.company.brandColorText}
+            />
+
+            {/* Divider Section */}
+            <DividerForm
+              divider={signatureData.divider}
+              onUpdate={handleDividerChange}
             />
 
             {/* Legal Section */}
