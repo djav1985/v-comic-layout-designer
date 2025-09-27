@@ -77,7 +77,7 @@ const generateSignatureHtml = (data: SignatureData): string => {
 
   // Base inline CSS for email compatibility, now including text styling
   const baseStyles = `
-    font-family: ${textStyling.fontFamily};
+    font-family: ${textStyling.fontFamily}, 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: ${textStyling.baseFontSize}px;
     color: ${company.brandColorText || '#333333'};
     line-height: ${textStyling.baseLineHeight};
@@ -91,17 +91,15 @@ const generateSignatureHtml = (data: SignatureData): string => {
     </a>
   `).join('');
 
-  // --- Moved these declarations to the top ---
-  const logoUrl = `https://placehold.co/120x60/${company.brandColorPrimary.substring(1)}/FFFFFF/png?text=${encodeURIComponent(company.businessName.split(' ')[0])}Logo`;
-  const dynamicHeadshotUrl = `https://placehold.co/${headshotPxSize}/${company.brandColorAccent.substring(1)}/FFFFFF/png?text=${encodeURIComponent(identity.fullName.split(' ').map(n => n[0]).join(''))}`;
-  const dynamicBannerUrl = `https://placehold.co/600x100/${company.brandColorAccent.substring(1)}/FFFFFF/png?text=${encodeURIComponent(company.tagline || 'Promotional Banner')}`;
-  // --- End of moved declarations ---
+  const logoUrl = company.logoUrl || `https://placehold.co/120x60/${company.brandColorPrimary.substring(1)}/FFFFFF/png?text=${encodeURIComponent(company.businessName.split(' ')[0])}Logo`;
+  const dynamicHeadshotUrl = media.headshotUrl || `https://placehold.co/${headshotPxSize}/${company.brandColorAccent.substring(1)}/FFFFFF/png?text=${encodeURIComponent(identity.fullName.split(' ').map(n => n[0]).join(''))}`;
+  const dynamicBannerUrl = media.bannerUrl || `https://placehold.co/600x100/${company.brandColorAccent.substring(1)}/FFFFFF/png?text=${encodeURIComponent(company.tagline || 'Promotional Banner')}`;
 
-  const headshotHtml = media.showHeadshot && media.headshotUrl ? `
+  const headshotHtml = media.showHeadshot ? `
     <img src="${dynamicHeadshotUrl}" alt="${identity.fullName} Headshot" width="${headshotPxSize}" height="${headshotPxSize}" style="display: block; border-radius: ${headshotBorderRadius}; max-width: ${headshotPxSize}px; height: auto; margin-bottom: ${verticalSpacing};" />
   ` : '';
 
-  const bannerImageHtml = media.showBanner && media.bannerUrl ? `
+  const bannerImageHtml = media.showBanner ? `
     <p style="margin-top: ${verticalSpacing}; margin-bottom: 0;"><img src="${dynamicBannerUrl}" alt="${company.businessName} Banner" width="500" style="display: block; max-width: 100%; height: auto;" /></p>
   ` : '';
 
@@ -118,8 +116,18 @@ const generateSignatureHtml = (data: SignatureData): string => {
         font-weight: bold;
         font-size: 14px;
         line-height: 1;
+        mso-hide: all; /* Outlook specific to hide border on filled button */
       ">
+        <!--[if mso]>
+        <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${cta.ctaLink}" style="height:36px;v-text-anchor:middle;width:150px;" arcsize="${cta.ctaCornerShape === "rounded" ? '14%' : '0%'}" strokecolor="${company.brandColorPrimary}" fill="${cta.ctaStyle === "filled" ? 'true' : 'false'}">
+          <w:anchorlock/>
+          <center style="color:${cta.ctaStyle === "filled" ? '#ffffff' : company.brandColorPrimary};font-family:Arial, sans-serif;font-size:14px;font-weight:bold;">
+        <![endif]-->
         ${cta.ctaLabel}
+        <!--[if mso]>
+          </center>
+        </v:roundrect>
+        <![endif]-->
       </a>
     </p>
   ` : '';
@@ -148,31 +156,42 @@ const generateSignatureHtml = (data: SignatureData): string => {
   switch (template) {
     case "classic-two-column":
       contentHtml = `
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="${baseStyles}">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="${baseStyles} max-width: 600px;">
           <tr>
-            ${headshotHtml ? `<td valign="top" style="padding-right: ${horizontalSpacing}; width: ${headshotPxSize}px;">${headshotHtml}</td>` : ''}
-            <td valign="top">
-              <p style="margin: 0; font-size: 16px; font-weight: bold;">${identity.fullName}</p>
-              <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: #555555;">${identity.jobTitle} | ${identity.department}</p>
-              <p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">${identity.pronouns}</p>
-              <p style="margin-top: ${verticalSpacing}; margin-bottom: ${verticalSpacing}; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold;">${company.businessName}</p>
-              <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: #555555;">${company.tagline}</p>
-              <p style="margin-top: ${verticalSpacing}; font-size: ${textStyling.baseFontSize}px;">
-                ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a> | ` : ''}
-                ${contact.emailAddress ? `<a href="mailto:${contact.emailAddress}" style="color: ${linkColor}; text-decoration: none;">${contact.emailAddress}</a>` : ''}
-              </p>
-              <p style="margin: 0; font-size: ${textStyling.baseFontSize}px;">
-                ${contact.websiteLink ? `<a href="${contact.websiteLink}" style="color: ${linkColor}; text-decoration: none;">Website</a>` : ''}
-                ${contact.websiteLink && contact.officeAddress ? ` | ` : ''}
-                ${contact.officeAddress ? `<span>${contact.officeAddress}</span>` : ''}
-              </p>
-              ${contact.bookingLink ? `<p style="margin-top: ${verticalSpacing}; font-size: ${textStyling.baseFontSize}px;"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
-              ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing};">${socialIconsHtml}</p>` : ''}
+            <td style="padding-bottom: ${verticalSpacing};">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  ${headshotHtml ? `
+                    <td valign="top" style="padding-right: ${horizontalSpacing}; width: ${headshotPxSize}px;">
+                      ${headshotHtml}
+                    </td>
+                  ` : ''}
+                  <td valign="top">
+                    <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
+                    <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">${identity.jobTitle} ${identity.department ? `| ${identity.department}` : ''}</p>
+                    ${identity.pronouns ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">${identity.pronouns}</p>` : ''}
+                    <p style="margin-top: ${verticalSpacing}; margin-bottom: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${company.businessName}</p>
+                    ${company.tagline ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">${company.tagline}</p>` : ''}
+                    <p style="margin-top: ${verticalSpacing}; margin-bottom: 0; font-size: ${textStyling.baseFontSize}px;">
+                      ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers.replace(/\s/g, '')}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a>` : ''}
+                      ${contact.phoneNumbers && contact.emailAddress ? ` &bull; ` : ''}
+                      ${contact.emailAddress ? `<a href="mailto:${contact.emailAddress}" style="color: ${linkColor}; text-decoration: none;">${contact.emailAddress}</a>` : ''}
+                    </p>
+                    <p style="margin: 0; font-size: ${textStyling.baseFontSize}px;">
+                      ${contact.websiteLink ? `<a href="${contact.websiteLink}" style="color: ${linkColor}; text-decoration: none;">${contact.websiteLink.replace(/^(https?:\/\/)/, '')}</a>` : ''}
+                      ${contact.websiteLink && contact.officeAddress ? ` &bull; ` : ''}
+                      ${contact.officeAddress ? `<span>${contact.officeAddress}</span>` : ''}
+                    </p>
+                    ${contact.bookingLink ? `<p style="margin-top: ${verticalSpacing}; margin-bottom: 0; font-size: ${textStyling.baseFontSize}px;"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
+                    ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; margin-bottom: 0;">${socialIconsHtml}</p>` : ''}
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           <tr>
-            <td colspan="2" style="padding-top: ${verticalSpacing};">
-              <img src="${logoUrl}" alt="${company.businessName} Logo" width="100" style="display: block; max-width: 100px; height: auto;" />
+            <td style="padding-top: ${verticalSpacing};">
+              <img src="${logoUrl}" alt="${company.businessName} Logo" width="120" style="display: block; max-width: 120px; height: auto; margin-bottom: ${verticalSpacing};" />
               ${bannerImageHtml}
               ${ctaButtonHtml}
               ${dividerHtml}
@@ -184,29 +203,29 @@ const generateSignatureHtml = (data: SignatureData): string => {
       break;
     case "compact-single-column":
       contentHtml = `
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="${baseStyles}">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="${baseStyles} max-width: 600px; text-align: center;">
           <tr>
-            <td style="text-align: center;">
-              <img src="${logoUrl}" alt="${company.businessName} Logo" width="80" style="display: block; margin: 0 auto ${verticalSpacing} auto; max-width: 80px; height: auto;" />
+            <td style="padding-bottom: ${verticalSpacing};">
+              <img src="${logoUrl}" alt="${company.businessName} Logo" width="100" style="display: block; margin: 0 auto ${verticalSpacing} auto; max-width: 100px; height: auto;" />
               ${headshotHtml ? `<p style="margin-bottom: ${verticalSpacing}; text-align: center;">${headshotHtml}</p>` : ''}
-              <p style="margin: 0; font-size: 16px; font-weight: bold;">${identity.fullName}</p>
-              <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: #555555;">${identity.jobTitle}</p>
-              <p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">${identity.department}</p>
-              <p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">${identity.pronouns}</p>
-              <p style="margin-top: ${verticalSpacing}; margin-bottom: ${verticalSpacing}; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold;">${company.businessName}</p>
-              <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: #555555;">${company.tagline}</p>
-              <p style="margin-top: ${verticalSpacing}; font-size: ${textStyling.baseFontSize}px;">
-                ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a>` : ''}
-                ${contact.phoneNumbers && contact.emailAddress ? ` | ` : ''}
+              <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
+              <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">${identity.jobTitle}</p>
+              ${identity.department ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">${identity.department}</p>` : ''}
+              ${identity.pronouns ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">${identity.pronouns}</p>` : ''}
+              <p style="margin-top: ${verticalSpacing}; margin-bottom: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${company.businessName}</p>
+              ${company.tagline ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">${company.tagline}</p>` : ''}
+              <p style="margin-top: ${verticalSpacing}; margin-bottom: 0; font-size: ${textStyling.baseFontSize}px;">
+                ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers.replace(/\s/g, '')}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a>` : ''}
+                ${contact.phoneNumbers && contact.emailAddress ? ` &bull; ` : ''}
                 ${contact.emailAddress ? `<a href="mailto:${contact.emailAddress}" style="color: ${linkColor}; text-decoration: none;">${contact.emailAddress}</a>` : ''}
               </p>
               <p style="margin: 0; font-size: ${textStyling.baseFontSize}px;">
-                ${contact.websiteLink ? `<a href="${contact.websiteLink}" style="color: ${linkColor}; text-decoration: none;">Website</a>` : ''}
-                ${contact.websiteLink && contact.officeAddress ? ` | ` : ''}
+                ${contact.websiteLink ? `<a href="${contact.websiteLink}" style="color: ${linkColor}; text-decoration: none;">${contact.websiteLink.replace(/^(https?:\/\/)/, '')}</a>` : ''}
+                ${contact.websiteLink && contact.officeAddress ? ` &bull; ` : ''}
                 ${contact.officeAddress ? `<span>${contact.officeAddress}</span>` : ''}
               </p>
-              ${contact.bookingLink ? `<p style="margin-top: ${verticalSpacing}; font-size: ${textStyling.baseFontSize}px;"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
-              ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; text-align: center;">${socialIconsHtml}</p>` : ''}
+              ${contact.bookingLink ? `<p style="margin-top: ${verticalSpacing}; margin-bottom: 0; font-size: ${textStyling.baseFontSize}px;"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
+              ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; margin-bottom: 0; text-align: center;">${socialIconsHtml}</p>` : ''}
               ${bannerImageHtml}
               ${ctaButtonHtml}
               ${dividerHtml}
@@ -218,24 +237,30 @@ const generateSignatureHtml = (data: SignatureData): string => {
       break;
     case "corporate-strip":
       contentHtml = `
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="${baseStyles} background-color: ${company.brandColorAccent || '#f0f0f0'}; padding: ${verticalSpacing} ${horizontalSpacing};">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="${baseStyles} max-width: 600px;">
           <tr>
-            <td valign="middle" style="width: 100px; padding-right: ${horizontalSpacing};">
-              <img src="${logoUrl}" alt="${company.businessName} Logo" width="80" style="display: block; max-width: 80px; height: auto;" />
-            </td>
-            <td valign="middle">
-              <p style="margin: 0; font-size: 16px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
-              <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">${identity.jobTitle}</p>
-              <p style="margin-top: ${verticalSpacing}; font-size: ${textStyling.baseFontSize}px;">
-                ${contact.emailAddress ? `<a href="mailto:${contact.emailAddress}" style="color: ${company.brandColorPrimary}; text-decoration: none;">${contact.emailAddress}</a>` : ''}
-                ${contact.emailAddress && contact.phoneNumbers ? ` | ` : ''}
-                ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers}" style="color: ${company.brandColorPrimary}; text-decoration: none;">${contact.phoneNumbers}</a>` : ''}
-              </p>
-              ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing};">${socialIconsHtml}</p>` : ''}
+            <td style="background-color: ${company.brandColorAccent || '#f0f0f0'}; padding: ${verticalSpacing} ${horizontalSpacing};">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td valign="middle" style="width: 80px; padding-right: ${horizontalSpacing};">
+                    <img src="${logoUrl}" alt="${company.businessName} Logo" width="80" style="display: block; max-width: 80px; height: auto;" />
+                  </td>
+                  <td valign="middle">
+                    <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
+                    <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">${identity.jobTitle}</p>
+                    <p style="margin-top: ${verticalSpacing}; margin-bottom: 0; font-size: ${textStyling.baseFontSize}px;">
+                      ${contact.emailAddress ? `<a href="mailto:${contact.emailAddress}" style="color: ${company.brandColorPrimary}; text-decoration: none;">${contact.emailAddress}</a>` : ''}
+                      ${contact.emailAddress && contact.phoneNumbers ? ` &bull; ` : ''}
+                      ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers.replace(/\s/g, '')}" style="color: ${company.brandColorPrimary}; text-decoration: none;">${contact.phoneNumbers}</a>` : ''}
+                    </p>
+                    ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; margin-bottom: 0;">${socialIconsHtml}</p>` : ''}
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           <tr>
-            <td colspan="2" style="padding-top: ${verticalSpacing};">
+            <td style="padding: ${verticalSpacing} ${horizontalSpacing};">
               ${bannerImageHtml}
               ${ctaButtonHtml}
               ${dividerHtml}
@@ -247,18 +272,18 @@ const generateSignatureHtml = (data: SignatureData): string => {
       break;
     case "card-with-cta":
       contentHtml = `
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="${baseStyles} border: 1px solid ${company.brandColorAccent || '#e0e0e0'}; border-radius: 8px; padding: ${verticalSpacing} ${horizontalSpacing}; background-color: #ffffff;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="${baseStyles} max-width: 600px; border: 1px solid ${company.brandColorAccent || '#e0e0e0'}; border-radius: 8px; padding: ${verticalSpacing} ${horizontalSpacing}; background-color: #ffffff; text-align: center;">
           <tr>
-            <td style="text-align: center;">
+            <td style="padding-bottom: ${verticalSpacing};">
               ${headshotHtml}
-              <p style="margin: 0; font-size: 18px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
-              <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: #555555;">${identity.jobTitle}</p>
-              <p style="margin-top: ${verticalSpacing}; font-size: ${textStyling.baseFontSize}px;">
+              <p style="margin: 0; font-size: ${textStyling.baseFontSize + 4}px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
+              <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">${identity.jobTitle}</p>
+              <p style="margin-top: ${verticalSpacing}; margin-bottom: 0; font-size: ${textStyling.baseFontSize}px;">
                 ${contact.emailAddress ? `<a href="mailto:${contact.emailAddress}" style="color: ${linkColor}; text-decoration: none;">${contact.emailAddress}</a>` : ''}
-                ${contact.emailAddress && contact.phoneNumbers ? ` | ` : ''}
-                ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a>` : ''}
+                ${contact.emailAddress && contact.phoneNumbers ? ` &bull; ` : ''}
+                ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers.replace(/\s/g, '')}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a>` : ''}
               </p>
-              ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing};">${socialIconsHtml}</p>` : ''}
+              ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; margin-bottom: 0;">${socialIconsHtml}</p>` : ''}
               ${ctaButtonHtml}
               ${bannerImageHtml}
               ${dividerHtml}
@@ -270,19 +295,19 @@ const generateSignatureHtml = (data: SignatureData): string => {
       break;
     case "social-focused":
       contentHtml = `
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="${baseStyles}">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="${baseStyles} max-width: 600px; text-align: center;">
           <tr>
-            <td style="text-align: center;">
+            <td style="padding-bottom: ${verticalSpacing};">
               <img src="${logoUrl}" alt="${company.businessName} Logo" width="100" style="display: block; margin: 0 auto ${verticalSpacing} auto; max-width: 100px; height: auto;" />
-              <p style="margin: 0; font-size: 18px; font-weight: bold; color: ${company.brandColorPrimary};">${company.businessName}</p>
-              <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: #555555;">${company.tagline}</p>
-              ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing};">${socialIconsHtml}</p>` : ''}
-              <p style="margin-top: ${verticalSpacing}; font-size: ${textStyling.baseFontSize}px;">
-                ${identity.fullName} | ${identity.jobTitle}
+              <p style="margin: 0; font-size: ${textStyling.baseFontSize + 4}px; font-weight: bold; color: ${company.brandColorPrimary};">${company.businessName}</p>
+              ${company.tagline ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">${company.tagline}</p>` : ''}
+              ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; margin-bottom: 0;">${socialIconsHtml}</p>` : ''}
+              <p style="margin-top: ${verticalSpacing}; margin-bottom: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">
+                ${identity.fullName} ${identity.jobTitle ? `| ${identity.jobTitle}` : ''}
               </p>
-              <p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">
-                ${contact.websiteLink ? `<a href="${contact.websiteLink}" style="color: ${linkColor}; text-decoration: none;">${contact.websiteLink}</a>` : ''}
-              </p>
+              ${contact.websiteLink ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">
+                <a href="${contact.websiteLink}" style="color: ${linkColor}; text-decoration: none;">${contact.websiteLink.replace(/^(https?:\/\/)/, '')}</a>
+              </p>` : ''}
               ${bannerImageHtml}
               ${ctaButtonHtml}
               ${dividerHtml}
@@ -294,12 +319,12 @@ const generateSignatureHtml = (data: SignatureData): string => {
       break;
     default:
       contentHtml = `
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="${baseStyles}">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="${baseStyles} max-width: 600px;">
           <tr>
             <td>
               ${headshotHtml}
-              <p style="margin: 0; font-size: 16px; font-weight: bold;">${identity.fullName}</p>
-              <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: #555555;">${identity.jobTitle}</p>
+              <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
+              <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">${identity.jobTitle}</p>
               <p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">Template: ${template}</p>
               <p style="margin-top: ${verticalSpacing}; font-size: ${textStyling.baseFontSize}px;">More details coming soon!</p>
               ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing};">${socialIconsHtml}</p>` : ''}
@@ -317,14 +342,53 @@ const generateSignatureHtml = (data: SignatureData): string => {
     <!DOCTYPE html>
     <html>
     <head>
-      <style>
-        body { margin: 0; padding: 0; }
-        p { margin: 0; }
-        a { text-decoration: none; }
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <title>Email Signature</title>
+      <style type="text/css">
+        body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+        a[x-apple-data-detectors] {
+          color: inherit !important;
+          text-decoration: none !important;
+          font-size: inherit !important;
+          font-family: inherit !important;
+          font-weight: inherit !important;
+          line-height: inherit !important;
+        }
+        @media screen and (max-width: 525px) {
+          .wrapper { width: 100% !important; max-width: 100% !important; }
+          .responsive-table { width: 100% !important; }
+          .mobile-hide { display: none !important; }
+          .img-max { width: 100% !important; max-width: 100% !important; height: auto !important; }
+          .padding { padding: 10px 5% 15px 5% !important; }
+          .padding-meta { padding: 30px 5% 0px 5% !important; text-align: center; }
+          .padding-copy { padding: 10px 5% 10px 5% !important; text-align: center; }
+          .full-width-image img { width: 100% !important; }
+          .container { padding: 0 10px !important; }
+        }
       </style>
     </head>
-    <body>
-      ${contentHtml}
+    <body style="margin: 0; padding: 0; background-color: #ffffff;">
+      <!--[if (gte mso 9)|(IE)]>
+      <table role="presentation" align="center" border="0" cellspacing="0" cellpadding="0" width="600">
+      <tr>
+      <td align="center" valign="top" width="600">
+      <![endif]-->
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto;">
+        <tr>
+          <td style="padding: 20px 0;">
+            ${contentHtml}
+          </td>
+        </tr>
+      </table>
+      <!--[if (gte mso 9)|(IE)]>
+      </td>
+      </tr>
+      </table>
+      <![endif]-->
     </body>
     </html>
   `;
