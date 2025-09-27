@@ -91,12 +91,18 @@ const generateSignatureHtml = (data: SignatureData): string => {
     </a>
   `).join('');
 
+  // --- Moved these declarations to the top ---
+  const logoUrl = `https://placehold.co/120x60/${company.brandColorPrimary.substring(1)}/FFFFFF/png?text=${encodeURIComponent(company.businessName.split(' ')[0])}Logo`;
+  const dynamicHeadshotUrl = `https://placehold.co/${headshotPxSize}/${company.brandColorAccent.substring(1)}/FFFFFF/png?text=${encodeURIComponent(identity.fullName.split(' ').map(n => n[0]).join(''))}`;
+  const dynamicBannerUrl = `https://placehold.co/600x100/${company.brandColorAccent.substring(1)}/FFFFFF/png?text=${encodeURIComponent(company.tagline || 'Promotional Banner')}`;
+  // --- End of moved declarations ---
+
   const headshotHtml = media.showHeadshot && media.headshotUrl ? `
-    <img src="${media.headshotUrl}" alt="${identity.fullName} Headshot" width="${headshotPxSize}" height="${headshotPxSize}" style="display: block; border-radius: ${headshotBorderRadius}; max-width: ${headshotPxSize}px; height: auto; margin-bottom: ${verticalSpacing};" />
+    <img src="${dynamicHeadshotUrl}" alt="${identity.fullName} Headshot" width="${headshotPxSize}" height="${headshotPxSize}" style="display: block; border-radius: ${headshotBorderRadius}; max-width: ${headshotPxSize}px; height: auto; margin-bottom: ${verticalSpacing};" />
   ` : '';
 
-  const bannerHtml = media.showBanner && media.bannerUrl ? `
-    <p style="margin-top: ${verticalSpacing}; margin-bottom: 0;"><img src="${media.bannerUrl}" alt="${company.businessName} Banner" width="500" style="display: block; max-width: 100%; height: auto;" /></p>
+  const bannerImageHtml = media.showBanner && media.bannerUrl ? `
+    <p style="margin-top: ${verticalSpacing}; margin-bottom: 0;"><img src="${dynamicBannerUrl}" alt="${company.businessName} Banner" width="500" style="display: block; max-width: 100%; height: auto;" /></p>
   ` : '';
 
   const ctaButtonHtml = cta.showCta && cta.ctaLink && cta.ctaLabel ? `
@@ -132,8 +138,8 @@ const generateSignatureHtml = (data: SignatureData): string => {
     <p style="margin-top: ${verticalSpacing}; font-size: 10px; color: #888888; line-height: 1.3;">
       ${legal.disclaimerText ? `<span>${legal.disclaimerText}</span><br/>` : ''}
       ${legal.confidentialityNotice ? `<span>${legal.confidentialityNotice}</span><br/>` : ''}
-      ${legal.showEqualHousingBadge ? `<img src="https://via.placeholder.com/20x20/0000FF/FFFFFF?text=EHO" alt="Equal Housing Opportunity" style="display: inline-block; vertical-align: middle; margin-right: 5px;" />` : ''}
-      ${legal.showHipaaBadge ? `<img src="https://via.placeholder.com/20x20/008000/FFFFFF?text=HIPAA" alt="HIPAA Compliant" style="display: inline-block; vertical-align: middle; margin-right: 5px;" />` : ''}
+      ${legal.showEqualHousingBadge ? `<img src="https://placehold.co/20x20/0000FF/FFFFFF/png?text=EHO" alt="Equal Housing Opportunity" style="display: inline-block; vertical-align: middle; margin-right: 5px;" />` : ''}
+      ${legal.showHipaaBadge ? `<img src="https://placehold.co/20x20/008000/FFFFFF/png?text=HIPAA" alt="HIPAA Compliant" style="display: inline-block; vertical-align: middle; margin-right: 5px;" />` : ''}
     </p>
   ` : '';
 
@@ -166,8 +172,8 @@ const generateSignatureHtml = (data: SignatureData): string => {
           </tr>
           <tr>
             <td colspan="2" style="padding-top: ${verticalSpacing};">
-              <img src="${company.logoUrl}" alt="${company.businessName} Logo" width="100" style="display: block; max-width: 100px; height: auto;" />
-              ${bannerHtml}
+              <img src="${logoUrl}" alt="${company.businessName} Logo" width="100" style="display: block; max-width: 100px; height: auto;" />
+              ${bannerImageHtml}
               ${ctaButtonHtml}
               ${dividerHtml}
               ${legalHtml}
@@ -181,7 +187,7 @@ const generateSignatureHtml = (data: SignatureData): string => {
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="${baseStyles}">
           <tr>
             <td style="text-align: center;">
-              <img src="${company.logoUrl}" alt="${company.businessName} Logo" width="80" style="display: block; margin: 0 auto ${verticalSpacing} auto; max-width: 80px; height: auto;" />
+              <img src="${logoUrl}" alt="${company.businessName} Logo" width="80" style="display: block; margin: 0 auto ${verticalSpacing} auto; max-width: 80px; height: auto;" />
               ${headshotHtml ? `<p style="margin-bottom: ${verticalSpacing}; text-align: center;">${headshotHtml}</p>` : ''}
               <p style="margin: 0; font-size: 16px; font-weight: bold;">${identity.fullName}</p>
               <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: #555555;">${identity.jobTitle}</p>
@@ -201,7 +207,7 @@ const generateSignatureHtml = (data: SignatureData): string => {
               </p>
               ${contact.bookingLink ? `<p style="margin-top: ${verticalSpacing}; font-size: ${textStyling.baseFontSize}px;"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
               ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; text-align: center;">${socialIconsHtml}</p>` : ''}
-              ${bannerHtml}
+              ${bannerImageHtml}
               ${ctaButtonHtml}
               ${dividerHtml}
               ${legalHtml}
@@ -215,7 +221,7 @@ const generateSignatureHtml = (data: SignatureData): string => {
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="${baseStyles} background-color: ${company.brandColorAccent || '#f0f0f0'}; padding: ${verticalSpacing} ${horizontalSpacing};">
           <tr>
             <td valign="middle" style="width: 100px; padding-right: ${horizontalSpacing};">
-              <img src="${company.logoUrl}" alt="${company.businessName} Logo" width="80" style="display: block; max-width: 80px; height: auto;" />
+              <img src="${logoUrl}" alt="${company.businessName} Logo" width="80" style="display: block; max-width: 80px; height: auto;" />
             </td>
             <td valign="middle">
               <p style="margin: 0; font-size: 16px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
@@ -230,7 +236,7 @@ const generateSignatureHtml = (data: SignatureData): string => {
           </tr>
           <tr>
             <td colspan="2" style="padding-top: ${verticalSpacing};">
-              ${bannerHtml}
+              ${bannerImageHtml}
               ${ctaButtonHtml}
               ${dividerHtml}
               ${legalHtml}
@@ -254,7 +260,7 @@ const generateSignatureHtml = (data: SignatureData): string => {
               </p>
               ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing};">${socialIconsHtml}</p>` : ''}
               ${ctaButtonHtml}
-              ${bannerHtml}
+              ${bannerImageHtml}
               ${dividerHtml}
               ${legalHtml}
             </td>
@@ -267,7 +273,7 @@ const generateSignatureHtml = (data: SignatureData): string => {
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="${baseStyles}">
           <tr>
             <td style="text-align: center;">
-              <img src="${company.logoUrl}" alt="${company.businessName} Logo" width="100" style="display: block; margin: 0 auto ${verticalSpacing} auto; max-width: 100px; height: auto;" />
+              <img src="${logoUrl}" alt="${company.businessName} Logo" width="100" style="display: block; margin: 0 auto ${verticalSpacing} auto; max-width: 100px; height: auto;" />
               <p style="margin: 0; font-size: 18px; font-weight: bold; color: ${company.brandColorPrimary};">${company.businessName}</p>
               <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: #555555;">${company.tagline}</p>
               ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing};">${socialIconsHtml}</p>` : ''}
@@ -277,7 +283,7 @@ const generateSignatureHtml = (data: SignatureData): string => {
               <p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">
                 ${contact.websiteLink ? `<a href="${contact.websiteLink}" style="color: ${linkColor}; text-decoration: none;">${contact.websiteLink}</a>` : ''}
               </p>
-              ${bannerHtml}
+              ${bannerImageHtml}
               ${ctaButtonHtml}
               ${dividerHtml}
               ${legalHtml}
@@ -297,7 +303,7 @@ const generateSignatureHtml = (data: SignatureData): string => {
               <p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">Template: ${template}</p>
               <p style="margin-top: ${verticalSpacing}; font-size: ${textStyling.baseFontSize}px;">More details coming soon!</p>
               ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing};">${socialIconsHtml}</p>` : ''}
-              ${bannerHtml}
+              ${bannerImageHtml}
               ${ctaButtonHtml}
               ${dividerHtml}
               ${legalHtml}

@@ -102,9 +102,9 @@ const SignatureDesigner = () => {
     company: {
       businessName: "Innovate Solutions",
       tagline: "Driving Tomorrow's Technology",
-      logoUrl: "https://via.placeholder.com/120x60/4285F4/FFFFFF?text=YourLogo",
-      brandColorPrimary: "#4285F4",
-      brandColorAccent: "#34A853",
+      logoUrl: "https://placehold.co/120x60/4285F4/FFFFFF/png?text=YourLogo", // Updated to placehold.co
+      brandColorPrimary: "#4285F4", // Google Blue
+      brandColorAccent: "#34A853", // Google Green
       brandColorText: "#333333",
     },
     contact: {
@@ -120,11 +120,11 @@ const SignatureDesigner = () => {
       { id: "3", platform: "Facebook", url: "https://facebook.com/janedoe" },
     ],
     media: {
-      headshotUrl: "https://via.placeholder.com/100/FFD700/FFFFFF?text=JD",
+      headshotUrl: "https://placehold.co/100/FFD700/FFFFFF/png?text=JD", // Updated to placehold.co
       showHeadshot: true,
       headshotShape: "circle",
       headshotSize: "medium",
-      bannerUrl: "https://via.placeholder.com/600x100/FF6347/FFFFFF?text=PromotionalBanner",
+      bannerUrl: "https://placehold.co/600x100/FF6347/FFFFFF/png?text=PromotionalBanner", // Updated to placehold.co
       showBanner: false,
       socialIconShape: "circle",
     },
