@@ -86,7 +86,7 @@ const generateSignatureHtml = (data: SignatureData): string => {
   const linkColor = company.brandColorPrimary || '#4285F4'; // Use default if not set
 
   const socialIconsHtml = socialMedia.map(social => `
-    <a href="${social.url}" style="display: inline-block; margin-right: 8px; text-decoration: none;" target="_blank">
+    <a href="${social.url}" style="display: inline-block; margin-right: 8px; text-decoration: none; vertical-align: middle;" target="_blank">
       ${getSocialIconSvg(social.platform, linkColor, media.socialIconShape)}
     </a>
   `).join('');
@@ -96,15 +96,15 @@ const generateSignatureHtml = (data: SignatureData): string => {
   const dynamicBannerUrl = media.bannerUrl || `https://placehold.co/600x100/${company.brandColorAccent.substring(1)}/FFFFFF/png?text=${encodeURIComponent(company.tagline || 'Promotional Banner')}`;
 
   const headshotHtml = media.showHeadshot ? `
-    <img src="${dynamicHeadshotUrl}" alt="${identity.fullName} Headshot" width="${headshotPxSize}" height="${headshotPxSize}" style="display: block; border-radius: ${headshotBorderRadius}; max-width: ${headshotPxSize}px; height: auto; margin-bottom: ${verticalSpacing};" />
+    <img src="${dynamicHeadshotUrl}" alt="${identity.fullName} Headshot" width="${headshotPxSize}" height="${headshotPxSize}" style="display: block; border-radius: ${headshotBorderRadius}; max-width: ${headshotPxSize}px; height: auto; margin: 0;" />
   ` : '';
 
   const bannerImageHtml = media.showBanner ? `
-    <p style="margin-top: ${verticalSpacing}; margin-bottom: 0;"><img src="${dynamicBannerUrl}" alt="${company.businessName} Banner" width="500" style="display: block; max-width: 100%; height: auto;" /></p>
+    <p style="margin: ${verticalSpacing} 0 0 0;"><img src="${dynamicBannerUrl}" alt="${company.businessName} Banner" width="500" style="display: block; max-width: 100%; height: auto; margin: 0;" /></p>
   ` : '';
 
   const ctaButtonHtml = cta.showCta && cta.ctaLink && cta.ctaLabel ? `
-    <p style="margin-top: ${verticalSpacing}; margin-bottom: 0;">
+    <p style="margin: ${verticalSpacing} 0 0 0;">
       <a href="${cta.ctaLink}" target="_blank" style="
         display: inline-block;
         padding: 10px 20px;
@@ -143,7 +143,7 @@ const generateSignatureHtml = (data: SignatureData): string => {
   ` : '';
 
   const legalHtml = (legal.disclaimerText || legal.confidentialityNotice || legal.showEqualHousingBadge || legal.showHipaaBadge) ? `
-    <p style="margin-top: ${verticalSpacing}; font-size: 10px; color: #888888; line-height: 1.3;">
+    <p style="margin: ${verticalSpacing} 0 0 0; font-size: 10px; color: #888888; line-height: 1.3;">
       ${legal.disclaimerText ? `<span>${legal.disclaimerText}</span><br/>` : ''}
       ${legal.confidentialityNotice ? `<span>${legal.confidentialityNotice}</span><br/>` : ''}
       ${legal.showEqualHousingBadge ? `<img src="https://placehold.co/20x20/0000FF/FFFFFF/png?text=EHO" alt="Equal Housing Opportunity" style="display: inline-block; vertical-align: middle; margin-right: 5px;" />` : ''}
@@ -170,9 +170,9 @@ const generateSignatureHtml = (data: SignatureData): string => {
                     <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
                     <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">${identity.jobTitle} ${identity.department ? `| ${identity.department}` : ''}</p>
                     ${identity.pronouns ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">${identity.pronouns}</p>` : ''}
-                    <p style="margin-top: ${verticalSpacing}; margin-bottom: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${company.businessName}</p>
+                    <p style="margin: ${verticalSpacing} 0 0 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${company.businessName}</p>
                     ${company.tagline ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">${company.tagline}</p>` : ''}
-                    <p style="margin-top: ${verticalSpacing}; margin-bottom: 0; font-size: ${textStyling.baseFontSize}px;">
+                    <p style="margin: ${verticalSpacing} 0 0 0; font-size: ${textStyling.baseFontSize}px;">
                       ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers.replace(/\s/g, '')}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a>` : ''}
                       ${contact.phoneNumbers && contact.emailAddress ? ` &bull; ` : ''}
                       ${contact.emailAddress ? `<a href="mailto:${contact.emailAddress}" style="color: ${linkColor}; text-decoration: none;">${contact.emailAddress}</a>` : ''}
@@ -182,8 +182,8 @@ const generateSignatureHtml = (data: SignatureData): string => {
                       ${contact.websiteLink && contact.officeAddress ? ` &bull; ` : ''}
                       ${contact.officeAddress ? `<span>${contact.officeAddress}</span>` : ''}
                     </p>
-                    ${contact.bookingLink ? `<p style="margin-top: ${verticalSpacing}; margin-bottom: 0; font-size: ${textStyling.baseFontSize}px;"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
-                    ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; margin-bottom: 0;">${socialIconsHtml}</p>` : ''}
+                    ${contact.bookingLink ? `<p style="margin: ${verticalSpacing} 0 0 0; font-size: ${textStyling.baseFontSize}px;"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
+                    ${socialMedia.length > 0 ? `<p style="margin: ${verticalSpacing} 0 0 0;">${socialIconsHtml}</p>` : ''}
                   </td>
                 </tr>
               </table>
@@ -191,7 +191,7 @@ const generateSignatureHtml = (data: SignatureData): string => {
           </tr>
           <tr>
             <td style="padding-top: ${verticalSpacing};">
-              <img src="${logoUrl}" alt="${company.businessName} Logo" width="120" style="display: block; max-width: 120px; height: auto; margin-bottom: ${verticalSpacing};" />
+              <img src="${logoUrl}" alt="${company.businessName} Logo" width="120" style="display: block; max-width: 120px; height: auto; margin: 0 0 ${verticalSpacing} 0;" />
               ${bannerImageHtml}
               ${ctaButtonHtml}
               ${dividerHtml}
@@ -207,14 +207,14 @@ const generateSignatureHtml = (data: SignatureData): string => {
           <tr>
             <td style="padding-bottom: ${verticalSpacing};">
               <img src="${logoUrl}" alt="${company.businessName} Logo" width="100" style="display: block; margin: 0 auto ${verticalSpacing} auto; max-width: 100px; height: auto;" />
-              ${headshotHtml ? `<p style="margin-bottom: ${verticalSpacing}; text-align: center;">${headshotHtml}</p>` : ''}
+              ${headshotHtml ? `<div style="margin: 0 auto ${verticalSpacing} auto; width: ${headshotPxSize}px;">${headshotHtml}</div>` : ''}
               <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
               <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">${identity.jobTitle}</p>
               ${identity.department ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">${identity.department}</p>` : ''}
               ${identity.pronouns ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">${identity.pronouns}</p>` : ''}
-              <p style="margin-top: ${verticalSpacing}; margin-bottom: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${company.businessName}</p>
+              <p style="margin: ${verticalSpacing} 0 0 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${company.businessName}</p>
               ${company.tagline ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">${company.tagline}</p>` : ''}
-              <p style="margin-top: ${verticalSpacing}; margin-bottom: 0; font-size: ${textStyling.baseFontSize}px;">
+              <p style="margin: ${verticalSpacing} 0 0 0; font-size: ${textStyling.baseFontSize}px;">
                 ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers.replace(/\s/g, '')}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a>` : ''}
                 ${contact.phoneNumbers && contact.emailAddress ? ` &bull; ` : ''}
                 ${contact.emailAddress ? `<a href="mailto:${contact.emailAddress}" style="color: ${linkColor}; text-decoration: none;">${contact.emailAddress}</a>` : ''}
@@ -224,8 +224,8 @@ const generateSignatureHtml = (data: SignatureData): string => {
                 ${contact.websiteLink && contact.officeAddress ? ` &bull; ` : ''}
                 ${contact.officeAddress ? `<span>${contact.officeAddress}</span>` : ''}
               </p>
-              ${contact.bookingLink ? `<p style="margin-top: ${verticalSpacing}; margin-bottom: 0; font-size: ${textStyling.baseFontSize}px;"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
-              ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; margin-bottom: 0; text-align: center;">${socialIconsHtml}</p>` : ''}
+              ${contact.bookingLink ? `<p style="margin: ${verticalSpacing} 0 0 0; font-size: ${textStyling.baseFontSize}px;"><a href="${contact.bookingLink}" style="color: ${linkColor}; text-decoration: none;">Book a Meeting</a></p>` : ''}
+              ${socialMedia.length > 0 ? `<p style="margin: ${verticalSpacing} 0 0 0; text-align: center;">${socialIconsHtml}</p>` : ''}
               ${bannerImageHtml}
               ${ctaButtonHtml}
               ${dividerHtml}
@@ -243,17 +243,17 @@ const generateSignatureHtml = (data: SignatureData): string => {
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
                   <td valign="middle" style="width: 80px; padding-right: ${horizontalSpacing};">
-                    <img src="${logoUrl}" alt="${company.businessName} Logo" width="80" style="display: block; max-width: 80px; height: auto;" />
+                    <img src="${logoUrl}" alt="${company.businessName} Logo" width="80" style="display: block; max-width: 80px; height: auto; margin: 0;" />
                   </td>
                   <td valign="middle">
                     <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
                     <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">${identity.jobTitle}</p>
-                    <p style="margin-top: ${verticalSpacing}; margin-bottom: 0; font-size: ${textStyling.baseFontSize}px;">
+                    <p style="margin: ${verticalSpacing} 0 0 0; font-size: ${textStyling.baseFontSize}px;">
                       ${contact.emailAddress ? `<a href="mailto:${contact.emailAddress}" style="color: ${company.brandColorPrimary}; text-decoration: none;">${contact.emailAddress}</a>` : ''}
                       ${contact.emailAddress && contact.phoneNumbers ? ` &bull; ` : ''}
                       ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers.replace(/\s/g, '')}" style="color: ${company.brandColorPrimary}; text-decoration: none;">${contact.phoneNumbers}</a>` : ''}
                     </p>
-                    ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; margin-bottom: 0;">${socialIconsHtml}</p>` : ''}
+                    ${socialMedia.length > 0 ? `<p style="margin: ${verticalSpacing} 0 0 0;">${socialIconsHtml}</p>` : ''}
                   </td>
                 </tr>
               </table>
@@ -275,15 +275,15 @@ const generateSignatureHtml = (data: SignatureData): string => {
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="${baseStyles} max-width: 600px; border: 1px solid ${company.brandColorAccent || '#e0e0e0'}; border-radius: 8px; padding: ${verticalSpacing} ${horizontalSpacing}; background-color: #ffffff; text-align: center;">
           <tr>
             <td style="padding-bottom: ${verticalSpacing};">
-              ${headshotHtml}
+              ${headshotHtml ? `<div style="margin: 0 auto ${verticalSpacing} auto; width: ${headshotPxSize}px;">${headshotHtml}</div>` : ''}
               <p style="margin: 0; font-size: ${textStyling.baseFontSize + 4}px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
               <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">${identity.jobTitle}</p>
-              <p style="margin-top: ${verticalSpacing}; margin-bottom: 0; font-size: ${textStyling.baseFontSize}px;">
+              <p style="margin: ${verticalSpacing} 0 0 0; font-size: ${textStyling.baseFontSize}px;">
                 ${contact.emailAddress ? `<a href="mailto:${contact.emailAddress}" style="color: ${linkColor}; text-decoration: none;">${contact.emailAddress}</a>` : ''}
                 ${contact.emailAddress && contact.phoneNumbers ? ` &bull; ` : ''}
                 ${contact.phoneNumbers ? `<a href="tel:${contact.phoneNumbers.replace(/\s/g, '')}" style="color: ${linkColor}; text-decoration: none;">${contact.phoneNumbers}</a>` : ''}
               </p>
-              ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; margin-bottom: 0;">${socialIconsHtml}</p>` : ''}
+              ${socialMedia.length > 0 ? `<p style="margin: ${verticalSpacing} 0 0 0;">${socialIconsHtml}</p>` : ''}
               ${ctaButtonHtml}
               ${bannerImageHtml}
               ${dividerHtml}
@@ -301,8 +301,8 @@ const generateSignatureHtml = (data: SignatureData): string => {
               <img src="${logoUrl}" alt="${company.businessName} Logo" width="100" style="display: block; margin: 0 auto ${verticalSpacing} auto; max-width: 100px; height: auto;" />
               <p style="margin: 0; font-size: ${textStyling.baseFontSize + 4}px; font-weight: bold; color: ${company.brandColorPrimary};">${company.businessName}</p>
               ${company.tagline ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">${company.tagline}</p>` : ''}
-              ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing}; margin-bottom: 0;">${socialIconsHtml}</p>` : ''}
-              <p style="margin-top: ${verticalSpacing}; margin-bottom: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">
+              ${socialMedia.length > 0 ? `<p style="margin: ${verticalSpacing} 0 0 0;">${socialIconsHtml}</p>` : ''}
+              <p style="margin: ${verticalSpacing} 0 0 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">
                 ${identity.fullName} ${identity.jobTitle ? `| ${identity.jobTitle}` : ''}
               </p>
               ${contact.websiteLink ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">
@@ -326,8 +326,8 @@ const generateSignatureHtml = (data: SignatureData): string => {
               <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary};">${identity.fullName}</p>
               <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText};">${identity.jobTitle}</p>
               <p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777;">Template: ${template}</p>
-              <p style="margin-top: ${verticalSpacing}; font-size: ${textStyling.baseFontSize}px;">More details coming soon!</p>
-              ${socialMedia.length > 0 ? `<p style="margin-top: ${verticalSpacing};">${socialIconsHtml}</p>` : ''}
+              <p style="margin: ${verticalSpacing} 0 0 0; font-size: ${textStyling.baseFontSize}px;">More details coming soon!</p>
+              ${socialMedia.length > 0 ? `<p style="margin: ${verticalSpacing} 0 0 0;">${socialIconsHtml}</p>` : ''}
               ${bannerImageHtml}
               ${ctaButtonHtml}
               ${dividerHtml}
