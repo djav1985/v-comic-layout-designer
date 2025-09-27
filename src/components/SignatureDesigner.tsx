@@ -19,8 +19,9 @@ import { SocialMediaForm } from "./forms/SocialMediaForm";
 import { MediaForm } from "./forms/MediaForm";
 import { LegalForm } from "./forms/LegalForm";
 import { CallToActionForm } from "./forms/CallToActionForm";
-import { TextStylingForm } from "./forms/TextStylingForm"; // Import TextStylingForm
-import { DividerForm } from "./forms/DividerForm"; // Import DividerForm
+import { TextStylingForm } from "./forms/TextStylingForm";
+import { DividerForm } from "./forms/DividerForm";
+import { GlobalSpacingForm } from "./forms/GlobalSpacingForm"; // Import GlobalSpacingForm
 
 // Define a type for the signature data
 export type SignatureData = {
@@ -83,6 +84,7 @@ export type SignatureData = {
     thickness: number;
     color: string;
   };
+  spacing: "tight" | "normal" | "roomy"; // Added spacing control
   // Add other sections as we implement them
 };
 
@@ -147,6 +149,7 @@ const SignatureDesigner = () => {
       thickness: 1,
       color: "#cccccc",
     },
+    spacing: "normal", // Default spacing
   });
 
   const handleIdentityChange = (field: keyof SignatureData['identity'], value: string) => {
@@ -236,6 +239,13 @@ const SignatureDesigner = () => {
     }));
   };
 
+  const handleSpacingChange = (value: SignatureData['spacing']) => {
+    setSignatureData(prevData => ({
+      ...prevData,
+      spacing: value,
+    }));
+  };
+
   const handleTemplateChange = (value: string) => {
     setSignatureData(prevData => ({
       ...prevData,
@@ -270,6 +280,12 @@ const SignatureDesigner = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Global Spacing Section */}
+            <GlobalSpacingForm
+              spacing={signatureData.spacing}
+              onUpdate={handleSpacingChange}
+            />
 
             {/* Text Styling Section */}
             <TextStylingForm
