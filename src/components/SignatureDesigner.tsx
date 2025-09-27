@@ -16,6 +16,7 @@ import { IdentityForm } from "./forms/IdentityForm";
 import { CompanyForm } from "./forms/CompanyForm";
 import { ContactInfoForm } from "./forms/ContactInfoForm";
 import { SocialMediaForm } from "./forms/SocialMediaForm";
+import { MediaForm } from "./forms/MediaForm"; // Import MediaForm
 
 // Define a type for the signature data
 export type SignatureData = {
@@ -46,6 +47,14 @@ export type SignatureData = {
     platform: string;
     url: string;
   }[];
+  media: {
+    headshotUrl: string;
+    showHeadshot: boolean;
+    headshotShape: "circle" | "rounded" | "square";
+    headshotSize: "small" | "medium" | "large";
+    bannerUrl: string;
+    showBanner: boolean;
+  };
   // Add other sections as we implement them
 };
 
@@ -77,6 +86,14 @@ const SignatureDesigner = () => {
       { id: "1", platform: "LinkedIn", url: "https://linkedin.com/in/johndoe" },
       { id: "2", platform: "X", url: "https://x.com/johndoe" },
     ],
+    media: {
+      headshotUrl: "https://via.placeholder.com/80",
+      showHeadshot: true,
+      headshotShape: "circle",
+      headshotSize: "medium",
+      bannerUrl: "",
+      showBanner: false,
+    },
   });
 
   const handleIdentityChange = (field: keyof SignatureData['identity'], value: string) => {
@@ -113,6 +130,16 @@ const SignatureDesigner = () => {
     setSignatureData(prevData => ({
       ...prevData,
       socialMedia,
+    }));
+  };
+
+  const handleMediaChange = (field: keyof SignatureData['media'], value: any) => {
+    setSignatureData(prevData => ({
+      ...prevData,
+      media: {
+        ...prevData.media,
+        [field]: value,
+      },
     }));
   };
 
@@ -173,6 +200,12 @@ const SignatureDesigner = () => {
             <SocialMediaForm
               socialMedia={signatureData.socialMedia}
               onUpdate={handleSocialMediaChange}
+            />
+
+            {/* Media Section */}
+            <MediaForm
+              media={signatureData.media}
+              onUpdate={handleMediaChange}
             />
 
             {/* Other sections will go here */}

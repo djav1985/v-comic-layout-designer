@@ -44,7 +44,38 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ company, onUpdate }) =
           (Actual image upload will be implemented later)
         </p>
       </div>
-      {/* Brand color pickers will be added here later */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <Label htmlFor="brandColorPrimary" className="mb-1 block">Primary Brand Color</Label>
+          <Input
+            id="brandColorPrimary"
+            type="color"
+            value={company.brandColorPrimary}
+            onChange={(e) => onUpdate("brandColorPrimary", e.target.value)}
+            className="h-10 w-full p-1"
+          />
+        </div>
+        <div>
+          <Label htmlFor="brandColorAccent" className="mb-1 block">Accent Brand Color</Label>
+          <Input
+            id="brandColorAccent"
+            type="color"
+            value={company.brandColorAccent}
+            onChange={(e) => onUpdate("brandColorAccent", e.target.value)}
+            className="h-10 w-full p-1"
+          />
+        </div>
+        <div>
+          <Label htmlFor="brandColorText" className="mb-1 block">Text Color</Label>
+          <Input
+            id="brandColorText"
+            type="color"
+            value={company.brandColorText}
+            onChange={(e) => onUpdate("brandColorText", e.target.value)}
+            className="h-10 w-full p-1"
+          />
+        </div>
+      </div>
     </div>
   );
 };
