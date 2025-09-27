@@ -151,7 +151,7 @@ async function startPhpServer() {
         ELECTRON_USER_DATA: app.getPath("userData"), // Pass user data path to PHP
       },
     },
-  );
+  });
 
   phpProcess.stdout.on("data", (data) => {
     console.log(`[php] ${data.toString()}`.trim());

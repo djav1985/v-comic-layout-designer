@@ -110,7 +110,7 @@ class ComicModel
     {
         $files = [];
         if (is_dir($this->uploadDir)) {
-            foreach (glob($this->uploadDir . '/*.{jpg,jpeg,png,gif}', GLOB_BRACE) as $file) {
+            foreach (glob($this->uploadDir . DIRECTORY_SEPARATOR . '*.{jpg,jpeg,png,gif}', GLOB_BRACE) as $file) {
                 if (is_file($file)) {
                     $files[] = $file;
                 }
@@ -124,7 +124,7 @@ class ComicModel
     {
         // Sync state with actual files
         $files = [];
-        foreach (glob($this->uploadDir . '/*.{jpg,jpeg,png,gif}', GLOB_BRACE) as $file) {
+        foreach (glob($this->uploadDir . DIRECTORY_SEPARATOR . '*.{jpg,jpeg,png,gif}', GLOB_BRACE) as $file) {
             $files[] = basename($file);
         }
         $this->state['images'] = $files;
@@ -138,7 +138,7 @@ class ComicModel
             return;
         }
 
-        foreach (glob($this->uploadDir . '/*') as $file) {
+        foreach (glob($this->uploadDir . DIRECTORY_SEPARATOR . '*') as $file) {
             if (is_file($file)) {
                 @unlink($file);
             }
@@ -148,7 +148,7 @@ class ComicModel
     public function saveUpload(array $file): void
     {
         $name = basename($file['name']);
-        $target = $this->uploadDir . '/' . $name;
+        $target = $this->uploadDir . DIRECTORY_SEPARATOR . $name;
         $allowed = ['image/jpeg', 'image/png', 'image/gif'];
         $maxSize = 5 * 1024 * 1024; // 5MB
         if (!in_array($file['type'], $allowed)) {
@@ -169,7 +169,7 @@ class ComicModel
 
     public function deleteImage(string $name): void
     {
-        $path = $this->uploadDir . '/' . $name;
+        $path = $this->uploadDir . DIRECTORY_SEPARATOR . $name;
         if (is_file($path)) {
             unlink($path);
         }
@@ -199,7 +199,7 @@ class ComicModel
     public function getLayouts(): array
     {
         $layouts = [];
-        foreach (glob($this->layoutDir . '/*.php') as $file) {
+        foreach (glob($this->layoutDir . DIRECTORY_SEPARATOR . '*.php') as $file) {
             $layouts[basename($file, '.php')] = $file;
         }
         return $layouts;
@@ -233,7 +233,7 @@ class ComicModel
     {
         $styles = [];
         foreach ($this->getLayouts() as $name => $file) {
-            $css = $this->layoutDir . '/' . $name . '.css';
+            $css = $this->layoutDir . DIRECTORY_SEPARATOR . $name . '.css';
             $styles[$name] = is_file($css) ? file_get_contents($css) : '';
         }
         return $styles;
