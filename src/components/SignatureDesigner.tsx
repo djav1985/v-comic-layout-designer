@@ -323,23 +323,23 @@ const SignatureDesigner = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
-      <h1 className="text-3xl font-bold p-4 border-b border-border shadow-sm">Email Signature Designer</h1>
+      <h1 className="text-3xl font-bold p-4 border-b border-border shadow-sm bg-card">Email Signature Designer</h1>
       <ResizablePanelGroup
         direction="horizontal"
         className="flex-grow"
       >
-        <ResizablePanel defaultSize={50} minSize={30}>
+        <ResizablePanel defaultSize={50} minSize={30} className="bg-muted/10">
           <ScrollArea className="h-full p-6">
-            <h2 className="text-2xl font-semibold mb-6 text-primary">Design Controls</h2>
+            <h2 className="text-2xl font-bold mb-6 text-primary">Design Controls</h2>
 
             {/* Template Selection */}
-            <div className="mb-6 p-4 border border-border rounded-lg shadow-sm bg-card">
-              <Label htmlFor="template-select" className="mb-2 block text-lg font-medium">Select Template</Label>
+            <div className="mb-6 p-4 border border-border rounded-lg shadow-lg bg-card transition-all duration-200 hover:shadow-xl">
+              <Label htmlFor="template-select" className="mb-2 block text-lg font-semibold text-primary-foreground">Select Template</Label>
               <Select onValueChange={handleTemplateChange} defaultValue={signatureData.template}>
-                <SelectTrigger id="template-select" className="w-full">
+                <SelectTrigger id="template-select" className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary">
                   <SelectValue placeholder="Select a template" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover text-popover-foreground border-border">
                   <SelectItem value="classic-two-column">Classic Two-Column</SelectItem>
                   <SelectItem value="compact-single-column">Compact Single-Column</SelectItem>
                   <SelectItem value="corporate-strip">Corporate Strip</SelectItem>
@@ -429,14 +429,14 @@ const SignatureDesigner = () => {
             </div>
           </ScrollArea>
         </ResizablePanel>
-        <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={50} minSize={30}>
-          <div className="h-full flex flex-col p-6 bg-gray-50 dark:bg-gray-900">
-            <h2 className="text-2xl font-semibold mb-4 text-primary">Live Preview</h2>
+        <ResizableHandle withHandle className="bg-border hover:bg-primary transition-colors duration-200" />
+        <ResizablePanel defaultSize={50} minSize={30} className="bg-gray-50 dark:bg-gray-900">
+          <div className="h-full flex flex-col p-6">
+            <h2 className="text-2xl font-bold mb-4 text-primary">Live Preview</h2>
             <Tabs defaultValue="desktop" className="flex-grow flex flex-col">
-              <TabsList className="grid w-full grid-cols-2 mb-4 bg-card border border-border shadow-sm">
-                <TabsTrigger value="desktop">Desktop</TabsTrigger>
-                <TabsTrigger value="mobile">Mobile</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-4 bg-card border border-border shadow-sm rounded-md overflow-hidden">
+                <TabsTrigger value="desktop" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-secondary data-[state=inactive]:text-secondary-foreground hover:bg-primary/90 hover:text-primary-foreground transition-colors duration-200">Desktop</TabsTrigger>
+                <TabsTrigger value="mobile" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-secondary data-[state=inactive]:text-secondary-foreground hover:bg-primary/90 hover:text-primary-foreground transition-colors duration-200">Mobile</TabsTrigger>
               </TabsList>
               <TabsContent value="desktop" className="flex-grow flex flex-col data-[state=inactive]:hidden">
                 <SignaturePreview signatureData={signatureData} previewMode="desktop" onHtmlContentReady={handleHtmlContentReady} />

@@ -42,8 +42,8 @@ export const CallToActionForm: React.FC<CallToActionFormProps> = ({ cta, onUpdat
   };
 
   return (
-    <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-sm bg-card">
-      <h3 className="text-lg font-medium mb-4 text-primary-foreground">Call-to-Action Button</h3>
+    <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-lg bg-card transition-all duration-200 hover:shadow-xl">
+      <h3 className="text-lg font-semibold mb-4 text-primary-foreground">Call-to-Action Button</h3>
 
       <div className="flex items-center justify-between">
         <Label htmlFor="showCta" className="text-muted-foreground">Show Call-to-Action Button</Label>
@@ -51,6 +51,7 @@ export const CallToActionForm: React.FC<CallToActionFormProps> = ({ cta, onUpdat
           id="showCta"
           checked={cta.showCta}
           onCheckedChange={(checked) => handleChange("showCta", checked)}
+          className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
         />
       </div>
 
@@ -63,7 +64,7 @@ export const CallToActionForm: React.FC<CallToActionFormProps> = ({ cta, onUpdat
               value={cta.ctaLabel}
               onChange={(e) => handleChange("ctaLabel", e.target.value)}
               placeholder="e.g., Learn More"
-              className="w-full"
+              className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary"
             />
             {errors.ctaLabel && <p className="text-destructive text-sm mt-1">{errors.ctaLabel}</p>}
           </div>
@@ -75,7 +76,7 @@ export const CallToActionForm: React.FC<CallToActionFormProps> = ({ cta, onUpdat
               value={cta.ctaLink}
               onChange={(e) => handleChange("ctaLink", e.target.value)}
               placeholder="e.g., https://www.yourcompany.com/learn"
-              className="w-full"
+              className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary"
             />
             {errors.ctaLink && <p className="text-destructive text-sm mt-1">{errors.ctaLink}</p>}
           </div>
@@ -85,10 +86,10 @@ export const CallToActionForm: React.FC<CallToActionFormProps> = ({ cta, onUpdat
               value={cta.ctaStyle}
               onValueChange={(value: SignatureData['cta']['ctaStyle']) => handleChange("ctaStyle", value)}
             >
-              <SelectTrigger id="ctaStyle" className="w-full">
+              <SelectTrigger id="ctaStyle" className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary">
                 <SelectValue placeholder="Select style" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-popover text-popover-foreground border-border">
                 <SelectItem value="filled">Filled</SelectItem>
                 <SelectItem value="outlined">Outlined</SelectItem>
               </SelectContent>
@@ -100,10 +101,10 @@ export const CallToActionForm: React.FC<CallToActionFormProps> = ({ cta, onUpdat
               value={cta.ctaCornerShape}
               onValueChange={(value: SignatureData['cta']['ctaCornerShape']) => handleChange("ctaCornerShape", value)}
             >
-              <SelectTrigger id="ctaCornerShape" className="w-full">
+              <SelectTrigger id="ctaCornerShape" className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary">
                 <SelectValue placeholder="Select shape" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-popover text-popover-foreground border-border">
                 <SelectItem value="rounded">Rounded</SelectItem>
                 <SelectItem value="square">Square</SelectItem>
               </SelectContent>

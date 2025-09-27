@@ -38,8 +38,8 @@ export const MediaForm: React.FC<MediaFormProps> = ({ media, onUpdate, onValidat
   };
 
   return (
-    <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-sm bg-card">
-      <h3 className="text-lg font-medium mb-4 text-primary-foreground">Media</h3>
+    <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-lg bg-card transition-all duration-200 hover:shadow-xl">
+      <h3 className="text-lg font-semibold mb-4 text-primary-foreground">Media</h3>
 
       {/* Headshot Section */}
       <div className="flex items-center justify-between">
@@ -48,6 +48,7 @@ export const MediaForm: React.FC<MediaFormProps> = ({ media, onUpdate, onValidat
           id="showHeadshot"
           checked={media.showHeadshot}
           onCheckedChange={(checked) => handleChange("showHeadshot", checked)}
+          className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
         />
       </div>
       {media.showHeadshot && (
@@ -59,7 +60,7 @@ export const MediaForm: React.FC<MediaFormProps> = ({ media, onUpdate, onValidat
               value={media.headshotUrl}
               onChange={(e) => handleChange("headshotUrl", e.target.value)}
               placeholder="e.g., https://yourcompany.com/headshot.jpg"
-              className="w-full"
+              className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary"
             />
             {errors.headshotUrl && <p className="text-destructive text-sm mt-1">{errors.headshotUrl}</p>}
           </div>
@@ -69,10 +70,10 @@ export const MediaForm: React.FC<MediaFormProps> = ({ media, onUpdate, onValidat
               value={media.headshotShape}
               onValueChange={(value: SignatureData['media']['headshotShape']) => handleChange("headshotShape", value)}
             >
-              <SelectTrigger id="headshotShape" className="w-full">
+              <SelectTrigger id="headshotShape" className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary">
                 <SelectValue placeholder="Select shape" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-popover text-popover-foreground border-border">
                 <SelectItem value="circle">Circle</SelectItem>
                 <SelectItem value="rounded">Rounded Square</SelectItem>
                 <SelectItem value="square">Square</SelectItem>
@@ -85,10 +86,10 @@ export const MediaForm: React.FC<MediaFormProps> = ({ media, onUpdate, onValidat
               value={media.headshotSize}
               onValueChange={(value: SignatureData['media']['headshotSize']) => handleChange("headshotSize", value)}
             >
-              <SelectTrigger id="headshotSize" className="w-full">
+              <SelectTrigger id="headshotSize" className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary">
                 <SelectValue placeholder="Select size" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-popover text-popover-foreground border-border">
                 <SelectItem value="small">Small (60px)</SelectItem>
                 <SelectItem value="medium">Medium (80px)</SelectItem>
                 <SelectItem value="large">Large (100px)</SelectItem>
@@ -105,6 +106,7 @@ export const MediaForm: React.FC<MediaFormProps> = ({ media, onUpdate, onValidat
           id="showBanner"
           checked={media.showBanner}
           onCheckedChange={(checked) => handleChange("showBanner", checked)}
+          className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
         />
       </div>
       {media.showBanner && (
@@ -116,7 +118,7 @@ export const MediaForm: React.FC<MediaFormProps> = ({ media, onUpdate, onValidat
               value={media.bannerUrl}
               onChange={(e) => handleChange("bannerUrl", e.target.value)}
               placeholder="e.g., https://yourcompany.com/banner.jpg"
-              className="w-full"
+              className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary"
             />
             {errors.bannerUrl && <p className="text-destructive text-sm mt-1">{errors.bannerUrl}</p>}
           </div>

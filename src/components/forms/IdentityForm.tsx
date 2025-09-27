@@ -36,8 +36,8 @@ export const IdentityForm: React.FC<IdentityFormProps> = ({ identity, onUpdate, 
   };
 
   return (
-    <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-sm bg-card">
-      <h3 className="text-lg font-medium mb-4 text-primary-foreground">Identity</h3>
+    <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-lg bg-card transition-all duration-200 hover:shadow-xl">
+      <h3 className="text-lg font-semibold mb-4 text-primary-foreground">Identity</h3>
       <div>
         <Label htmlFor="fullName" className="mb-1 block text-muted-foreground">Full Name</Label>
         <Input
@@ -45,7 +45,7 @@ export const IdentityForm: React.FC<IdentityFormProps> = ({ identity, onUpdate, 
           value={identity.fullName}
           onChange={(e) => handleChange("fullName", e.target.value)}
           placeholder="e.g., Jane Doe"
-          className="w-full"
+          className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary"
         />
         {errors.fullName && <p className="text-destructive text-sm mt-1">{errors.fullName}</p>}
       </div>
@@ -56,7 +56,7 @@ export const IdentityForm: React.FC<IdentityFormProps> = ({ identity, onUpdate, 
           value={identity.jobTitle}
           onChange={(e) => handleChange("jobTitle", e.target.value)}
           placeholder="e.g., Senior Developer"
-          className="w-full"
+          className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary"
         />
         {errors.jobTitle && <p className="text-destructive text-sm mt-1">{errors.jobTitle}</p>}
       </div>
@@ -67,7 +67,7 @@ export const IdentityForm: React.FC<IdentityFormProps> = ({ identity, onUpdate, 
           value={identity.pronouns}
           onChange={(e) => handleChange("pronouns", e.target.value)}
           placeholder="e.g., she/her"
-          className="w-full"
+          className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary"
         />
       </div>
       <div>
@@ -77,7 +77,7 @@ export const IdentityForm: React.FC<IdentityFormProps> = ({ identity, onUpdate, 
           value={identity.department}
           onChange={(e) => handleChange("department", e.target.value)}
           placeholder="e.g., Marketing"
-          className="w-full"
+          className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary"
         />
       </div>
     </div>

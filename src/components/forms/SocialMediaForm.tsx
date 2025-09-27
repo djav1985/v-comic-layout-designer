@@ -65,8 +65,8 @@ export const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ socialMedia, o
   };
 
   return (
-    <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-sm bg-card">
-      <h3 className="text-lg font-medium mb-4 text-primary-foreground">Social Media (Up to 10)</h3>
+    <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-lg bg-card transition-all duration-200 hover:shadow-xl">
+      <h3 className="text-lg font-semibold mb-4 text-primary-foreground">Social Media (Up to 10)</h3>
 
       <div className="mb-4">
         <Label htmlFor="socialIconShape" className="mb-1 block text-muted-foreground">Icon Shape</Label>
@@ -74,10 +74,10 @@ export const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ socialMedia, o
           value={socialIconShape}
           onValueChange={(value: SignatureData['media']['socialIconShape']) => onUpdateSocialIconShape(value)}
         >
-          <SelectTrigger id="socialIconShape" className="w-full">
+          <SelectTrigger id="socialIconShape" className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary">
             <SelectValue placeholder="Select icon shape" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-popover text-popover-foreground border-border">
             <SelectItem value="circle">Circle</SelectItem>
             <SelectItem value="square">Square</SelectItem>
             <SelectItem value="ghost">Ghost (No Background)</SelectItem>
@@ -88,7 +88,7 @@ export const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ socialMedia, o
       {socialMedia.map((item) => {
         const IconComponent = socialPlatforms.find(p => p.name === item.platform)?.icon || Share2;
         return (
-          <div key={item.id} className="flex items-end space-x-2 mb-4 p-2 border border-border rounded-md bg-secondary/20">
+          <div key={item.id} className="flex items-end space-x-2 mb-4 p-3 border border-border rounded-md bg-secondary/20 shadow-sm">
             <div className="flex-grow grid grid-cols-2 gap-2">
               <div>
                 <Label htmlFor={`platform-${item.id}`} className="mb-1 block text-muted-foreground">Platform</Label>
@@ -96,10 +96,10 @@ export const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ socialMedia, o
                   value={item.platform}
                   onValueChange={(value) => handleSocialPlatformChange(item.id, value)}
                 >
-                  <SelectTrigger id={`platform-${item.id}`} className="w-full">
+                  <SelectTrigger id={`platform-${item.id}`} className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary">
                     <SelectValue placeholder="Select platform" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-popover text-popover-foreground border-border">
                     {socialPlatforms.map(platform => (
                       <SelectItem key={platform.name} value={platform.name}>
                         <div className="flex items-center">
@@ -119,7 +119,7 @@ export const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ socialMedia, o
                   value={item.url}
                   onChange={(e) => handleSocialUrlChange(item.id, e.target.value)}
                   placeholder={`https://${item.platform.toLowerCase()}.com/yourprofile`}
-                  className="w-full"
+                  className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary"
                 />
                 {errors[item.id] && <p className="text-destructive text-sm mt-1">{errors[item.id]}</p>}
               </div>
@@ -128,7 +128,7 @@ export const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ socialMedia, o
               variant="ghost"
               size="icon"
               onClick={() => handleRemoveSocial(item.id)}
-              className="text-destructive hover:text-destructive/80"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive/80 transition-colors duration-200"
             >
               <XCircle className="h-5 w-5" />
             </Button>
@@ -136,7 +136,7 @@ export const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ socialMedia, o
         );
       })}
       {socialMedia.length < 10 && (
-        <Button variant="outline" onClick={handleAddSocial} className="w-full mt-4">
+        <Button variant="outline" onClick={handleAddSocial} className="w-full mt-4 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors duration-200">
           <PlusCircle className="mr-2 h-4 w-4" /> Add Social Link
         </Button>
       )}

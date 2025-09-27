@@ -30,18 +30,18 @@ export const TextStylingForm: React.FC<TextStylingFormProps> = ({ textStyling, o
   }, [textStyling, onValidationChange]);
 
   return (
-    <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-sm bg-card">
-      <h3 className="text-lg font-medium mb-4 text-primary-foreground">Text & Font Styling</h3>
+    <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-lg bg-card transition-all duration-200 hover:shadow-xl">
+      <h3 className="text-lg font-semibold mb-4 text-primary-foreground">Text & Font Styling</h3>
       <div>
         <Label htmlFor="fontFamily" className="mb-1 block text-muted-foreground">Font Family</Label>
         <Select
           value={textStyling.fontFamily}
           onValueChange={(value) => onUpdate("fontFamily", value)}
         >
-          <SelectTrigger id="fontFamily" className="w-full">
+          <SelectTrigger id="fontFamily" className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary">
             <SelectValue placeholder="Select a font" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-popover text-popover-foreground border-border">
             {emailSafeFonts.map(font => (
               <SelectItem key={font} value={font} style={{ fontFamily: font }}>
                 {font.split(',')[0]}
@@ -60,7 +60,7 @@ export const TextStylingForm: React.FC<TextStylingFormProps> = ({ textStyling, o
           min={8}
           max={24}
           step={1}
-          className="w-full"
+          className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary"
         />
       </div>
       <div>
@@ -73,7 +73,7 @@ export const TextStylingForm: React.FC<TextStylingFormProps> = ({ textStyling, o
           min={1.0}
           max={2.0}
           step={0.1}
-          className="w-full"
+          className="w-full bg-input text-foreground border-input focus:ring-ring focus:border-primary"
         />
       </div>
     </div>
