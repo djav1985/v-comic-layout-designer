@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ interface SocialMediaFormProps {
   onUpdate: (socialMedia: SignatureData['socialMedia']) => void;
   socialIconShape: SignatureData['media']['socialIconShape'];
   onUpdateSocialIconShape: (shape: SignatureData['media']['socialIconShape']) => void;
+  onValidationChange: (formName: string, isValid: boolean) => void;
 }
 
 const socialPlatforms = [
@@ -26,7 +27,25 @@ const socialPlatforms = [
   { name: "Other", icon: Share2 }, // Generic icon for other platforms
 ];
 
-export const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ socialMedia, onUpdate, socialIconShape, onUpdateSocialIconShape }) => {
+export const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ socialMedia, onUpdate, socialIconShape, onUpdateSocialIconShape, onValidationChange }) => {
+  const [errors, setErrors] = useState<{ [id: string]: string }>({});
+
+  useEffect(() => {
+    validateForm();
+  }, [socialMedia]); // Re-validate when socialMedia data changes
+
+  const validateForm = () => {
+    const newErrors: { [id: string]: string } = {};
+    socialMedia.forEach(item => {
+      if (!item.url.trim()) {
+        newErrors[item.id] = "URL is required.";
+      }
+    });
+    setErrors(newErrors);
+    onValidationChange("SocialMediaForm", Object.keys(newErrors).length === 0);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleAddSocial = () => {
     if (socialMedia.length < 10) {
       onUpdate([...socialMedia, { id: String(Date.now()), platform: "LinkedIn", url: "" }]);
@@ -102,6 +121,7 @@ export const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ socialMedia, o
                   placeholder={`https://${item.platform.toLowerCase()}.com/yourprofile`}
                   className="w-full"
                 />
+                {errors[item.id] && <p className="text-destructive text-sm mt-1">{errors[item.id]}</p>}
               </div>
             </div>
             <Button

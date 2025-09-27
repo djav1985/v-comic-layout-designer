@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -10,9 +10,33 @@ import { SignatureData } from "../SignatureDesigner";
 interface MediaFormProps {
   media: SignatureData['media'];
   onUpdate: (field: keyof SignatureData['media'], value: any) => void;
+  onValidationChange: (formName: string, isValid: boolean) => void;
 }
 
-export const MediaForm: React.FC<MediaFormProps> = ({ media, onUpdate }) => {
+export const MediaForm: React.FC<MediaFormProps> = ({ media, onUpdate, onValidationChange }) => {
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    validateForm();
+  }, [media]); // Re-validate when media data changes
+
+  const validateForm = () => {
+    const newErrors: { [key: string]: string } = {};
+    if (media.showHeadshot && !media.headshotUrl.trim()) {
+      newErrors.headshotUrl = "Headshot URL is required when headshot is shown.";
+    }
+    if (media.showBanner && !media.bannerUrl.trim()) {
+      newErrors.bannerUrl = "Banner URL is required when banner is shown.";
+    }
+    setErrors(newErrors);
+    onValidationChange("MediaForm", Object.keys(newErrors).length === 0);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (field: keyof SignatureData['media'], value: any) => {
+    onUpdate(field, value);
+  };
+
   return (
     <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-sm bg-card">
       <h3 className="text-lg font-medium mb-4 text-primary-foreground">Media</h3>
@@ -23,7 +47,7 @@ export const MediaForm: React.FC<MediaFormProps> = ({ media, onUpdate }) => {
         <Switch
           id="showHeadshot"
           checked={media.showHeadshot}
-          onCheckedChange={(checked) => onUpdate("showHeadshot", checked)}
+          onCheckedChange={(checked) => handleChange("showHeadshot", checked)}
         />
       </div>
       {media.showHeadshot && (
@@ -33,16 +57,17 @@ export const MediaForm: React.FC<MediaFormProps> = ({ media, onUpdate }) => {
             <Input
               id="headshotUrl"
               value={media.headshotUrl}
-              onChange={(e) => onUpdate("headshotUrl", e.target.value)}
+              onChange={(e) => handleChange("headshotUrl", e.target.value)}
               placeholder="e.g., https://yourcompany.com/headshot.jpg"
               className="w-full"
             />
+            {errors.headshotUrl && <p className="text-destructive text-sm mt-1">{errors.headshotUrl}</p>}
           </div>
           <div>
             <Label htmlFor="headshotShape" className="mb-1 block text-muted-foreground">Headshot Shape</Label>
             <Select
               value={media.headshotShape}
-              onValueChange={(value: SignatureData['media']['headshotShape']) => onUpdate("headshotShape", value)}
+              onValueChange={(value: SignatureData['media']['headshotShape']) => handleChange("headshotShape", value)}
             >
               <SelectTrigger id="headshotShape" className="w-full">
                 <SelectValue placeholder="Select shape" />
@@ -58,7 +83,7 @@ export const MediaForm: React.FC<MediaFormProps> = ({ media, onUpdate }) => {
             <Label htmlFor="headshotSize" className="mb-1 block text-muted-foreground">Headshot Size</Label>
             <Select
               value={media.headshotSize}
-              onValueChange={(value: SignatureData['media']['headshotSize']) => onUpdate("headshotSize", value)}
+              onValueChange={(value: SignatureData['media']['headshotSize']) => handleChange("headshotSize", value)}
             >
               <SelectTrigger id="headshotSize" className="w-full">
                 <SelectValue placeholder="Select size" />
@@ -79,7 +104,7 @@ export const MediaForm: React.FC<MediaFormProps> = ({ media, onUpdate }) => {
         <Switch
           id="showBanner"
           checked={media.showBanner}
-          onCheckedChange={(checked) => onUpdate("showBanner", checked)}
+          onCheckedChange={(checked) => handleChange("showBanner", checked)}
         />
       </div>
       {media.showBanner && (
@@ -89,10 +114,11 @@ export const MediaForm: React.FC<MediaFormProps> = ({ media, onUpdate }) => {
             <Input
               id="bannerUrl"
               value={media.bannerUrl}
-              onChange={(e) => onUpdate("bannerUrl", e.target.value)}
+              onChange={(e) => handleChange("bannerUrl", e.target.value)}
               placeholder="e.g., https://yourcompany.com/banner.jpg"
               className="w-full"
             />
+            {errors.bannerUrl && <p className="text-destructive text-sm mt-1">{errors.bannerUrl}</p>}
           </div>
         </div>
       )}

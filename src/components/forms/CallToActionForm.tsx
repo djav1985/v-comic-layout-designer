@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -12,9 +12,35 @@ interface CallToActionFormProps {
   onUpdate: (field: keyof SignatureData['cta'], value: any) => void;
   brandColorPrimary: string;
   brandColorText: string;
+  onValidationChange: (formName: string, isValid: boolean) => void;
 }
 
-export const CallToActionForm: React.FC<CallToActionFormProps> = ({ cta, onUpdate, brandColorPrimary, brandColorText }) => {
+export const CallToActionForm: React.FC<CallToActionFormProps> = ({ cta, onUpdate, brandColorPrimary, brandColorText, onValidationChange }) => {
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    validateForm();
+  }, [cta]); // Re-validate when cta data changes
+
+  const validateForm = () => {
+    const newErrors: { [key: string]: string } = {};
+    if (cta.showCta) {
+      if (!cta.ctaLabel.trim()) {
+        newErrors.ctaLabel = "Button Label is required when CTA is shown.";
+      }
+      if (!cta.ctaLink.trim()) {
+        newErrors.ctaLink = "Button Link is required when CTA is shown.";
+      }
+    }
+    setErrors(newErrors);
+    onValidationChange("CallToActionForm", Object.keys(newErrors).length === 0);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (field: keyof SignatureData['cta'], value: any) => {
+    onUpdate(field, value);
+  };
+
   return (
     <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-sm bg-card">
       <h3 className="text-lg font-medium mb-4 text-primary-foreground">Call-to-Action Button</h3>
@@ -24,7 +50,7 @@ export const CallToActionForm: React.FC<CallToActionFormProps> = ({ cta, onUpdat
         <Switch
           id="showCta"
           checked={cta.showCta}
-          onCheckedChange={(checked) => onUpdate("showCta", checked)}
+          onCheckedChange={(checked) => handleChange("showCta", checked)}
         />
       </div>
 
@@ -35,10 +61,11 @@ export const CallToActionForm: React.FC<CallToActionFormProps> = ({ cta, onUpdat
             <Input
               id="ctaLabel"
               value={cta.ctaLabel}
-              onChange={(e) => onUpdate("ctaLabel", e.target.value)}
+              onChange={(e) => handleChange("ctaLabel", e.target.value)}
               placeholder="e.g., Learn More"
               className="w-full"
             />
+            {errors.ctaLabel && <p className="text-destructive text-sm mt-1">{errors.ctaLabel}</p>}
           </div>
           <div>
             <Label htmlFor="ctaLink" className="mb-1 block text-muted-foreground">Button Link</Label>
@@ -46,16 +73,17 @@ export const CallToActionForm: React.FC<CallToActionFormProps> = ({ cta, onUpdat
               id="ctaLink"
               type="url"
               value={cta.ctaLink}
-              onChange={(e) => onUpdate("ctaLink", e.target.value)}
+              onChange={(e) => handleChange("ctaLink", e.target.value)}
               placeholder="e.g., https://www.yourcompany.com/learn"
               className="w-full"
             />
+            {errors.ctaLink && <p className="text-destructive text-sm mt-1">{errors.ctaLink}</p>}
           </div>
           <div>
             <Label htmlFor="ctaStyle" className="mb-1 block text-muted-foreground">Button Style</Label>
             <Select
               value={cta.ctaStyle}
-              onValueChange={(value: SignatureData['cta']['ctaStyle']) => onUpdate("ctaStyle", value)}
+              onValueChange={(value: SignatureData['cta']['ctaStyle']) => handleChange("ctaStyle", value)}
             >
               <SelectTrigger id="ctaStyle" className="w-full">
                 <SelectValue placeholder="Select style" />
@@ -70,7 +98,7 @@ export const CallToActionForm: React.FC<CallToActionFormProps> = ({ cta, onUpdat
             <Label htmlFor="ctaCornerShape" className="mb-1 block text-muted-foreground">Corner Shape</Label>
             <Select
               value={cta.ctaCornerShape}
-              onValueChange={(value: SignatureData['cta']['ctaCornerShape']) => onUpdate("ctaCornerShape", value)}
+              onValueChange={(value: SignatureData['cta']['ctaCornerShape']) => handleChange("ctaCornerShape", value)}
             >
               <SelectTrigger id="ctaCornerShape" className="w-full">
                 <SelectValue placeholder="Select shape" />

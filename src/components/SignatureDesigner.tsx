@@ -22,9 +22,9 @@ import { CallToActionForm } from "./forms/CallToActionForm";
 import { TextStylingForm } from "./forms/TextStylingForm";
 import { DividerForm } from "./forms/DividerForm";
 import { GlobalSpacingForm } from "./forms/GlobalSpacingForm";
-import { SignatureOutputActions } from "./SignatureOutputActions"; // Import SignatureOutputActions
-import { showSuccess, showError } from "@/utils/toast"; // Import toast utilities
-import { generateVCard } from "@/utils/vcard"; // Import vCard utility
+import { SignatureOutputActions } from "./SignatureOutputActions";
+import { showSuccess, showError } from "@/utils/toast";
+import { generateVCard } from "@/utils/vcard";
 
 // Define a type for the signature data
 export type SignatureData = {
@@ -102,9 +102,9 @@ const SignatureDesigner = () => {
     company: {
       businessName: "Innovate Solutions",
       tagline: "Driving Tomorrow's Technology",
-      logoUrl: "https://placehold.co/120x60/4285F4/FFFFFF/png?text=YourLogo", // Updated to placehold.co
-      brandColorPrimary: "#4285F4", // Google Blue
-      brandColorAccent: "#34A853", // Google Green
+      logoUrl: "https://placehold.co/120x60/4285F4/FFFFFF/png?text=YourLogo",
+      brandColorPrimary: "#4285F4",
+      brandColorAccent: "#34A853",
       brandColorText: "#333333",
     },
     contact: {
@@ -120,11 +120,11 @@ const SignatureDesigner = () => {
       { id: "3", platform: "Facebook", url: "https://facebook.com/janedoe" },
     ],
     media: {
-      headshotUrl: "https://placehold.co/100/FFD700/FFFFFF/png?text=JD", // Updated to placehold.co
+      headshotUrl: "https://placehold.co/100/FFD700/FFFFFF/png?text=JD",
       showHeadshot: true,
       headshotShape: "circle",
       headshotSize: "medium",
-      bannerUrl: "https://placehold.co/600x100/FF6347/FFFFFF/png?text=PromotionalBanner", // Updated to placehold.co
+      bannerUrl: "https://placehold.co/600x100/FF6347/FFFFFF/png?text=PromotionalBanner",
       showBanner: false,
       socialIconShape: "circle",
     },
@@ -155,6 +155,17 @@ const SignatureDesigner = () => {
   });
 
   const [generatedHtml, setGeneratedHtml] = useState<string>("");
+  const [formValidations, setFormValidations] = useState<Map<string, boolean>>(new Map());
+
+  const handleValidationChange = useCallback((formName: string, isValid: boolean) => {
+    setFormValidations(prev => {
+      const newMap = new Map(prev);
+      newMap.set(formName, isValid);
+      return newMap;
+    });
+  }, []);
+
+  const isOverallFormValid = Array.from(formValidations.values()).every(isValid => isValid);
 
   const handleIdentityChange = (field: keyof SignatureData['identity'], value: string) => {
     setSignatureData(prevData => ({
@@ -262,6 +273,10 @@ const SignatureDesigner = () => {
   }, []);
 
   const handleCopyHtml = async () => {
+    if (!isOverallFormValid) {
+      showError("Please fix validation errors before copying HTML.");
+      return;
+    }
     if (!generatedHtml) {
       showError("No signature HTML to copy.");
       return;
@@ -276,11 +291,18 @@ const SignatureDesigner = () => {
   };
 
   const handleExportPng = () => {
+    if (!isOverallFormValid) {
+      showError("Please fix validation errors before exporting PNG.");
+      return;
+    }
     showError("Export PNG functionality is not yet implemented.");
-    // This will be implemented in a future step, likely using html2canvas
   };
 
   const handleGenerateVCard = () => {
+    if (!isOverallFormValid) {
+      showError("Please fix validation errors before generating vCard.");
+      return;
+    }
     try {
       const vcard = generateVCard(signatureData.identity, signatureData.contact, signatureData.company.businessName);
       const blob = new Blob([vcard], { type: "text/vcard" });
@@ -331,30 +353,35 @@ const SignatureDesigner = () => {
             <GlobalSpacingForm
               spacing={signatureData.spacing}
               onUpdate={handleSpacingChange}
+              onValidationChange={handleValidationChange}
             />
 
             {/* Text Styling Section */}
             <TextStylingForm
               textStyling={signatureData.textStyling}
               onUpdate={handleTextStylingChange}
+              onValidationChange={handleValidationChange}
             />
 
             {/* Identity Section */}
             <IdentityForm
               identity={signatureData.identity}
               onUpdate={handleIdentityChange}
+              onValidationChange={handleValidationChange}
             />
 
             {/* Company Section */}
             <CompanyForm
               company={signatureData.company}
               onUpdate={handleCompanyChange}
+              onValidationChange={handleValidationChange}
             />
 
             {/* Contact Info Section */}
             <ContactInfoForm
               contact={signatureData.contact}
               onUpdate={handleContactChange}
+              onValidationChange={handleValidationChange}
             />
 
             {/* Social Media Section */}
@@ -363,12 +390,14 @@ const SignatureDesigner = () => {
               onUpdate={handleSocialMediaChange}
               socialIconShape={signatureData.media.socialIconShape}
               onUpdateSocialIconShape={(shape) => handleMediaChange("socialIconShape", shape)}
+              onValidationChange={handleValidationChange}
             />
 
             {/* Media Section */}
             <MediaForm
               media={signatureData.media}
               onUpdate={handleMediaChange}
+              onValidationChange={handleValidationChange}
             />
 
             {/* Call-to-Action Section */}
@@ -377,18 +406,21 @@ const SignatureDesigner = () => {
               onUpdate={handleCtaChange}
               brandColorPrimary={signatureData.company.brandColorPrimary}
               brandColorText={signatureData.company.brandColorText}
+              onValidationChange={handleValidationChange}
             />
 
             {/* Divider Section */}
             <DividerForm
               divider={signatureData.divider}
               onUpdate={handleDividerChange}
+              onValidationChange={handleValidationChange}
             />
 
             {/* Legal Section */}
             <LegalForm
               legal={signatureData.legal}
               onUpdate={handleLegalChange}
+              onValidationChange={handleValidationChange}
             />
 
             {/* Other sections will go here */}

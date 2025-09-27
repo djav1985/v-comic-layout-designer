@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -9,9 +9,15 @@ import { SignatureData } from "../SignatureDesigner";
 interface LegalFormProps {
   legal: SignatureData['legal'];
   onUpdate: (field: keyof SignatureData['legal'], value: any) => void;
+  onValidationChange: (formName: string, isValid: boolean) => void;
 }
 
-export const LegalForm: React.FC<LegalFormProps> = ({ legal, onUpdate }) => {
+export const LegalForm: React.FC<LegalFormProps> = ({ legal, onUpdate, onValidationChange }) => {
+  // No specific validation for legal fields, but we still need to report validity
+  useEffect(() => {
+    onValidationChange("LegalForm", true); // Always valid for now
+  }, [legal, onValidationChange]);
+
   return (
     <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-sm bg-card">
       <h3 className="text-lg font-medium mb-4 text-primary-foreground">Legal & Compliance</h3>

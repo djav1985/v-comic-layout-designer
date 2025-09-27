@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,6 +9,7 @@ import { SignatureData } from "../SignatureDesigner";
 interface TextStylingFormProps {
   textStyling: SignatureData['textStyling'];
   onUpdate: (field: keyof SignatureData['textStyling'], value: any) => void;
+  onValidationChange: (formName: string, isValid: boolean) => void;
 }
 
 const emailSafeFonts = [
@@ -22,7 +23,12 @@ const emailSafeFonts = [
   "Courier New, monospace",
 ];
 
-export const TextStylingForm: React.FC<TextStylingFormProps> = ({ textStyling, onUpdate }) => {
+export const TextStylingForm: React.FC<TextStylingFormProps> = ({ textStyling, onUpdate, onValidationChange }) => {
+  // No specific validation for text styling, but we still need to report validity
+  useEffect(() => {
+    onValidationChange("TextStylingForm", true); // Always valid
+  }, [textStyling, onValidationChange]);
+
   return (
     <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-sm bg-card">
       <h3 className="text-lg font-medium mb-4 text-primary-foreground">Text & Font Styling</h3>

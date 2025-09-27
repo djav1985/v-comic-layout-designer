@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -9,9 +9,15 @@ import { SignatureData } from "../SignatureDesigner";
 interface DividerFormProps {
   divider: SignatureData['divider'];
   onUpdate: (field: keyof SignatureData['divider'], value: any) => void;
+  onValidationChange: (formName: string, isValid: boolean) => void;
 }
 
-export const DividerForm: React.FC<DividerFormProps> = ({ divider, onUpdate }) => {
+export const DividerForm: React.FC<DividerFormProps> = ({ divider, onUpdate, onValidationChange }) => {
+  // No specific validation for divider fields, but we still need to report validity
+  useEffect(() => {
+    onValidationChange("DividerForm", true); // Always valid for now
+  }, [divider, onValidationChange]);
+
   return (
     <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-sm bg-card">
       <h3 className="text-lg font-medium mb-4 text-primary-foreground">Divider</h3>
