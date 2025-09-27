@@ -217,6 +217,17 @@ const generateSignatureHtml = (data: SignatureData): string => {
 export const SignaturePreview: React.FC<SignaturePreviewProps> = ({ signatureData, previewMode }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeContent, setIframeContent] = useState("");
+  const [iframeHeight, setIframeHeight] = useState("auto"); // State to control iframe height
+
+  const adjustIframeHeight = () => {
+    if (iframeRef.current) {
+      const iframeDoc = iframeRef.current.contentDocument;
+      if (iframeDoc && iframeDoc.body) {
+        // Set height to scrollHeight to fit content, plus a small buffer
+        setIframeHeight(`${iframeDoc.body.scrollHeight + 20}px`);
+      }
+    }
+  };
 
   useEffect(() => {
     setIframeContent(generateSignatureHtml(signatureData));
@@ -229,9 +240,15 @@ export const SignaturePreview: React.FC<SignaturePreviewProps> = ({ signatureDat
         iframeDoc.open();
         iframeDoc.write(iframeContent);
         iframeDoc.close();
+
+        // Add event listener for content changes within the iframe
+        // This is important for dynamic content or when images load
+        iframeRef.current.onload = adjustIframeHeight;
+        // Also call it immediately in case content is already loaded or very small
+        adjustIframeHeight();
       }
     }
-  }, [iframeContent]);
+  }, [iframeContent]); // Re-run when content changes
 
   const previewWidth = previewMode === "desktop" ? "100%" : "320px"; // Common mobile width
 
@@ -239,13 +256,18 @@ export const SignaturePreview: React.FC<SignaturePreviewProps> = ({ signatureDat
     <div className="flex-grow flex items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-md shadow-inner overflow-hidden">
       <div
         className="bg-white p-4 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg transition-all duration-300 ease-in-out"
-        style={{ width: previewWidth, maxWidth: "600px", minHeight: "150px" }}
+        style={{
+          width: previewWidth,
+          maxWidth: "600px",
+          flexGrow: 1, // Allow this container to grow
+          overflowY: "auto", // This container will scroll if content is too long
+        }}
       >
         <iframe
           ref={iframeRef}
           title="Email Signature Preview"
-          className="w-full h-full border-none bg-transparent"
-          style={{ minHeight: "100px" }}
+          className="w-full border-none bg-transparent"
+          style={{ height: iframeHeight }} // Use dynamic height
         />
       </div>
     </div>
