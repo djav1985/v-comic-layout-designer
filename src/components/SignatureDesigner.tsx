@@ -78,51 +78,52 @@ const SignatureDesigner = () => {
   const [signatureData, setSignatureData] = useState<SignatureData>({
     template: "classic-two-column",
     identity: {
-      fullName: "John Doe",
-      jobTitle: "Software Engineer",
-      pronouns: "he/him",
-      department: "Engineering",
+      fullName: "Jane Doe",
+      jobTitle: "Marketing Manager",
+      pronouns: "she/her",
+      department: "Marketing",
     },
     company: {
-      businessName: "Acme Corp",
-      tagline: "Innovating the Future",
-      logoUrl: "https://via.placeholder.com/100x50?text=Logo",
-      brandColorPrimary: "#1a73e8",
-      brandColorAccent: "#4285f4",
+      businessName: "Innovate Solutions",
+      tagline: "Driving Tomorrow's Technology",
+      logoUrl: "https://via.placeholder.com/120x60/4285F4/FFFFFF?text=YourLogo", // More distinct placeholder
+      brandColorPrimary: "#4285F4", // Google Blue
+      brandColorAccent: "#34A853", // Google Green
       brandColorText: "#333333",
     },
     contact: {
-      phoneNumbers: "+1 (555) 123-4567",
-      emailAddress: "john.doe@example.com",
-      websiteLink: "https://www.example.com",
-      officeAddress: "123 Main St, Anytown, USA",
-      bookingLink: "",
+      phoneNumbers: "+1 (555) 987-6543",
+      emailAddress: "jane.doe@innovatesolutions.com",
+      websiteLink: "https://www.innovatesolutions.com",
+      officeAddress: "456 Tech Drive, Innovation City, CA 90210",
+      bookingLink: "https://calendly.com/janedoe-innovate",
     },
     socialMedia: [
-      { id: "1", platform: "LinkedIn", url: "https://linkedin.com/in/johndoe" },
-      { id: "2", platform: "X", url: "https://x.com/johndoe" },
+      { id: "1", platform: "LinkedIn", url: "https://linkedin.com/in/janedoe" },
+      { id: "2", platform: "X", url: "https://x.com/janedoe" },
+      { id: "3", platform: "Facebook", url: "https://facebook.com/janedoe" },
     ],
     media: {
-      headshotUrl: "https://via.placeholder.com/80",
+      headshotUrl: "https://via.placeholder.com/100/FFD700/FFFFFF?text=JD", // Gold background placeholder
       showHeadshot: true,
       headshotShape: "circle",
       headshotSize: "medium",
-      bannerUrl: "",
+      bannerUrl: "https://via.placeholder.com/600x100/FF6347/FFFFFF?text=PromotionalBanner", // Tomato background placeholder
       showBanner: false,
       socialIconShape: "circle", // Default social icon shape
     },
     legal: {
-      disclaimerText: "This email and any files transmitted with it are confidential and intended solely for the use of the individual or entity to whom they are addressed.",
-      confidentialityNotice: "If you have received this email in error please notify the system manager.",
-      showEqualHousingBadge: false,
+      disclaimerText: "This message is intended only for the use of the individual or entity to which it is addressed and may contain information that is confidential and privileged.",
+      confidentialityNotice: "If you are not the intended recipient, you are hereby notified that any dissemination, distribution, or copying of this communication is strictly prohibited.",
+      showEqualHousingBadge: true,
       showHipaaBadge: false,
     },
     cta: {
-      ctaLabel: "Visit Our Website",
-      ctaLink: "https://www.example.com",
+      ctaLabel: "Explore Our Services",
+      ctaLink: "https://www.innovatesolutions.com/services",
       ctaStyle: "filled",
       ctaCornerShape: "rounded",
-      showCta: false,
+      showCta: true,
     },
   });
 
@@ -201,21 +202,21 @@ const SignatureDesigner = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col">
-      <h1 className="text-3xl font-bold p-4 border-b">Email Signature Designer</h1>
+    <div className="h-screen flex flex-col bg-background text-foreground">
+      <h1 className="text-3xl font-bold p-4 border-b border-border shadow-sm">Email Signature Designer</h1>
       <ResizablePanelGroup
         direction="horizontal"
         className="flex-grow"
       >
         <ResizablePanel defaultSize={50} minSize={30}>
           <ScrollArea className="h-full p-6">
-            <h2 className="text-2xl font-semibold mb-6">Design Controls</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-primary">Design Controls</h2>
 
             {/* Template Selection */}
-            <div className="mb-6">
-              <Label htmlFor="template-select" className="mb-2 block">Select Template</Label>
+            <div className="mb-6 p-4 border border-border rounded-lg shadow-sm bg-card">
+              <Label htmlFor="template-select" className="mb-2 block text-lg font-medium">Select Template</Label>
               <Select onValueChange={handleTemplateChange} defaultValue={signatureData.template}>
-                <SelectTrigger id="template-select">
+                <SelectTrigger id="template-select" className="w-full">
                   <SelectValue placeholder="Select a template" />
                 </SelectTrigger>
                 <SelectContent>
@@ -275,17 +276,17 @@ const SignatureDesigner = () => {
             />
 
             {/* Other sections will go here */}
-            <div className="mt-8 p-4 border rounded-md bg-muted/20 text-muted-foreground">
-              More design controls and sections will be added here!
+            <div className="mt-8 p-4 border border-border rounded-lg bg-muted/20 text-muted-foreground shadow-sm">
+              <p className="text-sm">More design controls and sections will be added here!</p>
             </div>
           </ScrollArea>
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={50} minSize={30}>
           <div className="h-full flex flex-col p-6 bg-gray-50 dark:bg-gray-900">
-            <h2 className="text-2xl font-semibold mb-4">Live Preview</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-primary">Live Preview</h2>
             <Tabs defaultValue="desktop" className="flex-grow flex flex-col">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsList className="grid w-full grid-cols-2 mb-4 bg-card border border-border shadow-sm">
                 <TabsTrigger value="desktop">Desktop</TabsTrigger>
                 <TabsTrigger value="mobile">Mobile</TabsTrigger>
               </TabsList>

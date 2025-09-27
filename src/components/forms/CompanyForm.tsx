@@ -12,33 +12,36 @@ interface CompanyFormProps {
 
 export const CompanyForm: React.FC<CompanyFormProps> = ({ company, onUpdate }) => {
   return (
-    <div className="space-y-4 mb-6 p-4 border rounded-md bg-card">
-      <h3 className="text-lg font-medium mb-4">Company</h3>
+    <div className="space-y-4 mb-6 p-4 border border-border rounded-lg shadow-sm bg-card">
+      <h3 className="text-lg font-medium mb-4 text-primary-foreground">Company</h3>
       <div>
-        <Label htmlFor="businessName" className="mb-1 block">Business Name</Label>
+        <Label htmlFor="businessName" className="mb-1 block text-muted-foreground">Business Name</Label>
         <Input
           id="businessName"
           value={company.businessName}
           onChange={(e) => onUpdate("businessName", e.target.value)}
           placeholder="e.g., Acme Corp"
+          className="w-full"
         />
       </div>
       <div>
-        <Label htmlFor="tagline" className="mb-1 block">Tagline (Optional)</Label>
+        <Label htmlFor="tagline" className="mb-1 block text-muted-foreground">Tagline (Optional)</Label>
         <Input
           id="tagline"
           value={company.tagline}
           onChange={(e) => onUpdate("tagline", e.target.value)}
           placeholder="e.g., Innovating the Future"
+          className="w-full"
         />
       </div>
       <div>
-        <Label htmlFor="logoUrl" className="mb-1 block">Logo URL (Placeholder)</Label>
+        <Label htmlFor="logoUrl" className="mb-1 block text-muted-foreground">Logo URL (Placeholder)</Label>
         <Input
           id="logoUrl"
           value={company.logoUrl}
           onChange={(e) => onUpdate("logoUrl", e.target.value)}
           placeholder="e.g., https://yourcompany.com/logo.png"
+          className="w-full"
         />
         <p className="text-sm text-muted-foreground mt-1">
           (Actual image upload will be implemented later)
@@ -46,33 +49,33 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ company, onUpdate }) =
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <Label htmlFor="brandColorPrimary" className="mb-1 block">Primary Brand Color</Label>
+          <Label htmlFor="brandColorPrimary" className="mb-1 block text-muted-foreground">Primary Brand Color</Label>
           <Input
             id="brandColorPrimary"
             type="color"
             value={company.brandColorPrimary}
             onChange={(e) => onUpdate("brandColorPrimary", e.target.value)}
-            className="h-10 w-full p-1"
+            className="h-10 w-full p-1 cursor-pointer"
           />
         </div>
         <div>
-          <Label htmlFor="brandColorAccent" className="mb-1 block">Accent Brand Color</Label>
+          <Label htmlFor="brandColorAccent" className="mb-1 block text-muted-foreground">Accent Brand Color</Label>
           <Input
             id="brandColorAccent"
             type="color"
             value={company.brandColorAccent}
             onChange={(e) => onUpdate("brandColorAccent", e.target.value)}
-            className="h-10 w-full p-1"
+            className="h-10 w-full p-1 cursor-pointer"
           />
         </div>
         <div>
-          <Label htmlFor="brandColorText" className="mb-1 block">Text Color</Label>
+          <Label htmlFor="brandColorText" className="mb-1 block text-muted-foreground">Text Color</Label>
           <Input
             id="brandColorText"
             type="color"
             value={company.brandColorText}
             onChange={(e) => onUpdate("brandColorText", e.target.value)}
-            className="h-10 w-full p-1"
+            className="h-10 w-full p-1 cursor-pointer"
           />
         </div>
       </div>
