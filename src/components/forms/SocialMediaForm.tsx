@@ -1,0 +1,104 @@
+"use client";
+
+import React from "react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SignatureData } from "../SignatureDesigner";
+import { PlusCircle, XCircle, Linkedin, X, Facebook, Instagram, Youtube, Globe, Github, Share2 } from "lucide-react";
+
+interface SocialMediaFormProps {
+  socialMedia: SignatureData['socialMedia'];
+  onUpdate: (socialMedia: SignatureData['socialMedia']) => void;
+}
+
+const socialPlatforms = [
+  { name: "LinkedIn", icon: Linkedin },
+  { name: "X", icon: X },
+  { name: "Facebook", icon: Facebook },
+  { name: "Instagram", icon: Instagram },
+  { name: "YouTube", icon: Youtube },
+  { name: "Website", icon: Globe },
+  { name: "GitHub", icon: Github },
+  { name: "Other", icon: Share2 }, // Generic icon for other platforms
+];
+
+export const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ socialMedia, onUpdate }) => {
+  const handleAddSocial = () => {
+    if (socialMedia.length < 10) {
+      onUpdate([...socialMedia, { id: String(Date.now()), platform: "LinkedIn", url: "" }]);
+    }
+  };
+
+  const handleRemoveSocial = (id: string) => {
+    onUpdate(socialMedia.filter(item => item.id !== id));
+  };
+
+  const handleSocialPlatformChange = (id: string, platform: string) => {
+    onUpdate(socialMedia.map(item => item.id === id ? { ...item, platform } : item));
+  };
+
+  const handleSocialUrlChange = (id: string, url: string) => {
+    onUpdate(socialMedia.map(item => item.id === id ? { ...item, url } : item));
+  };
+
+  return (
+    <div className="space-y-4 mb-6 p-4 border rounded-md bg-card">
+      <h3 className="text-lg font-medium mb-4">Social Media (Up to 10)</h3>
+      {socialMedia.map((item) => {
+        const IconComponent = socialPlatforms.find(p => p.name === item.platform)?.icon || Share2;
+        return (
+          <div key={item.id} className="flex items-end space-x-2 mb-4">
+            <div className="flex-grow grid grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor={`platform-${item.id}`} className="mb-1 block">Platform</Label>
+                <Select
+                  value={item.platform}
+                  onValueChange={(value) => handleSocialPlatformChange(item.id, value)}
+                >
+                  <SelectTrigger id={`platform-${item.id}`}>
+                    <SelectValue placeholder="Select platform" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {socialPlatforms.map(platform => (
+                      <SelectItem key={platform.name} value={platform.name}>
+                        <div className="flex items-center">
+                          <platform.icon className="mr-2 h-4 w-4" />
+                          {platform.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor={`url-${item.id}`} className="mb-1 block">URL</Label>
+                <Input
+                  id={`url-${item.id}`}
+                  type="url"
+                  value={item.url}
+                  onChange={(e) => handleSocialUrlChange(item.id, e.target.value)}
+                  placeholder={`https://${item.platform.toLowerCase()}.com/yourprofile`}
+                />
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleRemoveSocial(item.id)}
+              className="text-destructive hover:text-destructive/80"
+            >
+              <XCircle className="h-5 w-5" />
+            </Button>
+          </div>
+        );
+      })}
+      {socialMedia.length < 10 && (
+        <Button variant="outline" onClick={handleAddSocial} className="w-full">
+          <PlusCircle className="mr-2 h-4 w-4" /> Add Social Link
+        </Button>
+      )}
+    </div>
+  );
+};

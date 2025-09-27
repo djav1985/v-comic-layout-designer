@@ -15,6 +15,7 @@ import { SignaturePreview } from "./SignaturePreview";
 import { IdentityForm } from "./forms/IdentityForm";
 import { CompanyForm } from "./forms/CompanyForm";
 import { ContactInfoForm } from "./forms/ContactInfoForm";
+import { SocialMediaForm } from "./forms/SocialMediaForm";
 
 // Define a type for the signature data
 export type SignatureData = {
@@ -40,6 +41,11 @@ export type SignatureData = {
     officeAddress: string;
     bookingLink: string;
   };
+  socialMedia: {
+    id: string;
+    platform: string;
+    url: string;
+  }[];
   // Add other sections as we implement them
 };
 
@@ -67,6 +73,10 @@ const SignatureDesigner = () => {
       officeAddress: "123 Main St, Anytown, USA",
       bookingLink: "",
     },
+    socialMedia: [
+      { id: "1", platform: "LinkedIn", url: "https://linkedin.com/in/johndoe" },
+      { id: "2", platform: "X", url: "https://x.com/johndoe" },
+    ],
   });
 
   const handleIdentityChange = (field: keyof SignatureData['identity'], value: string) => {
@@ -96,6 +106,13 @@ const SignatureDesigner = () => {
         ...prevData.contact,
         [field]: value,
       },
+    }));
+  };
+
+  const handleSocialMediaChange = (socialMedia: SignatureData['socialMedia']) => {
+    setSignatureData(prevData => ({
+      ...prevData,
+      socialMedia,
     }));
   };
 
@@ -150,6 +167,12 @@ const SignatureDesigner = () => {
             <ContactInfoForm
               contact={signatureData.contact}
               onUpdate={handleContactChange}
+            />
+
+            {/* Social Media Section */}
+            <SocialMediaForm
+              socialMedia={signatureData.socialMedia}
+              onUpdate={handleSocialMediaChange}
             />
 
             {/* Other sections will go here */}
