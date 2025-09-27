@@ -59,7 +59,7 @@ export type SignatureData = {
     headshotUrl: string;
     showHeadshot: boolean;
     headshotShape: "circle" | "rounded" | "square";
-    headshotSize: "small" | "medium" | "large";
+        headshotSize: "small" | "medium" | "large";
     bannerUrl: string;
     showBanner: boolean;
     socialIconShape: "circle" | "square" | "ghost";
@@ -323,12 +323,12 @@ const SignatureDesigner = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
-      <h1 className="text-3xl font-extrabold p-4 border-b border-border shadow-md bg-card text-primary">Email Signature Designer</h1>
+      <h1 className="text-4xl font-extrabold p-4 border-b border-border shadow-lg bg-primary text-primary-foreground">Email Signature Designer</h1>
       <ResizablePanelGroup
         direction="horizontal"
         className="flex-grow"
       >
-        <ResizablePanel defaultSize={50} minSize={30} className="bg-muted/5">
+        <ResizablePanel defaultSize={50} minSize={30} className="bg-gray-50 dark:bg-gray-900">
           <ScrollArea className="h-full p-6">
             <h2 className="text-2xl font-bold mb-6 text-primary">Design Controls</h2>
 
@@ -430,7 +430,7 @@ const SignatureDesigner = () => {
           </ScrollArea>
         </ResizablePanel>
         <ResizableHandle withHandle className="bg-border hover:bg-primary transition-colors duration-200" />
-        <ResizablePanel defaultSize={50} minSize={30} className="bg-secondary/10">
+        <ResizablePanel defaultSize={50} minSize={30} className="bg-white dark:bg-gray-800">
           <div className="h-full flex flex-col p-6">
             <h2 className="text-2xl font-bold mb-4 text-primary">Live Preview</h2>
             <Tabs defaultValue="desktop" className="flex-grow flex flex-col">
