@@ -11,8 +11,8 @@ export const MinimalistTemplate = (templateVars: TemplateVars): string => {
     logoUrl,
     dividerHtml,
     legalHtml,
-    headshotHtml, // Added headshotHtml
-    headshotPxSize, // Added headshotPxSize for centering
+    headshotHtml,
+    headshotPxSize,
   } = templateVars;
 
   const { identity, company, contact, socialMedia, textStyling } = signatureData;
@@ -21,7 +21,7 @@ export const MinimalistTemplate = (templateVars: TemplateVars): string => {
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
       <tr>
         <td style="padding-bottom: ${verticalSpacing};">
-          ${headshotHtml ? `<div style="margin: 0 ${previewMode === 'mobile' ? 'auto' : '0'} ${verticalSpacing} ${previewMode === 'mobile' ? 'auto' : '0'}; width: ${headshotPxSize}px;">${headshotHtml}</div>` : ''}
+          ${headshotHtml ? `<div style="margin: 0 0 ${verticalSpacing} 0; width: ${headshotPxSize}px;">${headshotHtml}</div>` : ''}
           <p style="margin: 0; font-size: ${textStyling.baseFontSize + 2}px; font-weight: bold; color: ${company.brandColorPrimary}; line-height: ${textStyling.baseLineHeight};">${identity.fullName}</p>
           <p style="margin: 0; font-size: ${textStyling.baseFontSize}px; color: ${company.brandColorText}; line-height: ${textStyling.baseLineHeight};">${identity.jobTitle} at ${company.businessName}</p>
           ${identity.pronouns ? `<p style="margin: 0; font-size: ${textStyling.baseFontSize - 2}px; color: #777777; line-height: ${textStyling.baseLineHeight};">${identity.pronouns}</p>` : ''}
