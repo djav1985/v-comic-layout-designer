@@ -6,33 +6,36 @@ export const BaseTemplate = (props: { signatureData: SignatureData; previewMode:
   const { signatureData, previewMode, children } = props;
   const { identity, company, contact, socialMedia, media, legal, cta, textStyling, divider, spacing } = signatureData;
 
-  // Spacing 6–12px feel
+  // Determine spacing values
   let verticalSpacing = '10px';
   let horizontalSpacing = '10px';
   if (spacing === 'tight') {
-    verticalSpacing = '6px';
-    horizontalSpacing = '6px';
+    verticalSpacing = '5px';
+    horizontalSpacing = '5px';
   } else if (spacing === 'roomy') {
-    verticalSpacing = '12px';
-    horizontalSpacing = '12px';
+    verticalSpacing = '15px';
+    horizontalSpacing = '15px';
   }
 
+  // Determine headshot size
   let headshotPxSize = 80;
   if (media.headshotSize === "small") headshotPxSize = 60;
   if (media.headshotSize === "large") headshotPxSize = 100;
 
-  let headshotBorderRadius = "50%";
+  // Determine headshot shape
+  let headshotBorderRadius = "50%"; // circle
   if (media.headshotShape === "rounded") headshotBorderRadius = "8px";
   if (media.headshotShape === "square") headshotBorderRadius = "0";
 
+  // Base inline CSS for email compatibility, now including text styling
   const baseStyles = `
-    font-family: ${textStyling.fontFamily}, Arial, Helvetica, Verdana, sans-serif;
+    font-family: ${textStyling.fontFamily}, 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: ${textStyling.baseFontSize}px;
     color: ${company.brandColorText || '#333333'};
     line-height: ${textStyling.baseLineHeight};
   `;
 
-  const linkColor = company.brandColorPrimary || '#4285F4';
+  const linkColor = company.brandColorPrimary || '#4285F4'; // Use default if not set
 
   const socialIconsHtml = socialMedia.map(social => `
     <a href="${social.url}" style="display: inline-block; margin-right: 8px; text-decoration: none; vertical-align: middle;" target="_blank">
@@ -45,7 +48,7 @@ export const BaseTemplate = (props: { signatureData: SignatureData; previewMode:
   const dynamicBannerUrl = media.bannerUrl || `https://placehold.co/600x100/${company.brandColorAccent.substring(1)}/FFFFFF/png?text=${encodeURIComponent(company.tagline || 'Promotional Banner')}`;
 
   const headshotHtml = media.showHeadshot ? `
-    <img src="${dynamicHeadshotUrl}" alt="${identity.fullName} Headshot" width="${headshotPxSize}" height="${headshotPxSize}" style="display: block; border-radius: ${headshotBorderRadius}; max-width: 100%; max-height: 120px; height: auto; margin: 0;" />
+    <img src="${dynamicHeadshotUrl}" alt="${identity.fullName} Headshot" width="${headshotPxSize}" height="${headshotPxSize}" style="display: block; border-radius: ${headshotBorderRadius}; max-width: 100%; height: auto; margin: 0;" />
   ` : '';
 
   const bannerImageHtml = media.showBanner ? `
@@ -64,17 +67,27 @@ export const BaseTemplate = (props: { signatureData: SignatureData; previewMode:
         <td style="padding-top: ${verticalSpacing}; padding-bottom: 0;">
           <a href="${cta.ctaLink}" target="_blank" style="
             display: inline-block;
-            padding: 10px 16px;
+            padding: 10px 20px;
             background-color: ${cta.ctaStyle === "filled" ? company.brandColorPrimary : 'transparent'};
             color: ${cta.ctaStyle === "filled" ? '#ffffff' : company.brandColorPrimary};
             border: ${cta.ctaStyle === "outlined" ? `1px solid ${company.brandColorPrimary}` : 'none'};
-            border-radius: ${cta.ctaCornerShape === "rounded" ? '6px' : '0'};
+            border-radius: ${cta.ctaCornerShape === "rounded" ? '5px' : '0'};
             text-decoration: none;
-            font-weight: 600;
-            font-size: 13px;
+            font-weight: bold;
+            font-size: 14px;
             line-height: 1;
+            mso-hide: all; /* Outlook specific to hide border on filled button */
           ">
+            <!--[if mso]>
+            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${cta.ctaLink}" style="height:36px;v-text-anchor:middle;width:150px;" arcsize="${cta.ctaCornerShape === "rounded" ? '14%' : '0%'}" strokecolor="${company.brandColorPrimary}" fill="${cta.ctaStyle === "filled" ? 'true' : 'false'}">
+              <w:anchorlock/>
+              <center style="color:${cta.ctaStyle === "filled" ? '#ffffff' : company.brandColorPrimary};font-family:Arial, sans-serif;font-size:14px;font-weight:bold;">
+            <![endif]-->
             ${cta.ctaLabel}
+            <!--[if mso]>
+              </center>
+            </v:roundrect>
+            <![endif]-->
           </a>
         </td>
       </tr>
@@ -94,7 +107,7 @@ export const BaseTemplate = (props: { signatureData: SignatureData; previewMode:
   const legalHtml = (legal.disclaimerText || legal.confidentialityNotice || legal.showEqualHousingBadge || legal.showHipaaBadge) ? `
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
       <tr>
-        <td style="padding-top: ${verticalSpacing}; font-size: 10px; color: #8a8a8a; line-height: 1.35;">
+        <td style="padding-top: ${verticalSpacing}; font-size: 10px; color: #888888; line-height: 1.3;">
           ${legal.disclaimerText ? `<span>${legal.disclaimerText}</span><br/>` : ''}
           ${legal.confidentialityNotice ? `<span>${legal.confidentialityNotice}</span><br/>` : ''}
           ${legal.showEqualHousingBadge ? `<img src="https://placehold.co/20x20/0000FF/FFFFFF/png?text=EHO" alt="Equal Housing Opportunity" style="display: inline-block; vertical-align: middle; margin-right: 5px;" />` : ''}
@@ -104,8 +117,9 @@ export const BaseTemplate = (props: { signatureData: SignatureData; previewMode:
     </table>
   ` : '';
 
+  // Mobile-specific styles for column stacking
   const mobileColumnTdStyle = `width: 100%; display: block; padding-right: 0; text-align: center;`;
-  const mobileHeadshotWrapperStyle = `margin: 0 auto ${verticalSpacing} auto;`;
+  const mobileHeadshotWrapperStyle = `margin: 0 auto ${verticalSpacing} auto;`; // Center headshot on mobile
 
   const templateVars: TemplateVars = {
     signatureData,
@@ -141,7 +155,14 @@ export const BaseTemplate = (props: { signatureData: SignatureData; previewMode:
         body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
         table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
         img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
-        a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; font-size: inherit !important; font-family: inherit !important; font-weight: inherit !important; line-height: inherit !important; }
+        a[x-apple-data-detectors] {
+          color: inherit !important;
+          text-decoration: none !important;
+          font-size: inherit !important;
+          font-family: inherit !important;
+          font-weight: inherit !important;
+          line-height: inherit !important;
+        }
         @media screen and (max-width: 525px) {
           .wrapper { width: 100% !important; max-width: 100% !important; }
           .responsive-table { width: 100% !important; }
@@ -156,13 +177,23 @@ export const BaseTemplate = (props: { signatureData: SignatureData; previewMode:
       </style>
     </head>
     <body style="margin: 0; padding: 0; background-color: #ffffff;">
-      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: ${previewMode === 'mobile' ? '320px' : '600px'}; margin: 0 auto; text-align: left;">
+      <!--[if (gte mso 9)|(IE)]>
+      <table role="presentation" align="center" border="0" cellspacing="0" cellpadding="0" width="600">
+      <tr>
+      <td align="center" valign="top" width="600">
+      <![endif]-->
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: ${previewMode === 'mobile' ? '320px' : '600px'}; margin: 0 auto;">
         <tr>
           <td style="padding: 0;">
             ${children(templateVars)}
           </td>
         </tr>
       </table>
+      <!--[if (gte mso 9)|(IE)]>
+      </td>
+      </tr>
+      </table>
+      <![endif]-->
     </body>
     </html>`
   );
