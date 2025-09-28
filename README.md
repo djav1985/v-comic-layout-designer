@@ -90,10 +90,10 @@ flowchart LR
 | Domain | Highlights |
 | --- | --- |
 | **Asset library** | Multi-file uploads with drag-and-drop, inline deletion, touch-friendly modal on small screens. |
-| **Storyboard workspace** | Dynamic layout selector, gutter color picker, page locking (green **U**/**L** toggle), autosave banner, keyboard shortcut helper. |
+| **Storyboard workspace** | Dynamic layout selector, gutter color picker, page locking (green **U**/**L** toggle), autosave banner, keyboard shortcut helper. Stored transforms are normalized to panel percentages so resizing the canvas never drifts artwork placements. |
 | **Real-time sync** | Browser EventSource streams push notifications whenever the SQLite `state.db` changes on disk, so multiple sessions stay mirrored. |
 | **State management** | Reset the world in one click, or save/load ZIP archives (`state.db` + uploads) to branch, share, or roll back progress. |
-| **Exports** | Generate high-resolution PDFs or per-page PNGs. Export dimensions respect the live panel transforms and preserve the 1:1.545 aspect ratio. |
+| **Exports** | Generate high-resolution PDFs or per-page PNGs. Export dimensions respect the live panel transforms, reapplying normalized translations before drawing to preserve the 1:1.545 aspect ratio. |
 | **Mobile experience** | A docked **Images** pill reveals the full-screen library, double-tap panels to place art without precision dragging. |
 
 ---

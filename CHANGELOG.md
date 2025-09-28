@@ -21,6 +21,7 @@
 - Removed the remaining angled panel styling and export helpers so every layout now uses straightforward rectangular frames.
 - Rebuilt the `wide-top-portrait-left-two-square-right` CSS so the page geometry enforces 16:9, 9:16, and 1:1 ratios while matching the existing layout positioning system.
 - Tuned the `wide-top-portrait-left-two-square-right` layout with clamped banner heights, a named column gutter, and responsive portrait/square sizing so it better adapts to the available page dimensions.
+- Normalize panel transforms against their parent dimensions so dragging results persist across responsive breakpoints and exports match the current layout geometry.
 
 ### Fixed
 - Execute layout PHP templates on the server before sending them to the browser so panels render correctly in both the editor and exports.
