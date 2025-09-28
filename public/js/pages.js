@@ -159,12 +159,9 @@ function enableImageControls(img, hiddenInput, initial = {}) {
   let translateX = initialTranslateX ?? 0;
   let translateY = initialTranslateY ?? 0;
 
-  const normalizedX =
-    toFiniteNumber(initial.translateXPct) ??
-    toFiniteNumber(initial.translateXPercent);
-  const normalizedY =
-    toFiniteNumber(initial.translateYPct) ??
-    toFiniteNumber(initial.translateYPercent);
+  // Standardize on translateXPercent and translateYPercent property names
+  const normalizedX = toFiniteNumber(initial.translateXPercent);
+  const normalizedY = toFiniteNumber(initial.translateYPercent);
 
   let translateXPct = normalizedX ?? 0;
   let translateYPct = normalizedY ?? 0;
