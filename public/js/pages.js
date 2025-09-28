@@ -337,7 +337,6 @@ function placeImageInPanel({
   transformInput.name = `pages[${pageIndex}][transforms][${slot}]`;
   transformInput.value = JSON.stringify(initialTransform || {});
   container.appendChild(transformInput);
-  enableImageControls(clone, transformInput, initialTransform || {});
 
   const hidden = document.createElement("input");
   hidden.type = "hidden";
@@ -347,6 +346,9 @@ function placeImageInPanel({
 
   content.appendChild(clone);
   clone.style.cursor = isPageLocked(panel) ? "not-allowed" : "move";
+  
+  // Enable image controls after appending to DOM so getPanelContentDimensions can measure actual dimensions
+  enableImageControls(clone, transformInput, initialTransform || {});
 
   if (!skipLibraryUpdate) {
     setTimeout(() => {
