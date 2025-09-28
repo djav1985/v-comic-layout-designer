@@ -67,6 +67,25 @@ function getPanelContentDimensions(panel) {
   };
 }
 
+/**
+ * Calculates percentage from pixel value relative to a dimension
+ * @param {number} pixelValue - The pixel value to convert
+ * @param {number} dimension - The dimension to calculate percentage against
+ * @param {boolean} useFiniteCheck - Whether to validate pixelValue with Number.isFinite
+ * @returns {number} The calculated percentage (0-100 range)
+ */
+function calculatePercentage(pixelValue, dimension, useFiniteCheck = false) {
+  if (!dimension) {
+    return 0;
+  }
+  
+  const safePixelValue = useFiniteCheck 
+    ? (Number.isFinite(pixelValue) ? pixelValue : 0)
+    : pixelValue;
+  
+  return (safePixelValue / dimension) * 100;
+}
+
 function clearPanel(panel) {
   const content = getPanelContent(panel);
   if (content) {
@@ -195,8 +214,8 @@ function enableImageControls(img, hiddenInput, initial = {}) {
 
     const safeWidth = baseWidth || 1;
     const safeHeight = baseHeight || 1;
-    translateXPct = (translateX / safeWidth) * 100;
-    translateYPct = (translateY / safeHeight) * 100;
+    translateXPct = calculatePercentage(translateX, safeWidth);
+    translateYPct = calculatePercentage(translateY, safeHeight);
 
     img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
     img.dataset.scale = String(scale);
@@ -670,11 +689,11 @@ export function capturePagesFromDom() {
           const pxY = parseFloat(img.dataset.translateY);
 
           if (translateXPct === null) {
-            translateXPct = width ? ((Number.isFinite(pxX) ? pxX : 0) / width) * 100 : 0;
+            translateXPct = calculatePercentage(pxX, width, true);
           }
 
           if (translateYPct === null) {
-            translateYPct = height ? ((Number.isFinite(pxY) ? pxY : 0) / height) * 100 : 0;
+            translateYPct = calculatePercentage(pxY, height, true);
           }
         }
 
