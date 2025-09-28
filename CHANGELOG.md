@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 ### Added
+- Verify the embedded PHP runtime exposes the `zip`, `pdo_sqlite`, and `sqlite3` extensions before starting the desktop server so missing modules surface immediately with a helpful dialog.
+- Track a repository-level `resources/php/php.ini` that enables the required PHP extensions for bundled desktop builds.
 - Bundle jsPDF locally under `public/vendor/` with a CDN fallback so PDF exports keep working offline.
 - Wrap the application in an Electron shell that automatically boots an embedded PHP server for desktop use.
 - Ship npm scripts for local Electron development builds and Windows installer packaging via `electron-builder`.
@@ -44,5 +46,6 @@
 - Treat `public/storage/state.db` as the single source of truth when rehydrating pages, removing the fallback to embedded data bundled in the HTML.
 
 ### Documentation
+- Document the PHP extension preflight and bundled `php.ini` so desktop users know which modules are required and how the app responds when they are absent.
 - Replace the README with an in-depth, highly visual guide covering architecture, workflows, testing commands, and troubleshooting tips.
 - Add workspace screenshots and clarify README sections to keep the documentation accurate and actionable.
