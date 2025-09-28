@@ -14,11 +14,6 @@ export const PDF_PAGE_HEIGHT = 612;
 export const PDF_COLUMN_WIDTH = PDF_PAGE_WIDTH / 2;
 export const DEFAULT_GUTTER_COLOR = "#cccccc";
 export const EXPORT_SCALE = 2;
-export const CANONICAL_LAYOUT_WIDTH = 900;
-export const CANONICAL_LAYOUT_ASPECT_RATIO = 1.545;
-export const CANONICAL_LAYOUT_HEIGHT = Math.round(
-  CANONICAL_LAYOUT_WIDTH * CANONICAL_LAYOUT_ASPECT_RATIO,
-);
 
 const dom = {
   pages: null,
@@ -83,13 +78,11 @@ function calculatePercentage(pixelValue, dimension, useFiniteCheck = false) {
   if (!dimension) {
     return 0;
   }
-
-  const safePixelValue = useFiniteCheck
-    ? Number.isFinite(pixelValue)
-      ? pixelValue
-      : 0
+  
+  const safePixelValue = useFiniteCheck 
+    ? (Number.isFinite(pixelValue) ? pixelValue : 0)
     : pixelValue;
-
+  
   return (safePixelValue / dimension) * 100;
 }
 
@@ -203,10 +196,7 @@ function enableImageControls(img, hiddenInput, initial = {}) {
     img.style.cursor = isPageLocked(img) ? "not-allowed" : "move";
   }
 
-  const applyTransform = ({
-    fromNormalizedX = false,
-    fromNormalizedY = false,
-  } = {}) => {
+  const applyTransform = ({ fromNormalizedX = false, fromNormalizedY = false } = {}) => {
     const panel = img.closest(".panel");
     const { width, height } = getPanelContentDimensions(panel);
     const baseWidth = width || img.clientWidth || img.naturalWidth || 1;
@@ -235,19 +225,11 @@ function enableImageControls(img, hiddenInput, initial = {}) {
     img.dataset.translateYPct = String(translateYPct);
 
     if (hiddenInput) {
-      hiddenInput.value = JSON.stringify({
-        scale,
-        translateXPct,
-        translateYPct,
-      });
+      hiddenInput.value = JSON.stringify({ scale, translateXPct, translateYPct });
     }
   };
 
-  const updateTransform = ({
-    fromNormalizedX = false,
-    fromNormalizedY = false,
-    immediate = false,
-  } = {}) => {
+  const updateTransform = ({ fromNormalizedX = false, fromNormalizedY = false, immediate = false } = {}) => {
     if (fromNormalizedX) {
       deriveXFromNormalized = true;
     }
@@ -338,10 +320,7 @@ function enableImageControls(img, hiddenInput, initial = {}) {
     });
   });
 
-  updateTransform({
-    fromNormalizedX: hasNormalizedX,
-    fromNormalizedY: hasNormalizedY,
-  });
+  updateTransform({ fromNormalizedX: hasNormalizedX, fromNormalizedY: hasNormalizedY });
   updateCursor();
 }
 
@@ -386,7 +365,7 @@ function placeImageInPanel({
 
   content.appendChild(clone);
   clone.style.cursor = isPageLocked(panel) ? "not-allowed" : "move";
-
+  
   // Enable image controls after appending to DOM so getPanelContentDimensions can measure actual dimensions
   enableImageControls(clone, transformInput, initialTransform || {});
 
@@ -429,9 +408,7 @@ function handleSelectedImagePlacement(panel, slot, container, pageIndex) {
 }
 
 function returnImagesFromPage(container) {
-  container
-    .querySelectorAll('input[type="hidden"]')
-    .forEach((input) => input.remove());
+  container.querySelectorAll('input[type="hidden"]').forEach((input) => input.remove());
   container.querySelectorAll(".panel").forEach((panel) => {
     clearPanel(panel);
   });
@@ -498,9 +475,7 @@ function renderLayout(
 
       const name = e.dataTransfer.getData("text/plain");
       const imageList = document.getElementById("imageList");
-      const img = imageList
-        ? imageList.querySelector(`img[data-name="${name}"]`)
-        : null;
+      const img = imageList ? imageList.querySelector(`img[data-name="${name}"]`) : null;
       if (!img) return;
 
       const wrapper = img.closest(".image-wrapper");
@@ -559,7 +534,10 @@ function renderLayout(
   });
 }
 
-export function createPage(data, pagesContainer = getPagesContainer()) {
+export function createPage(
+  data,
+  pagesContainer = getPagesContainer(),
+) {
   const page = document.createElement("div");
   page.className = "page";
 
@@ -586,8 +564,7 @@ export function createPage(data, pagesContainer = getPagesContainer()) {
 
   const gutterColor = document.createElement("input");
   gutterColor.type = "color";
-  gutterColor.value =
-    data && data.gutterColor ? data.gutterColor : DEFAULT_GUTTER_COLOR;
+  gutterColor.value = data && data.gutterColor ? data.gutterColor : DEFAULT_GUTTER_COLOR;
   gutterColor.title = "Gutter Color";
   gutterColor.className = "gutter-color-picker";
 
@@ -692,9 +669,7 @@ export function capturePagesFromDom() {
   document.querySelectorAll("#pages > .page").forEach((pageDiv) => {
     const layout = pageDiv.querySelector("select").value;
     const gutterColorInput = pageDiv.querySelector('input[type="color"]');
-    const gutterColor = gutterColorInput
-      ? gutterColorInput.value
-      : DEFAULT_GUTTER_COLOR;
+    const gutterColor = gutterColorInput ? gutterColorInput.value : DEFAULT_GUTTER_COLOR;
     const slots = {};
     const transforms = {};
     pageDiv.querySelectorAll(".panel").forEach((panel) => {
@@ -705,12 +680,8 @@ export function capturePagesFromDom() {
         const scaleValue = parseFloat(img.dataset.scale);
         const rawTranslateXPct = parseFloat(img.dataset.translateXPct);
         const rawTranslateYPct = parseFloat(img.dataset.translateYPct);
-        let translateXPct = Number.isFinite(rawTranslateXPct)
-          ? rawTranslateXPct
-          : null;
-        let translateYPct = Number.isFinite(rawTranslateYPct)
-          ? rawTranslateYPct
-          : null;
+        let translateXPct = Number.isFinite(rawTranslateXPct) ? rawTranslateXPct : null;
+        let translateYPct = Number.isFinite(rawTranslateYPct) ? rawTranslateYPct : null;
 
         if (translateXPct === null || translateYPct === null) {
           const { width, height } = getPanelContentDimensions(panel);
@@ -848,9 +819,7 @@ function processIncomingPages(incomingPages) {
 
 export function subscribeToStateStream() {
   if (!window.EventSource) {
-    console.warn(
-      "EventSource is not supported in this browser; live sync disabled.",
-    );
+    console.warn("EventSource is not supported in this browser; live sync disabled.");
     return;
   }
 
@@ -934,9 +903,7 @@ function setupResetButton() {
   if (!resetButton) return;
 
   resetButton.addEventListener("click", () => {
-    const confirmed = window.confirm(
-      "Resetting will remove all images and pages. Continue?",
-    );
+    const confirmed = window.confirm("Resetting will remove all images and pages. Continue?");
     if (!confirmed) {
       return;
     }
@@ -980,9 +947,7 @@ function setupStateImportExport() {
       fetch("/state/export")
         .then((response) => {
           if (!response.ok) {
-            throw new Error(
-              `Failed to export state (status ${response.status})`,
-            );
+            throw new Error(`Failed to export state (status ${response.status})`);
           }
 
           const disposition = response.headers.get("Content-Disposition");
@@ -1036,8 +1001,7 @@ function setupStateImportExport() {
             .catch(() => ({ error: "State import failed" }))
             .then((data) => {
               if (!response.ok || (data && data.error)) {
-                const message =
-                  data && data.error ? data.error : "State import failed";
+                const message = data && data.error ? data.error : "State import failed";
                 throw new Error(message);
               }
 
@@ -1066,18 +1030,13 @@ function setupShortcutToggle() {
 
   const setExpandedHeight = () => {
     const currentHeight = shortcutList.scrollHeight;
-    shortcutList.style.setProperty(
-      "--shortcuts-expanded-height",
-      `${currentHeight}px`,
-    );
+    shortcutList.style.setProperty("--shortcuts-expanded-height", `${currentHeight}px`);
   };
 
   const updateToggleState = (isOpen) => {
     toggleShortcutsButton.setAttribute("aria-expanded", String(isOpen));
     toggleShortcutsButton.classList.toggle("active", isOpen);
-    toggleShortcutsButton.textContent = isOpen
-      ? "Hide Shortcuts"
-      : "Show Shortcuts";
+    toggleShortcutsButton.textContent = isOpen ? "Hide Shortcuts" : "Show Shortcuts";
     shortcutList.setAttribute("aria-hidden", String(!isOpen));
   };
 
@@ -1127,86 +1086,24 @@ export function parseRadiusValue(value) {
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
-function parseCornerRadius(value) {
-  if (typeof value === "number") {
-    const numeric = Number.isFinite(value) ? value : 0;
-    return { x: numeric, y: numeric };
-  }
-
-  if (!value) {
-    return { x: 0, y: 0 };
-  }
-
-  const sanitized = String(value).replace(/\//g, " ");
-  const parts = sanitized
-    .trim()
-    .split(/\s+/)
-    .map((part) => parseFloat(part))
-    .filter((part) => Number.isFinite(part));
-
-  if (parts.length === 0) {
-    return { x: 0, y: 0 };
-  }
-
-  const [x, y] = parts;
-  const xRadius = Number.isFinite(x) ? x : 0;
-  const yRadius = Number.isFinite(y) ? y : xRadius;
-
-  return { x: xRadius, y: yRadius };
-}
-
-function scaleCornerRadius(value, scaleX, scaleY) {
-  const { x, y } = parseCornerRadius(value);
-  return {
-    x: x * scaleX,
-    y: y * scaleY,
-  };
-}
-
 export function buildRoundedRectPath(ctx, x, y, width, height, radii) {
-  if (!radii || radii.length === 0) {
+  if (!radii || radii.every((r) => r === 0)) {
     ctx.beginPath();
     ctx.rect(x, y, width, height);
     return;
   }
 
-  const normalizedRadii = radii.map((radius) => {
-    if (!radius) {
-      return { x: 0, y: 0 };
-    }
-
-    if (typeof radius === "number") {
-      return { x: radius, y: radius };
-    }
-
-    const xRadius = Number.isFinite(radius.x) ? radius.x : 0;
-    const yRadius = Number.isFinite(radius.y) ? radius.y : 0;
-
-    return { x: xRadius, y: yRadius };
-  });
-
-  if (normalizedRadii.every((radius) => radius.x === 0 && radius.y === 0)) {
-    ctx.beginPath();
-    ctx.rect(x, y, width, height);
-    return;
-  }
-
-  const [
-    tl = { x: 0, y: 0 },
-    tr = { x: 0, y: 0 },
-    br = { x: 0, y: 0 },
-    bl = { x: 0, y: 0 },
-  ] = normalizedRadii;
+  const [tl, tr, br, bl] = radii;
   ctx.beginPath();
-  ctx.moveTo(x + tl.x, y);
-  ctx.lineTo(x + width - tr.x, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + tr.y);
-  ctx.lineTo(x + width, y + height - br.y);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - br.x, y + height);
-  ctx.lineTo(x + bl.x, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - bl.y);
-  ctx.lineTo(x, y + tl.y);
-  ctx.quadraticCurveTo(x, y, x + tl.x, y);
+  ctx.moveTo(x + tl, y);
+  ctx.lineTo(x + width - tr, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + tr);
+  ctx.lineTo(x + width, y + height - br);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - br, y + height);
+  ctx.lineTo(x + bl, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - bl);
+  ctx.lineTo(x, y + tl);
+  ctx.quadraticCurveTo(x, y, x + tl, y);
   ctx.closePath();
 }
 
@@ -1265,13 +1162,8 @@ export async function renderLayoutToCanvas(layout, scale = EXPORT_SCALE) {
   }
 
   const canvas = document.createElement("canvas");
-  const baseScaleX = CANONICAL_LAYOUT_WIDTH / layoutRect.width;
-  const baseScaleY = CANONICAL_LAYOUT_HEIGHT / layoutRect.height;
-  const scaleX = baseScaleX * scale;
-  const scaleY = baseScaleY * scale;
-
-  canvas.width = Math.round(CANONICAL_LAYOUT_WIDTH * scale);
-  canvas.height = Math.round(CANONICAL_LAYOUT_HEIGHT * scale);
+  canvas.width = Math.round(layoutRect.width * scale);
+  canvas.height = Math.round(layoutRect.height * scale);
 
   const ctx = canvas.getContext("2d");
   if (!ctx) {
@@ -1283,11 +1175,7 @@ export async function renderLayoutToCanvas(layout, scale = EXPORT_SCALE) {
 
   const computedLayoutStyle = window.getComputedStyle(layout);
   let gutterColor = computedLayoutStyle.backgroundColor;
-  if (
-    !gutterColor ||
-    gutterColor === "transparent" ||
-    gutterColor === "rgba(0, 0, 0, 0)"
-  ) {
+  if (!gutterColor || gutterColor === "transparent" || gutterColor === "rgba(0, 0, 0, 0)") {
     gutterColor = DEFAULT_GUTTER_COLOR;
   }
 
@@ -1303,27 +1191,23 @@ export async function renderLayoutToCanvas(layout, scale = EXPORT_SCALE) {
       return;
     }
 
-    const offsetX = (panelRect.left - layoutRect.left) * scaleX;
-    const offsetY = (panelRect.top - layoutRect.top) * scaleY;
-    const panelWidth = panelRect.width * scaleX;
-    const panelHeight = panelRect.height * scaleY;
+    const offsetX = (panelRect.left - layoutRect.left) * scale;
+    const offsetY = (panelRect.top - layoutRect.top) * scale;
+    const panelWidth = panelRect.width * scale;
+    const panelHeight = panelRect.height * scale;
 
     const panelStyle = window.getComputedStyle(panel);
     const radii = [
-      scaleCornerRadius(panelStyle.borderTopLeftRadius, scaleX, scaleY),
-      scaleCornerRadius(panelStyle.borderTopRightRadius, scaleX, scaleY),
-      scaleCornerRadius(panelStyle.borderBottomRightRadius, scaleX, scaleY),
-      scaleCornerRadius(panelStyle.borderBottomLeftRadius, scaleX, scaleY),
+      parseRadiusValue(panelStyle.borderTopLeftRadius) * scale,
+      parseRadiusValue(panelStyle.borderTopRightRadius) * scale,
+      parseRadiusValue(panelStyle.borderBottomRightRadius) * scale,
+      parseRadiusValue(panelStyle.borderBottomLeftRadius) * scale,
     ];
 
     const inner = panel.querySelector(".panel-inner");
     const innerStyle = inner ? window.getComputedStyle(inner) : null;
     let panelBackground = innerStyle ? innerStyle.backgroundColor : "#ffffff";
-    if (
-      !panelBackground ||
-      panelBackground === "transparent" ||
-      panelBackground === "rgba(0, 0, 0, 0)"
-    ) {
+    if (!panelBackground || panelBackground === "transparent" || panelBackground === "rgba(0, 0, 0, 0)") {
       panelBackground = "#ffffff";
     }
 
@@ -1336,10 +1220,10 @@ export async function renderLayoutToCanvas(layout, scale = EXPORT_SCALE) {
     const img = panel.querySelector("img");
     if (img && img.naturalWidth && img.naturalHeight) {
       const imgRect = img.getBoundingClientRect();
-      const imgX = (imgRect.left - layoutRect.left) * scaleX;
-      const imgY = (imgRect.top - layoutRect.top) * scaleY;
-      const imgWidth = imgRect.width * scaleX;
-      const imgHeight = imgRect.height * scaleY;
+      const imgX = (imgRect.left - layoutRect.left) * scale;
+      const imgY = (imgRect.top - layoutRect.top) * scale;
+      const imgWidth = imgRect.width * scale;
+      const imgHeight = imgRect.height * scale;
 
       if (imgWidth > 0 && imgHeight > 0) {
         ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
