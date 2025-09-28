@@ -1,7 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+
 ### Added
+
 - Ship a `wide-top-portrait-left-two-square-right` page template featuring a cinematic 16:9 banner, a portrait well, and stacked square story beats.
 - Introduce a **Build Electron Release** GitHub Actions workflow that packages Windows installers from the `dev` branch and publishes versioned releases on demand.
 - Stream live page updates over Server-Sent Events so any open workspace reacts immediately when the SQLite `state.db` is modified.
@@ -11,6 +13,7 @@
 - Add a lock toggle next to each page so spreads can be frozen (yellow “L”) or unlocked (green “U”) to prevent accidental image edits.
 
 ### Changed
+
 - Split the monolithic `app.js` client script into focused ES modules for the image library, page management, exports, and shared state to simplify maintenance.
 - Rebuilt the entire interface with a modern glassmorphism aesthetic, refreshed typography, and responsive layout cards to separate the asset library from the page builder.
 - Widened the app shell and workspace grid to give the builder canvas more horizontal breathing room on large screens while keeping the layout responsive.
@@ -22,8 +25,10 @@
 - Rebuilt the `wide-top-portrait-left-two-square-right` CSS so the page geometry enforces 16:9, 9:16, and 1:1 ratios while matching the existing layout positioning system.
 - Tuned the `wide-top-portrait-left-two-square-right` layout with clamped banner heights, a named column gutter, and responsive portrait/square sizing so it better adapts to the available page dimensions.
 - Normalize panel transforms against their parent dimensions so dragging results persist across responsive breakpoints and exports match the current layout geometry.
+- Capture exports at a canonical 900 × 1391 layout resolution and scale panel math accordingly so PDF and PNG output stays consistent regardless of the editor viewport size.
 
 ### Fixed
+
 - Execute layout PHP templates on the server before sending them to the browser so panels render correctly in both the editor and exports.
 - Release the PHP session lock before streaming live updates so refreshing the workspace no longer hangs behind an open EventSource connection.
 - Strip library thumbnail styling from dropped artwork so newly placed panels render at full size without waiting for a page refresh.
@@ -36,5 +41,6 @@
 - Treat `public/storage/state.db` as the single source of truth when rehydrating pages, removing the fallback to embedded data bundled in the HTML.
 
 ### Documentation
+
 - Replace the README with an in-depth, highly visual guide covering architecture, workflows, testing commands, and troubleshooting tips.
 - Add workspace screenshots and clarify README sections to keep the documentation accurate and actionable.
