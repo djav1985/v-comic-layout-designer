@@ -164,6 +164,7 @@ Available templates include:
 - `three-horizontal`
 - `three-vertical`
 - `four-grid`
+- `wide-top-portrait-left-two-square-right` – Cinematic 16:9 banner, 9:16 portrait column, and perfectly square stacked beats.
 
 Add your own by creating matching `.php` and `.css` files inside `layouts/`; `App\Models\ComicModel` will auto-discover and expose them to the UI.
 
