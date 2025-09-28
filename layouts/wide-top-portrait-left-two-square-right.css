@@ -1,0 +1,80 @@
+.layout.wide-top-portrait-left-two-square-right {
+    --gutter-h: 12px;         /* left & right frame */
+    --gutter-top: 36px;       /* top gutter */
+    --gutter-bottom: 60px;    /* bottom gutter */
+    --gutter-middle-v: 24px;  /* separation between top banner and bottom row */
+    --gutter-stack: 14px;     /* gap between stacked square panels */
+
+    --available-width: calc(100% - (2 * var(--gutter-h)));
+
+    /* Top panel target ratio ≈ 16:9 using the available width */
+    --top-panel-height: calc(var(--available-width) * (9 / 16));
+
+    /* Bottom composition occupies the remaining height on the page */
+    --bottom-area-top: calc(var(--gutter-top) + var(--top-panel-height) + var(--gutter-middle-v));
+    --bottom-area-height: max(
+        0px,
+        calc(100% - var(--gutter-top) - var(--gutter-bottom) - var(--gutter-middle-v) - var(--top-panel-height))
+    );
+
+    /* Squares: perfectly 1:1 using the available bottom height */
+    --square-size: max(0px, calc((var(--bottom-area-height) - var(--gutter-stack)) / 2));
+    --bottom-right-width: var(--square-size);
+
+    /* Portrait: solve for 9:16 (height / width ≈ 16/9) */
+    --portrait-ratio: 1.7777778;
+    --bottom-left-width: max(
+        0px,
+        min(
+            calc(var(--bottom-area-height) / var(--portrait-ratio)),
+            calc(var(--available-width) - var(--bottom-right-width))
+        )
+    );
+
+    /* Horizontal separation between the portrait column and squares */
+    --computed-gap: max(0px, calc(var(--available-width) - var(--bottom-left-width) - var(--bottom-right-width)));
+}
+
+/* Wide cinematic panel across the top */
+.layout.wide-top-portrait-left-two-square-right .panel1 {
+    position: absolute;
+    top: var(--gutter-top);
+    left: var(--gutter-h);
+    width: var(--available-width);
+    height: var(--top-panel-height);
+}
+
+/* Tall portrait panel on the bottom left (≈9:16) */
+.layout.wide-top-portrait-left-two-square-right .panel2 {
+    position: absolute;
+    top: var(--bottom-area-top);
+    left: var(--gutter-h);
+    width: var(--bottom-left-width);
+    height: var(--bottom-area-height);
+}
+
+/* First square on the bottom right stack (≈1:1) */
+.layout.wide-top-portrait-left-two-square-right .panel3 {
+    position: absolute;
+    top: var(--bottom-area-top);
+    left: calc(var(--gutter-h) + var(--bottom-left-width) + var(--computed-gap));
+    width: var(--bottom-right-width);
+    height: var(--square-size);
+}
+
+/* Second square on the bottom right stack (≈1:1) */
+.layout.wide-top-portrait-left-two-square-right .panel4 {
+    position: absolute;
+    top: calc(var(--bottom-area-top) + var(--square-size) + var(--gutter-stack));
+    left: calc(var(--gutter-h) + var(--bottom-left-width) + var(--computed-gap));
+    width: var(--bottom-right-width);
+    height: var(--square-size);
+}
+
+/* Keep the full composition within the page frame */
+.layout.wide-top-portrait-left-two-square-right .panel1,
+.layout.wide-top-portrait-left-two-square-right .panel2,
+.layout.wide-top-portrait-left-two-square-right .panel3,
+.layout.wide-top-portrait-left-two-square-right .panel4 {
+    border-radius: inherit;
+}

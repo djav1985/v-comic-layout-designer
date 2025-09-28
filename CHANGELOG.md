@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Added
+- Ship a `wide-top-portrait-left-two-square-right` page template featuring a cinematic 16:9 banner, a portrait well, and stacked square story beats.
 - Introduce a **Build Electron Release** GitHub Actions workflow that packages Windows installers from the `dev` branch and publishes versioned releases on demand.
 - Stream live page updates over Server-Sent Events so any open workspace reacts immediately when the SQLite `state.db` is modified.
 - Support drag-and-drop uploads with visual feedback in the asset library.
@@ -18,6 +19,7 @@
 - Locked the layout preview container to a 1:1.545 aspect ratio that matches a single page column and removed its rounded border so spreads sit flush without white bands.
 - Streamlined the page toolbar so the layout selector, gutter picker, and removal action share a single aligned row with matching control dimensions.
 - Removed the remaining angled panel styling and export helpers so every layout now uses straightforward rectangular frames.
+- Rebuilt the `wide-top-portrait-left-two-square-right` CSS so the page geometry enforces 16:9, 9:16, and 1:1 ratios while matching the existing layout positioning system.
 
 ### Fixed
 - Execute layout PHP templates on the server before sending them to the browser so panels render correctly in both the editor and exports.
