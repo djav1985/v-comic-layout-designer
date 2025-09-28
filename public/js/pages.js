@@ -26,6 +26,10 @@ const dom = {
   loadStateInput: null,
 };
 
+const normalizedTransformHandlers = new WeakMap();
+const layoutResizeObservers = new WeakMap();
+let hasWindowLayoutResizeListener = false;
+
 function getPagesContainer() {
   if (dom.pages) {
     return dom.pages;
@@ -50,10 +54,65 @@ function getPanelImage(panel) {
   return content ? content.querySelector("img") : null;
 }
 
+function getPanelContentDimensions(panel) {
+  const content = getPanelContent(panel);
+  const element = content || panel;
+  if (!element) {
+    return { width: 0, height: 0 };
+  }
+  const rect = element.getBoundingClientRect();
+  return {
+    width: rect.width || 0,
+    height: rect.height || 0,
+  };
+}
+
 function clearPanel(panel) {
   const content = getPanelContent(panel);
   if (content) {
     content.innerHTML = "";
+  }
+}
+
+function ensureWindowLayoutResizeListener() {
+  if (typeof window === "undefined" || typeof document === "undefined") return;
+  if (hasWindowLayoutResizeListener) return;
+  hasWindowLayoutResizeListener = true;
+  window.addEventListener("resize", () => {
+    document.querySelectorAll(".layout-container").forEach((container) => {
+      reapplyNormalizedTransforms(container);
+    });
+  });
+}
+
+function observeLayoutContainer(container) {
+  if (!container) return;
+
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (window.ResizeObserver) {
+    if (layoutResizeObservers.has(container)) {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => {
+      reapplyNormalizedTransforms(container);
+    });
+    observer.observe(container);
+    layoutResizeObservers.set(container, observer);
+  } else {
+    ensureWindowLayoutResizeListener();
+  }
+}
+
+function unobserveLayoutContainer(container) {
+  if (!container) return;
+  const observer = layoutResizeObservers.get(container);
+  if (observer) {
+    observer.disconnect();
+    layoutResizeObservers.delete(container);
   }
 }
 
@@ -85,29 +144,106 @@ function removeSlotInputs(container, pageIndex, slot) {
 }
 
 function enableImageControls(img, hiddenInput, initial = {}) {
-  let scale = parseFloat(initial.scale || 1);
-  let translateX = parseFloat(initial.translateX || 0);
-  let translateY = parseFloat(initial.translateY || 0);
+  const toFiniteNumber = (value) => {
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  let scale = toFiniteNumber(initial.scale);
+  if (scale === null) {
+    scale = 1;
+  }
+
+  const initialTranslateX = toFiniteNumber(initial.translateX);
+  const initialTranslateY = toFiniteNumber(initial.translateY);
+  let translateX = initialTranslateX ?? 0;
+  let translateY = initialTranslateY ?? 0;
+
+  // Standardize on translateXPercent and translateYPercent property names
+  const normalizedX = toFiniteNumber(initial.translateXPercent);
+  const normalizedY = toFiniteNumber(initial.translateYPercent);
+
+  let translateXPct = normalizedX ?? 0;
+  let translateYPct = normalizedY ?? 0;
+
+  const hasNormalizedX = normalizedX !== null;
+  const hasNormalizedY = normalizedY !== null;
+
   let rafId = null;
+  let deriveXFromNormalized = hasNormalizedX;
+  let deriveYFromNormalized = hasNormalizedY;
 
   function updateCursor() {
     img.style.cursor = isPageLocked(img) ? "not-allowed" : "move";
   }
 
-  function updateTransform() {
+  const applyTransform = ({ fromNormalizedX = false, fromNormalizedY = false } = {}) => {
+    const panel = img.closest(".panel");
+    const { width, height } = getPanelContentDimensions(panel);
+    const baseWidth = width || img.clientWidth || img.naturalWidth || 1;
+    const baseHeight = height || img.clientHeight || img.naturalHeight || 1;
+
+    if (fromNormalizedX) {
+      const pct = Number.isFinite(translateXPct) ? translateXPct : 0;
+      translateX = (baseWidth * pct) / 100;
+    }
+
+    if (fromNormalizedY) {
+      const pct = Number.isFinite(translateYPct) ? translateYPct : 0;
+      translateY = (baseHeight * pct) / 100;
+    }
+
+    const safeWidth = baseWidth || 1;
+    const safeHeight = baseHeight || 1;
+    translateXPct = (translateX / safeWidth) * 100;
+    translateYPct = (translateY / safeHeight) * 100;
+
+    img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    img.dataset.scale = String(scale);
+    img.dataset.translateX = String(translateX);
+    img.dataset.translateY = String(translateY);
+    img.dataset.translateXPct = String(translateXPct);
+    img.dataset.translateYPct = String(translateYPct);
+
+    if (hiddenInput) {
+      hiddenInput.value = JSON.stringify({ scale, translateXPct, translateYPct });
+    }
+  };
+
+  const updateTransform = ({ fromNormalizedX = false, fromNormalizedY = false, immediate = false } = {}) => {
+    if (fromNormalizedX) {
+      deriveXFromNormalized = true;
+    }
+    if (fromNormalizedY) {
+      deriveYFromNormalized = true;
+    }
+
+    if (immediate) {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      applyTransform({
+        fromNormalizedX: deriveXFromNormalized,
+        fromNormalizedY: deriveYFromNormalized,
+      });
+      deriveXFromNormalized = false;
+      deriveYFromNormalized = false;
+      return;
+    }
+
     if (rafId) return;
 
     rafId = requestAnimationFrame(() => {
-      img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-      img.dataset.scale = scale;
-      img.dataset.translateX = translateX;
-      img.dataset.translateY = translateY;
-      if (hiddenInput) {
-        hiddenInput.value = JSON.stringify({ scale, translateX, translateY });
-      }
+      applyTransform({
+        fromNormalizedX: deriveXFromNormalized,
+        fromNormalizedY: deriveYFromNormalized,
+      });
+      deriveXFromNormalized = false;
+      deriveYFromNormalized = false;
       rafId = null;
     });
-  }
+  };
 
   img.addEventListener("wheel", (e) => {
     if (isPageLocked(img)) {
@@ -153,7 +289,19 @@ function enableImageControls(img, hiddenInput, initial = {}) {
     }
   });
 
-  updateTransform();
+  img.addEventListener("load", () => {
+    updateTransform({ fromNormalizedX: true, fromNormalizedY: true });
+  });
+
+  normalizedTransformHandlers.set(img, (options = {}) => {
+    updateTransform({
+      fromNormalizedX: true,
+      fromNormalizedY: true,
+      immediate: Boolean(options.immediate),
+    });
+  });
+
+  updateTransform({ fromNormalizedX: hasNormalizedX, fromNormalizedY: hasNormalizedY });
   updateCursor();
 }
 
@@ -421,6 +569,8 @@ export function createPage(
   page.appendChild(container);
   pagesContainer.appendChild(page);
 
+  observeLayoutContainer(container);
+
   const index = state.pageCounter++;
   select.name = `pages[${index}][layout]`;
   gutterColor.name = `pages[${index}][gutterColor]`;
@@ -487,6 +637,7 @@ export function createPage(
 
   deleteBtn.addEventListener("click", () => {
     returnImagesFromPage(container);
+    unobserveLayoutContainer(container);
     page.remove();
     savePagesState(true);
   });
@@ -505,10 +656,30 @@ export function capturePagesFromDom() {
       const img = getPanelImage(panel);
       if (img) {
         slots[slot] = img.dataset.name;
+        const scaleValue = parseFloat(img.dataset.scale);
+        const rawTranslateXPct = parseFloat(img.dataset.translateXPct);
+        const rawTranslateYPct = parseFloat(img.dataset.translateYPct);
+        let translateXPct = Number.isFinite(rawTranslateXPct) ? rawTranslateXPct : null;
+        let translateYPct = Number.isFinite(rawTranslateYPct) ? rawTranslateYPct : null;
+
+        if (translateXPct === null || translateYPct === null) {
+          const { width, height } = getPanelContentDimensions(panel);
+          const pxX = parseFloat(img.dataset.translateX);
+          const pxY = parseFloat(img.dataset.translateY);
+
+          if (translateXPct === null) {
+            translateXPct = width ? ((Number.isFinite(pxX) ? pxX : 0) / width) * 100 : 0;
+          }
+
+          if (translateYPct === null) {
+            translateYPct = height ? ((Number.isFinite(pxY) ? pxY : 0) / height) * 100 : 0;
+          }
+        }
+
         transforms[slot] = {
-          scale: img.dataset.scale || 1,
-          translateX: img.dataset.translateX || 0,
-          translateY: img.dataset.translateY || 0,
+          scale: Number.isFinite(scaleValue) ? scaleValue : 1,
+          translateXPct,
+          translateYPct,
         };
       }
     });
@@ -562,6 +733,9 @@ export function rebuildPagesUI(pages) {
     } else {
       createPage(undefined, newPagesDiv);
     }
+    currentPagesDiv
+      .querySelectorAll(".layout-container")
+      .forEach((container) => unobserveLayoutContainer(container));
     currentPagesDiv.replaceWith(newPagesDiv);
     dom.pages = newPagesDiv;
 
@@ -935,10 +1109,31 @@ export function waitForImageLoad(img) {
   });
 }
 
+export function reapplyNormalizedTransforms(root = document) {
+  let images = [];
+
+  if (root instanceof HTMLImageElement) {
+    images = [root];
+  } else if (root && typeof root.querySelectorAll === "function") {
+    images = Array.from(root.querySelectorAll(".panel img"));
+  } else {
+    images = Array.from(document.querySelectorAll(".panel img"));
+  }
+
+  images.forEach((img) => {
+    const handler = normalizedTransformHandlers.get(img);
+    if (handler) {
+      handler({ immediate: true });
+    }
+  });
+}
+
 export async function renderLayoutToCanvas(layout, scale = EXPORT_SCALE) {
   if (!layout) {
     throw new Error("Cannot render export for an empty layout");
   }
+
+  reapplyNormalizedTransforms(layout);
 
   const layoutRect = layout.getBoundingClientRect();
   if (!layoutRect.width || !layoutRect.height) {
