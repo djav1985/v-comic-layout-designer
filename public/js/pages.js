@@ -198,8 +198,8 @@ function enableImageControls(img, hiddenInput, initial = {}) {
 
     const safeWidth = baseWidth || 1;
     const safeHeight = baseHeight || 1;
-    translateXPct = safeWidth ? (translateX / safeWidth) * 100 : 0;
-    translateYPct = safeHeight ? (translateY / safeHeight) * 100 : 0;
+    translateXPct = (translateX / safeWidth) * 100;
+    translateYPct = (translateY / safeHeight) * 100;
 
     img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
     img.dataset.scale = String(scale);
