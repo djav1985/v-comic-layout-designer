@@ -11,3 +11,4 @@ public/storage/*.db
 /dist/
 /resources/php/*
 !/resources/php/.gitkeep
+!/resources/php/php.ini

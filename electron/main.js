@@ -1,6 +1,6 @@
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 const path = require("path");
-const { spawn } = require("child_process");
+const { spawn, spawnSync } = require("child_process");
 const fs = require("fs");
 
 let mainWindow = null;
@@ -67,24 +67,19 @@ async function startPhpServer() {
 
   // Verify PHP version compatibility
   try {
-    const { spawn: syncSpawn } = require("child_process");
-    const versionCheck = syncSpawn(phpBinary, ["--version"], { stdio: "pipe" });
-    let versionOutput = "";
-
-    versionCheck.stdout.on("data", (data) => {
-      versionOutput += data.toString();
+    const versionCheck = spawnSync(phpBinary, ["--version"], {
+      encoding: "utf8",
     });
 
-    await new Promise((resolve, reject) => {
-      versionCheck.on("close", (code) => {
-        if (code !== 0) {
-          reject(new Error(`PHP version check failed with code ${code}`));
-        } else {
-          resolve();
-        }
-      });
-      versionCheck.on("error", reject);
-    });
+    if (versionCheck.error) {
+      throw versionCheck.error;
+    }
+
+    if (versionCheck.status !== 0) {
+      throw new Error(`PHP version check failed with code ${versionCheck.status}`);
+    }
+
+    const versionOutput = versionCheck.stdout || "";
 
     console.log(`PHP version check: ${versionOutput.split("\n")[0]}`);
 
@@ -103,6 +98,46 @@ async function startPhpServer() {
     dialog.showErrorBox(
       "PHP Compatibility Error",
       `PHP version check failed: ${error.message}`,
+    );
+    app.quit();
+    return null;
+  }
+
+  const requiredExtensions = ["zip", "pdo_sqlite", "sqlite3"];
+  const missingExtensions = [];
+
+  for (const extension of requiredExtensions) {
+    const result = spawnSync(phpBinary, [
+      "-r",
+      `exit(extension_loaded('${extension}') ? 0 : 1);`,
+    ]);
+
+    if (result.error) {
+      console.error(
+        "Failed to verify required PHP extensions:",
+        result.error,
+      );
+      dialog.showErrorBox(
+        "PHP Extension Check Failed",
+        `Unable to verify required PHP extensions: ${result.error.message}`,
+      );
+      app.quit();
+      return null;
+    }
+
+    if (result.status !== 0) {
+      missingExtensions.push(extension);
+    }
+  }
+
+  if (missingExtensions.length > 0) {
+    dialog.showErrorBox(
+      "Required PHP Extensions Missing",
+      [
+        "The embedded PHP runtime is missing one or more required extensions.",
+        "Please reinstall or repair the application to restore the bundled PHP extensions.",
+        `Missing extensions: ${missingExtensions.join(", ")}`,
+      ].join("\n"),
     );
     app.quit();
     return null;

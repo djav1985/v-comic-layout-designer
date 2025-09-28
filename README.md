@@ -121,7 +121,7 @@ flowchart LR
 ## 🚀 Getting started
 
 ### Prerequisites
-- PHP **8.0+** with SQLite extension enabled
+- PHP **8.0+** with the `zip`, `pdo_sqlite`, and `sqlite3` extensions enabled
 - Composer  
 - Modern browser (Chrome, Firefox, Safari, Edge)
 
@@ -161,7 +161,7 @@ To work entirely offline or provide a native-like experience, the project now sh
 
 #### Extra prerequisites
 - Node.js 20+ and npm
-- PHP 8.0+ available on your PATH when running in development mode
+- PHP 8.0+ available on your PATH when running in development mode (with the same `zip`, `pdo_sqlite`, and `sqlite3` extensions enabled)
 
 #### Run the desktop shell locally
 ```bash
@@ -171,11 +171,16 @@ npm run electron:dev
 ```
 This starts the PHP development server on a random open port, pointing it at the custom `server-router.php` so bundled assets are still served by PHP's static file handler, and automatically loads it inside an Electron browser window.
 
+> [!IMPORTANT]
+> When the Electron shell launches it now performs a preflight check that the embedded (or system) PHP runtime exposes the `zip`, `pdo_sqlite`, and `sqlite3` extensions. If any are missing the app aborts before opening a browser window and displays a dialog listing the absent modules so the issue can be fixed without a mysterious blank screen.
+
 #### Build a Windows installer locally
 ```bash
 npm run dist
 ```
 The build process expects a PHP runtime in `resources/php`. During CI this directory is populated automatically; for manual builds download the [official PHP non-thread-safe build for Windows](https://windows.php.net/download) and extract it into `resources/php` so that `php.exe` and its DLLs sit directly inside that folder. Electron Builder now copies this directory straight into `resources/php` inside the packaged app (dropping the previous redundant `resources/resources/php` nesting), so the runtime lands exactly where the launcher searches for it.
+
+To keep that runtime consistent across platforms the repository now tracks a `resources/php/php.ini` file that explicitly enables the `zip`, `pdo_sqlite`, and `sqlite3` extensions. Bundled builds ship with those modules active so the desktop app can create ZIP archives and persist state in SQLite without additional manual tweaks.
 
 > [!NOTE]
 > The installer now targets per-user installs by default, so Windows writes to `%LOCALAPPDATA%\Programs\V Comic Layout Designer` without requesting elevation. Advanced users can still opt into a different path during setup.
