@@ -74,11 +74,20 @@ class ComicModel
 
     public function getImages(): array
     {
-        // Sync state with actual files
         $files = [];
         foreach (glob($this->uploadDir . '/*.{jpg,jpeg,png,gif}', GLOB_BRACE) as $file) {
             $files[] = basename($file);
         }
+        return $files;
+    }
+
+    /**
+     * Sync the images list in state to match the actual files on disk and persist it.
+     * Use this after operations that modify the upload directory.
+     */
+    public function syncImagesFromDisk(): array
+    {
+        $files = $this->getImages();
         $this->state['images'] = $files;
         $this->saveState();
         return $files;
@@ -99,23 +108,50 @@ class ComicModel
 
     public function saveUpload(array $file): void
     {
-        $name = basename($file['name']);
-        $target = $this->uploadDir . '/' . $name;
-        $allowed = ['image/jpeg', 'image/png', 'image/gif'];
-        $maxSize = 5 * 1024 * 1024; // 5MB
-        if (!in_array($file['type'], $allowed)) {
-            throw new \Exception('Invalid file type.');
-        }
+        $maxSize = 5 * 1024 * 1024; // 5 MB
+
         if ($file['size'] > $maxSize) {
             throw new \Exception('File too large.');
         }
+
         if (!is_uploaded_file($file['tmp_name'])) {
             throw new \Exception('Upload failed.');
         }
+
+        // Inspect actual file content – never trust the client-supplied MIME type
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $detectedMime = $finfo->file($file['tmp_name']);
+
+        $mimeToExtension = [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/gif'  => 'gif',
+        ];
+
+        if (!array_key_exists($detectedMime, $mimeToExtension)) {
+            throw new \Exception('Invalid file type.');
+        }
+
+        // Derive expected extension from the original filename and cross-check
+        $originalExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $canonicalExt = $mimeToExtension[$detectedMime];
+        // Accept 'jpeg' as an alias for 'jpg'
+        if ($originalExt === 'jpeg') {
+            $originalExt = 'jpg';
+        }
+        if ($originalExt !== $canonicalExt) {
+            throw new \Exception('File extension does not match detected content type.');
+        }
+
+        // Generate a unique server-side filename to prevent collisions and path traversal
+        $uniqueName = bin2hex(random_bytes(16)) . '.' . $canonicalExt;
+        $target = $this->uploadDir . '/' . $uniqueName;
+
         if (!move_uploaded_file($file['tmp_name'], $target)) {
             throw new \Exception('Failed to save file.');
         }
-        $this->state['images'][] = $name;
+
+        $this->state['images'][] = $uniqueName;
         $this->saveState();
     }
 
@@ -272,6 +308,6 @@ class ComicModel
             copy($fileInfo->getPathname(), $target);
         }
 
-        $this->getImages();
+        $this->syncImagesFromDisk();
     }
 }

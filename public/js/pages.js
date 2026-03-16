@@ -8,6 +8,7 @@ import {
   isMobileViewport,
   setInitialImages,
 } from "./image-library.js";
+import { getCsrfHeaders } from "./csrf.js";
 
 export const PDF_PAGE_WIDTH = 792;
 export const PDF_PAGE_HEIGHT = 612;
@@ -747,7 +748,7 @@ export function savePagesState(rebuildUI = true) {
 
   fetch("/save-pages", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...getCsrfHeaders() },
     body: JSON.stringify({ pages, pageCount: pages.length }),
   })
     .then((res) => {
@@ -944,7 +945,7 @@ function setupResetButton() {
     resetButton.disabled = true;
     showSaveIndicator("Resetting workspace...", "#2196F3");
 
-    fetch("/state/reset", { method: "POST" })
+    fetch("/state/reset", { method: "POST", headers: getCsrfHeaders() })
       .then((response) =>
         response
           .json()
@@ -1029,7 +1030,7 @@ function setupStateImportExport() {
       loadStateButton.disabled = true;
       showSaveIndicator("Loading state...", "#2196F3");
 
-      fetch("/state/import", { method: "POST", body: formData })
+      fetch("/state/import", { method: "POST", headers: getCsrfHeaders(), body: formData })
         .then((response) =>
           response
             .json()

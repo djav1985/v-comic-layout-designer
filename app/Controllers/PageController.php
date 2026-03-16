@@ -63,19 +63,20 @@ class PageController
         $lastModified = null;
         $maxIterations = 25; // Limit iterations to prevent infinite blocking
         $iterations = 0;
+        $eventId = 0;
 
         echo "retry: 5000\n\n";
         @ob_flush();
         flush();
 
-        $this->emitState($this->model->refreshStateFromDisk());
+        $this->emitState($this->model->refreshStateFromDisk(), ++$eventId);
         $lastModified = $this->model->getLastModified();
 
         while (!connection_aborted() && $iterations < $maxIterations) {
             $currentModified = $this->model->getLastModified();
             if ($currentModified !== $lastModified) {
                 $lastModified = $currentModified;
-                $this->emitState($this->model->refreshStateFromDisk());
+                $this->emitState($this->model->refreshStateFromDisk(), ++$eventId);
             }
             if (connection_aborted()) {
                 break;
@@ -98,7 +99,7 @@ class PageController
         }
     }
 
-    private function emitState(array $state): void
+    private function emitState(array $state, int $eventId): void
     {
         $payload = [
             'pages' => $state['pages'] ?? [],
@@ -106,6 +107,7 @@ class PageController
             'timestamp' => time(),
         ];
 
+        echo "id: {$eventId}\n";
         echo "event: pages\n";
         echo 'data: ' . json_encode($payload, JSON_UNESCAPED_UNICODE) . "\n\n";
         @ob_flush();

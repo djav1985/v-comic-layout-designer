@@ -1,4 +1,5 @@
 import { showSaveIndicator } from "./save-indicator.js";
+import { getCsrfHeaders } from "./csrf.js";
 
 const dom = {
   imageList: null,
@@ -87,7 +88,7 @@ export function uploadImages(files) {
     formData.append("images[]", file);
   });
 
-  return fetch("/upload", { method: "POST", body: formData }).then((response) =>
+  return fetch("/upload", { method: "POST", headers: getCsrfHeaders(), body: formData }).then((response) =>
     response
       .json()
       .catch(() => ({ error: "Upload failed" }))
@@ -203,7 +204,7 @@ export function updateImages(list, pages = null) {
       delBtn.addEventListener("click", () => {
         fetch("/delete-image", {
           method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          headers: { "Content-Type": "application/x-www-form-urlencoded", ...getCsrfHeaders() },
           body: `name=${encodeURIComponent(name)}`,
         })
           .then((r) => r.json())
