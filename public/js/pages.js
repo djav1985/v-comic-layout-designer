@@ -1721,6 +1721,7 @@ export function lockAllPages() {
  */
 export function unlockAllPages() {
   history.push(capturePagesFromDom());
+  updateHistoryButtons();
   getPagesContainer().querySelectorAll(".page").forEach((p) => {
     if (p.classList.contains("is-locked")) setPageLocked(p, false);
   });
@@ -1739,6 +1740,7 @@ export function initializePageModule(refs) {
   if (dom.addPageButton) {
     dom.addPageButton.addEventListener("click", () => {
       history.push(capturePagesFromDom());
+      updateHistoryButtons();
       createPage();
       savePagesState(true);
     });
@@ -1805,6 +1807,7 @@ export function initializePageModule(refs) {
           const btn = focusedPage.querySelector(".page-lock-btn");
           if (btn) {
             history.push(capturePagesFromDom());
+            updateHistoryButtons();
             btn.click();
           }
         }
