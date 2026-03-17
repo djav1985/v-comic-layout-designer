@@ -81,7 +81,22 @@ function buildPresetItem(preset, index, onApply, onDelete) {
   return li;
 }
 
-// ── Main initializer ───────────────────────────────────────────────────────
+// ── Non-blocking notification banner ──────────────────────────────────────
+
+function showPresetsNotice(message, type = "info") {
+  const existing = document.getElementById("presetsNotice");
+  if (existing) existing.remove();
+
+  const notice = document.createElement("div");
+  notice.id = "presetsNotice";
+  notice.className = `presets-notice presets-notice--${type}`;
+  notice.setAttribute("role", "status");
+  notice.textContent = message;
+
+  document.body.appendChild(notice);
+  setTimeout(() => notice.remove(), 4000);
+}
+
 
 /**
  * @param {object} options
@@ -207,22 +222,23 @@ export function initializePresets({ container, getCurrentPageData, applyPreset }
       return;
     }
     if (presets.length >= MAX_PRESETS) {
-      alert(`You can save at most ${MAX_PRESETS} presets. Remove one first.`);
+      showPresetsNotice(`Maximum of ${MAX_PRESETS} presets reached. Remove one first.`, "error");
       return;
     }
     const data = getCurrentPageData();
     if (!data) {
-      alert("No page is currently available to save as a preset.");
+      showPresetsNotice("No page is currently available to save as a preset.", "error");
       return;
     }
     const preset = sanitizePreset({ name: pageName, ...data });
     if (!preset) {
-      alert("Could not read a valid layout from the current page.");
+      showPresetsNotice("Could not read a valid layout from the current page.", "error");
       return;
     }
     presets.push(preset);
     savePresets(presets);
     nameInput.value = "";
     renderList();
+    showPresetsNotice(`Preset "${preset.name}" saved.`, "success");
   });
 }

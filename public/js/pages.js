@@ -1392,7 +1392,7 @@ export async function initializePages() {
 
     if (savedLocal && savedLocal !== serverSignature && serverPages.length > 0) {
       try {
-        const localPages = JSON.parse(savedLocal).map((p) => sanitizePageData(p, null));
+        const localPages = JSON.parse(savedLocal).map((p) => sanitizePageData(p, []));
         if (JSON.stringify(localPages) !== serverSignature) {
           const restore = window.confirm(
             "Unsaved local changes were found from your last session. Restore them?"

@@ -1385,4 +1385,39 @@ body.image-library-open .mobile-image-bar {
     margin: 4px 0 0;
 }
 
+/* ---- Presets inline notification ---- */
+
+.presets-notice {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 500;
+    z-index: 1700;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.presets-notice--info {
+    background: rgba(30, 41, 59, 0.97);
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    color: var(--text-primary);
+}
+
+.presets-notice--success {
+    background: rgba(20, 52, 30, 0.97);
+    border: 1px solid rgba(74, 222, 128, 0.4);
+    color: #86efac;
+}
+
+.presets-notice--error {
+    background: rgba(52, 20, 20, 0.97);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+}
+
 /* ---- End additions ---- */
