@@ -1626,11 +1626,6 @@ function setupShortcutToggle() {
   });
 }
 
-/** Returns true if the page containing the given element is locked. */
-function isPageLocked(pageEl) {
-  return pageEl.classList.contains("is-locked");
-}
-
 /**
  * Set the lock state of a page element directly, without triggering click events.
  * Works by updating the page class, lock button, and image cursors.
