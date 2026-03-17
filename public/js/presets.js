@@ -181,14 +181,19 @@ export function initializePresets({ container, getCurrentPageData, applyPreset }
 
   function renderList() {
     list.innerHTML = "";
-    const valid = presets.filter(Boolean);
+    const valid = [];
+    presets.forEach((preset, originalIndex) => {
+      if (preset) {
+        valid.push({ preset, originalIndex });
+      }
+    });
     emptyMsg.hidden = valid.length > 0;
 
-    valid.forEach((preset, i) => {
+    valid.forEach(({ preset, originalIndex }, i) => {
       list.appendChild(
         buildPresetItem(
           preset,
-          i,
+          originalIndex,
           (p) => {
             applyPreset(p);
           },
