@@ -1380,7 +1380,10 @@ export function subscribeToStateStream() {
   }
 
   state.pageStreamSource = new EventSource("/pages/stream");
-  updateSyncHealth(true);
+
+  state.pageStreamSource.addEventListener("open", () => {
+    updateSyncHealth(true);
+  });
 
   state.pageStreamSource.addEventListener("pages", (event) => {
     if (!event.data) {
@@ -1403,6 +1406,7 @@ export function subscribeToStateStream() {
 
   state.pageStreamSource.addEventListener("error", (event) => {
     console.error("Page stream connection error", event);
+    updateSyncHealth(false);
     cleanupEventSource();
     setTimeout(() => {
       if (document.visibilityState !== "hidden") {
@@ -1412,6 +1416,7 @@ export function subscribeToStateStream() {
   });
 
   state.pageStreamSource.addEventListener("keepalive", () => {
+    updateSyncHealth(false);
     cleanupEventSource();
     setTimeout(() => {
       if (document.visibilityState !== "hidden") {
