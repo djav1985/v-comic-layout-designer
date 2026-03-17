@@ -966,6 +966,8 @@ export function createPage(data, pagesContainer = getPagesContainer()) {
 
   applyLockState(Boolean(data && data.locked));
 
+  let lastClickedPanel = null;
+
   deleteBtn.addEventListener("click", () => {
     history.push(capturePagesFromDom());
     returnImagesFromPage(container);
@@ -995,9 +997,20 @@ export function createPage(data, pagesContainer = getPagesContainer()) {
     savePagesState(true);
   });
 
-  // Keyboard: press Enter/Space on a panel to place selected image
-  page.addEventListener("keydown", (e) => {
+  // Track the last clicked panel so keyboard shortcuts can target it
+  page.addEventListener("click", (e) => {
     const panel = e.target.closest && e.target.closest(".panel");
+    if (panel && page.contains(panel)) {
+      lastClickedPanel = panel;
+    }
+  });
+
+  // Keyboard: press Enter/Space on a panel (or last clicked panel) to place selected image
+  page.addEventListener("keydown", (e) => {
+    let panel = e.target.closest && e.target.closest(".panel");
+    if (!panel && lastClickedPanel && page.contains(lastClickedPanel)) {
+      panel = lastClickedPanel;
+    }
     if (panel && (e.key === "Enter" || e.key === " ")) {
       e.preventDefault();
       const slot = panel.getAttribute("data-slot");
