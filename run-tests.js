@@ -85,12 +85,17 @@ function runPhpLint(sourceDir) {
     phpFiles.forEach((file) => {
       const proc = spawn('php', ['-l', file]);
       let stderr = '';
+      let stdout = '';
+      proc.stdout.on('data', (d) => { stdout += d.toString(); });
       proc.stderr.on('data', (d) => { stderr += d.toString(); });
       proc.on('close', (code) => {
         if (code !== 0) {
           lintErrors++;
           console.error(`[lint] ❌ ${file}`);
-          if (stderr.trim()) console.error(`       ${stderr.trim()}`);
+          const out = stdout.trim();
+          const err = stderr.trim();
+          if (out) console.error(`       ${out}`);
+          if (err) console.error(`       ${err}`);
         }
         pending--;
         if (pending === 0) {
