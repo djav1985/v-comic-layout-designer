@@ -774,7 +774,8 @@ function renderLayout(
       addBubbleBtn.className = "add-bubble-btn";
       addBubbleBtn.textContent = "+ Bubble";
       addBubbleBtn.setAttribute("aria-label", "Add speech bubble to panel");
-      panelContent.appendChild(addBubbleBtn);
+      // Append as a sibling of the panel content so .panel-inner can be truly empty
+      panel.appendChild(addBubbleBtn);
 
       addBubbleBtn.addEventListener("click", (e) => {
         e.stopPropagation();
