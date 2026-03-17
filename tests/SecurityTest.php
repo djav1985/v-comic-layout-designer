@@ -2,6 +2,7 @@
 require __DIR__ . '/../vendor/autoload.php';
 
 use App\Core\Router;
+use App\Models\ComicModel;
 
 // ---------------------------------------------------------------------------
 // Test: CSRF token generation
@@ -92,6 +93,9 @@ $pngData = base64_decode(
 file_put_contents($tempPng, $pngData);
 $tempPngSize = filesize($tempPng);
 
+// Use the real ComicModel::saveUpload() to verify upload/MIME validation.
+$comicModel = new ComicModel();
+
 // Test: extension mismatch – .jpg extension but real PNG content
 $fakeName = 'photo.jpg';
 $fakeFile = [
@@ -104,47 +108,40 @@ $fakeFile = [
 
 $caught = false;
 try {
-    // We can't use is_uploaded_file() in tests (not a real upload), so test the
-    // earlier validation steps by directly testing the finfo detection path.
-    $finfo = new finfo(FILEINFO_MIME_TYPE);
-    $detectedMime = $finfo->file($tempPng);
-
-    $mimeToExtension = [
-        'image/jpeg' => 'jpg',
-        'image/png'  => 'png',
-        'image/gif'  => 'gif',
-    ];
-
-    $originalExt = strtolower(pathinfo($fakeName, PATHINFO_EXTENSION));
-    if ($originalExt === 'jpeg') $originalExt = 'jpg';
-
-    if (array_key_exists($detectedMime, $mimeToExtension)) {
-        $canonicalExt = $mimeToExtension[$detectedMime];
-        if ($originalExt !== $canonicalExt) {
-            $caught = true; // Expected mismatch detected
-        }
-    }
+    // Expect ComicModel::saveUpload() to reject mismatched extension/content.
+    $comicModel->saveUpload($fakeFile);
 } catch (\Throwable $e) {
-    fwrite(STDERR, "Unexpected error in MIME inspection test: " . $e->getMessage() . PHP_EOL);
-    @unlink($tempPng);
-    exit(1);
+    $caught = true;
 }
 
 if (!$caught) {
-    fwrite(STDERR, "Expected extension/content mismatch to be detected for PNG file named .jpg." . PHP_EOL);
+    fwrite(STDERR, "Expected ComicModel::saveUpload() to reject PNG content with .jpg extension." . PHP_EOL);
     @unlink($tempPng);
     exit(1);
 }
 
-// Test: disallowed MIME type (text file) is rejected
+// Test: disallowed MIME type (text file) is rejected by ComicModel::saveUpload()
 $tempTxt = tempnam(sys_get_temp_dir(), 'upload_test_txt_');
 file_put_contents($tempTxt, 'this is plain text, not an image');
+$tempTxtSize = filesize($tempTxt);
 
-$finfo = new finfo(FILEINFO_MIME_TYPE);
-$txtMime = $finfo->file($tempTxt);
-$allowedMimes = ['image/jpeg', 'image/png', 'image/gif'];
-if (in_array($txtMime, $allowedMimes, true)) {
-    fwrite(STDERR, "Text file was incorrectly identified as an allowed image MIME type: {$txtMime}" . PHP_EOL);
+$fakeTextFile = [
+    'name'     => 'notes.txt',
+    'type'     => 'text/plain',
+    'tmp_name' => $tempTxt,
+    'error'    => UPLOAD_ERR_OK,
+    'size'     => $tempTxtSize,
+];
+
+$caughtText = false;
+try {
+    $comicModel->saveUpload($fakeTextFile);
+} catch (\Throwable $e) {
+    $caughtText = true;
+}
+
+if (!$caughtText) {
+    fwrite(STDERR, "Expected ComicModel::saveUpload() to reject disallowed MIME type (text/plain)." . PHP_EOL);
     @unlink($tempPng);
     @unlink($tempTxt);
     exit(1);
