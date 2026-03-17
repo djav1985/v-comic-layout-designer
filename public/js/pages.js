@@ -1158,51 +1158,51 @@ export function savePagesState(rebuildUI = true) {
     });
 }
 
-/**
- * Attempt to patch a single page in place when only that page changed.
- * Returns true if a targeted patch was applied, false if a full rebuild is needed.
- */
-function tryPatchSinglePage(currentPages, incomingPages) {
-  const container = getPagesContainer();
-  const pageDivs = Array.from(container.querySelectorAll(".page"));
 
-  if (currentPages.length !== incomingPages.length) return false;
-  if (pageDivs.length !== incomingPages.length) return false;
 
-  let changedIdx = -1;
-  for (let i = 0; i < currentPages.length; i++) {
-    if (JSON.stringify(currentPages[i]) !== JSON.stringify(incomingPages[i])) {
-      if (changedIdx !== -1) return false; // more than one change
-      changedIdx = i;
-    }
-  }
 
-  if (changedIdx === -1) return true; // nothing changed
 
-  const incoming = incomingPages[changedIdx];
-  const current = currentPages[changedIdx];
-  const pageDiv = pageDivs[changedIdx];
 
-  // Only patch gutter color change (cheap, no re-render needed)
-  if (incoming.layout === current.layout &&
-      incoming.gutterColor !== current.gutterColor) {
-    const colorInput = pageDiv.querySelector('input[type="color"]');
-    if (colorInput) colorInput.value = incoming.gutterColor;
-    const layoutDiv = pageDiv.querySelector(".layout");
-    if (layoutDiv) layoutDiv.style.background = incoming.gutterColor;
-    return true;
-  }
 
-  // Only patch lock state change
-  if (incoming.layout === current.layout &&
-      JSON.stringify(incoming.slots) === JSON.stringify(current.slots) &&
-      incoming.locked !== current.locked) {
-    setPageLocked(pageDiv, incoming.locked);
-    return true;
-  }
 
-  return false;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export function rebuildPagesUI(pages) {
   state.isUpdatingFromServer = true;
