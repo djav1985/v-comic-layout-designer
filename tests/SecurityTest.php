@@ -80,8 +80,6 @@ unset($_SERVER['HTTP_X_CSRF_TOKEN'], $_POST['_csrf_token']);
 // Test: Upload validation – content inspection rejects wrong MIME
 // ---------------------------------------------------------------------------
 
-use App\Models\ComicModel;
-
 $model = new ComicModel();
 
 // Create a temp file with PNG content but mis-labelled as jpeg in 'name'

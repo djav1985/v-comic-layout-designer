@@ -1,5 +1,6 @@
 import { state } from "./state.js";
-import { showSaveIndicator } from "./save-indicator.js";
+import { showSaveIndicator, updateSyncHealth, createSyncHealthIndicator } from "./save-indicator.js";
+import { history } from "./history.js";
 import {
   updateImages,
   clearSelectedImage,
@@ -825,21 +826,36 @@ function renderLayout(
 export function createPage(data, pagesContainer = getPagesContainer()) {
   const page = document.createElement("div");
   page.className = "page";
+  page.setAttribute("tabindex", "0");
 
   const deleteBtn = document.createElement("button");
   deleteBtn.type = "button";
   deleteBtn.className = "delete-page-btn";
-  deleteBtn.innerHTML = '<span aria-hidden="true">✕</span>';
+  deleteBtn.innerHTML = '<span aria-hidden="true">✕</span><span class="sr-only">Remove page</span>';
   deleteBtn.setAttribute("aria-label", "Remove page");
 
   const lockBtn = document.createElement("button");
   lockBtn.type = "button";
   lockBtn.className = "page-lock-btn";
-  lockBtn.textContent = "U";
-  lockBtn.setAttribute("aria-label", "Lock page");
+  // Label text is set by applyLockState below
   lockBtn.setAttribute("aria-pressed", "false");
 
+  const duplicateBtn = document.createElement("button");
+  duplicateBtn.type = "button";
+  duplicateBtn.className = "duplicate-page-btn";
+  duplicateBtn.innerHTML = '<span aria-hidden="true">⧉</span><span class="sr-only">Duplicate page</span>';
+  duplicateBtn.setAttribute("aria-label", "Duplicate page");
+  duplicateBtn.title = "Duplicate page";
+
+  const clearBtn = document.createElement("button");
+  clearBtn.type = "button";
+  clearBtn.className = "clear-page-btn";
+  clearBtn.innerHTML = '<span aria-hidden="true">⊘</span><span class="sr-only">Clear page images</span>';
+  clearBtn.setAttribute("aria-label", "Clear all images from page");
+  clearBtn.title = "Clear all images from page";
+
   const select = document.createElement("select");
+  select.setAttribute("aria-label", "Page layout");
   layouts.forEach((l) => {
     const opt = document.createElement("option");
     opt.value = l;
@@ -852,6 +868,7 @@ export function createPage(data, pagesContainer = getPagesContainer()) {
   gutterColor.value =
     data && data.gutterColor ? data.gutterColor : DEFAULT_GUTTER_COLOR;
   gutterColor.title = "Gutter Color";
+  gutterColor.setAttribute("aria-label", "Gutter color");
   gutterColor.className = "gutter-color-picker";
 
   const layoutGroup = document.createElement("div");
@@ -865,6 +882,8 @@ export function createPage(data, pagesContainer = getPagesContainer()) {
   const controlsContainer = document.createElement("div");
   controlsContainer.className = "page-controls";
   controlsContainer.appendChild(layoutGroup);
+  controlsContainer.appendChild(duplicateBtn);
+  controlsContainer.appendChild(clearBtn);
   controlsContainer.appendChild(deleteBtn);
   controlsContainer.appendChild(lockBtn);
   controlsContainer.appendChild(gutterGroup);
@@ -886,6 +905,7 @@ export function createPage(data, pagesContainer = getPagesContainer()) {
   }
 
   select.addEventListener("change", () => {
+    history.push(capturePagesFromDom());
     returnImagesFromPage(container);
     renderLayout(container, select.value, index);
 
@@ -926,10 +946,12 @@ export function createPage(data, pagesContainer = getPagesContainer()) {
   const applyLockState = (locked) => {
     page.classList.toggle("is-locked", locked);
     lockBtn.classList.toggle("is-locked", locked);
-    lockBtn.textContent = locked ? "L" : "U";
+    lockBtn.innerHTML = locked
+      ? '<span aria-hidden="true">🔒</span><span class="lock-label">Locked</span>'
+      : '<span aria-hidden="true">🔓</span><span class="lock-label">Unlocked</span>';
     lockBtn.setAttribute("aria-pressed", String(locked));
     lockBtn.setAttribute("aria-label", locked ? "Unlock page" : "Lock page");
-    lockBtn.title = locked ? "Page locked" : "Page unlocked";
+    lockBtn.title = locked ? "Click to unlock page" : "Click to lock page";
     page.querySelectorAll(".panel-image").forEach((img) => {
       img.style.cursor = locked ? "not-allowed" : "move";
     });
@@ -937,18 +959,122 @@ export function createPage(data, pagesContainer = getPagesContainer()) {
 
   lockBtn.addEventListener("click", () => {
     const shouldLock = !page.classList.contains("is-locked");
+    history.push(capturePagesFromDom());
     applyLockState(shouldLock);
     debouncedSave();
   });
 
   applyLockState(Boolean(data && data.locked));
 
+  let lastClickedPanel = null;
+
   deleteBtn.addEventListener("click", () => {
+    history.push(capturePagesFromDom());
     returnImagesFromPage(container);
     unobserveLayoutContainer(container);
     page.remove();
     savePagesState(true);
   });
+
+  duplicateBtn.addEventListener("click", () => {
+    const currentData = capturePagesFromDom();
+    history.push(currentData);
+    // Capture the data for just this page
+    const thisIndex = Array.from(getPagesContainer().querySelectorAll(".page")).indexOf(page);
+    const pageData = thisIndex >= 0 ? currentData[thisIndex] : undefined;
+    // Duplicate without images (slots/transforms empty) to avoid library confusion
+    const dupData = pageData
+      ? { layout: pageData.layout, gutterColor: pageData.gutterColor, slots: {}, transforms: {}, locked: false, bubbles: {} }
+      : undefined;
+    createPage(dupData, getPagesContainer());
+    savePagesState(true);
+  });
+
+  clearBtn.addEventListener("click", () => {
+    if (isPageLocked(page)) return;
+    history.push(capturePagesFromDom());
+    returnImagesFromPage(container);
+    savePagesState(true);
+  });
+
+  // Track the last clicked panel so keyboard shortcuts can target it
+  page.addEventListener("click", (e) => {
+    const panel = e.target.closest && e.target.closest(".panel");
+    if (panel && page.contains(panel)) {
+      lastClickedPanel = panel;
+    }
+  });
+
+  // Keyboard: press Enter/Space on a panel (or last clicked panel) to place selected image
+  page.addEventListener("keydown", (e) => {
+    let panel = e.target.closest && e.target.closest(".panel");
+    if (!panel && lastClickedPanel && page.contains(lastClickedPanel)) {
+      panel = lastClickedPanel;
+    }
+    if (panel && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      const slot = panel.getAttribute("data-slot");
+      handleSelectedImagePlacement(panel, slot, container, index);
+    }
+  });
+}
+
+/**
+ * Validate and sanitize a single page data object.
+ * Returns a clean page object with safe defaults, logging any repairs.
+ */
+export function sanitizePageData(raw) {
+  if (!raw || typeof raw !== "object") {
+    console.warn("[schema] Invalid page object replaced with default.");
+    return { layout: layouts[0] || "1-panel", gutterColor: DEFAULT_GUTTER_COLOR, slots: {}, transforms: {}, locked: false, bubbles: {} };
+  }
+
+  const layout =
+    typeof raw.layout === "string" && layouts.includes(raw.layout)
+      ? raw.layout
+      : (layouts[0] || "1-panel");
+
+  if (layout !== raw.layout && raw.layout !== undefined) {
+    console.warn(`[schema] Unknown layout "${raw.layout}" replaced with "${layout}".`);
+  }
+
+  const gutterColor =
+    typeof raw.gutterColor === "string" && /^#[0-9a-fA-F]{6}$/.test(raw.gutterColor)
+      ? raw.gutterColor
+      : DEFAULT_GUTTER_COLOR;
+
+  const slots = {};
+  const transforms = {};
+
+  if (raw.slots && typeof raw.slots === "object") {
+    for (const [slot, name] of Object.entries(raw.slots)) {
+      if (typeof name === "string" && name.length > 0) {
+        slots[slot] = name;
+      } else {
+        console.warn(`[schema] Invalid slot value for slot "${slot}" discarded.`);
+      }
+    }
+  }
+
+  if (raw.transforms && typeof raw.transforms === "object") {
+    for (const [slot, t] of Object.entries(raw.transforms)) {
+      if (t && typeof t === "object") {
+        const scale = Number.isFinite(parseFloat(t.scale)) ? parseFloat(t.scale) : 1;
+        const translateXPct = Number.isFinite(parseFloat(t.translateXPct)) ? parseFloat(t.translateXPct) : 0;
+        const translateYPct = Number.isFinite(parseFloat(t.translateYPct)) ? parseFloat(t.translateYPct) : 0;
+        transforms[slot] = { scale, translateXPct, translateYPct };
+      }
+    }
+  }
+
+  return {
+    layout,
+    gutterColor,
+    slots,
+    transforms,
+    locked: Boolean(raw.locked),
+    bubbles: raw.bubbles && typeof raw.bubbles === "object" ? raw.bubbles : {},
+  };
 }
 
 export function capturePagesFromDom() {
@@ -1032,6 +1158,52 @@ export function savePagesState(rebuildUI = true) {
     });
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function rebuildPagesUI(pages) {
   state.isUpdatingFromServer = true;
   const currentPagesDiv = getPagesContainer();
@@ -1080,7 +1252,32 @@ export async function initializePages() {
       throw new Error("Response payload was missing a pages array");
     }
 
-    rebuildPagesUI(data.pages);
+    const serverPages = data.pages.map(sanitizePageData);
+
+    // "Restore last session" prompt: check if there are local unsaved changes
+    const serverSignature = JSON.stringify(serverPages);
+    const savedLocal = localStorage.getItem("v-comic-local-session");
+
+    if (savedLocal && savedLocal !== serverSignature && serverPages.length > 0) {
+      try {
+        const localPages = JSON.parse(savedLocal).map(sanitizePageData);
+        if (JSON.stringify(localPages) !== serverSignature) {
+          const restore = window.confirm(
+            "Unsaved local changes were found from your last session. Restore them?"
+          );
+          if (restore) {
+            rebuildPagesUI(localPages);
+            localStorage.removeItem("v-comic-local-session");
+            return;
+          }
+        }
+      } catch {
+        // ignore corrupt local session data
+      }
+    }
+
+    localStorage.removeItem("v-comic-local-session");
+    rebuildPagesUI(serverPages);
   } catch (error) {
     console.error("Failed to load saved pages from state.json:", error);
     rebuildPagesUI([]);
@@ -1092,6 +1289,58 @@ export function cleanupEventSource() {
     state.pageStreamSource.close();
     state.pageStreamSource = null;
   }
+  updateSyncHealth(false);
+}
+
+/**
+ * Show a non-blocking conflict banner allowing the user to choose
+ * between local and remote state.
+ */
+function showConflictBanner(incomingPages) {
+  if (state.conflictBannerVisible) {
+    // Update the pending conflict but don't create another banner
+    state.pendingConflict = incomingPages;
+    return;
+  }
+
+  state.conflictBannerVisible = true;
+  state.pendingConflict = incomingPages;
+
+  const banner = document.createElement("div");
+  banner.id = "conflictBanner";
+  banner.className = "conflict-banner";
+  banner.setAttribute("role", "alertdialog");
+  banner.setAttribute("aria-label", "Sync conflict detected");
+  banner.innerHTML = `
+    <span class="conflict-icon" aria-hidden="true">⚠️</span>
+    <span class="conflict-msg">A newer version was received from the server. What would you like to do?</span>
+    <button type="button" class="conflict-btn-local ghost" aria-label="Keep your local changes">Keep local</button>
+    <button type="button" class="conflict-btn-remote primary" aria-label="Accept the server version">Accept remote</button>
+    <button type="button" class="conflict-btn-dismiss ghost" aria-label="Dismiss this notification">✕</button>
+  `;
+
+  document.body.appendChild(banner);
+
+  const dismiss = () => {
+    banner.remove();
+    state.conflictBannerVisible = false;
+    state.pendingConflict = null;
+  };
+
+  banner.querySelector(".conflict-btn-local").addEventListener("click", dismiss);
+
+  banner.querySelector(".conflict-btn-remote").addEventListener("click", () => {
+    const pages = state.pendingConflict;
+    dismiss();
+    if (pages) {
+      history.push(capturePagesFromDom());
+      rebuildPagesUI(pages);
+      state.lastSyncedSignature = JSON.stringify(pages);
+      showSaveIndicator("Remote version applied", "#4CAF50");
+    }
+  });
+
+  banner.querySelector(".conflict-btn-dismiss").addEventListener("click", dismiss);
 }
 
 function processIncomingPages(incomingPages) {
@@ -1104,6 +1353,12 @@ function processIncomingPages(incomingPages) {
   const currentSignature = JSON.stringify(capturePagesFromDom());
   if (incomingSignature === currentSignature) {
     state.lastSyncedSignature = incomingSignature;
+    return;
+  }
+
+  // If local state has diverged from last-synced, we have a conflict
+  if (state.lastSyncedSignature && currentSignature !== state.lastSyncedSignature) {
+    showConflictBanner(incomingPages);
     return;
   }
 
@@ -1124,6 +1379,10 @@ export function subscribeToStateStream() {
   }
 
   state.pageStreamSource = new EventSource("/pages/stream");
+
+  state.pageStreamSource.addEventListener("open", () => {
+    updateSyncHealth(true);
+  });
 
   state.pageStreamSource.addEventListener("pages", (event) => {
     if (!event.data) {
@@ -1146,6 +1405,7 @@ export function subscribeToStateStream() {
 
   state.pageStreamSource.addEventListener("error", (event) => {
     console.error("Page stream connection error", event);
+    updateSyncHealth(false);
     cleanupEventSource();
     setTimeout(() => {
       if (document.visibilityState !== "hidden") {
@@ -1155,6 +1415,7 @@ export function subscribeToStateStream() {
   });
 
   state.pageStreamSource.addEventListener("keepalive", () => {
+    updateSyncHealth(false);
     cleanupEventSource();
     setTimeout(() => {
       if (document.visibilityState !== "hidden") {
@@ -1187,8 +1448,12 @@ function parseFilenameFromDisposition(disposition) {
 }
 
 export function applyLoadedState(payload) {
-  const pages = Array.isArray(payload && payload.pages) ? payload.pages : [];
+  const pages = sanitizePageData(
+    Array.isArray(payload && payload.pages) ? payload.pages : [],
+  );
   const images = Array.isArray(payload && payload.images) ? payload.images : [];
+
+  history.clear();
 
   setInitialImages(images);
   rebuildPagesUI(pages);
@@ -1206,6 +1471,9 @@ function setupResetButton() {
       return;
     }
 
+    // Checkpoint before destructive reset
+    history.checkpoint(capturePagesFromDom());
+
     resetButton.disabled = true;
     showSaveIndicator("Resetting workspace...", "#2196F3");
 
@@ -1220,6 +1488,7 @@ function setupResetButton() {
               throw new Error(message);
             }
 
+            history.clear();
             applyLoadedState(data);
             showSaveIndicator("Workspace reset ✓", "#4CAF50");
           }),
@@ -1306,6 +1575,8 @@ function setupStateImportExport() {
                 throw new Error(message);
               }
 
+              // Checkpoint before destructive import
+              history.checkpoint(capturePagesFromDom());
               applyLoadedState(data);
               showSaveIndicator("State loaded ✓", "#4CAF50");
             }),
@@ -1372,6 +1643,94 @@ function setupShortcutToggle() {
   });
 }
 
+/**
+ * Set the lock state of a page element directly, without triggering click events.
+ * Works by updating the page class, lock button, and image cursors.
+ */
+function setPageLocked(pageEl, locked) {
+  const lockBtn = pageEl.querySelector(".page-lock-btn");
+  if (!lockBtn) return;
+  pageEl.classList.toggle("is-locked", locked);
+  lockBtn.classList.toggle("is-locked", locked);
+  lockBtn.innerHTML = locked
+    ? '<span aria-hidden="true">🔒</span><span class="lock-label">Locked</span>'
+    : '<span aria-hidden="true">🔓</span><span class="lock-label">Unlocked</span>';
+  lockBtn.setAttribute("aria-pressed", String(locked));
+  lockBtn.setAttribute("aria-label", locked ? "Unlock page" : "Lock page");
+  lockBtn.title = locked ? "Click to unlock page" : "Click to lock page";
+  pageEl.querySelectorAll(".panel-image").forEach((img) => {
+    img.style.cursor = locked ? "not-allowed" : "move";
+  });
+}
+
+/** Place the currently selected image into a panel (keyboard accessibility helper). */
+function handleSelectedImagePlacementFromKeyboard(panel, slot, container, index) {
+  const selectedName = getSelectedImageName && getSelectedImageName();
+  if (!selectedName) return;
+  const pageEl = panel.closest(".page");
+  if (pageEl && isPageLocked(pageEl)) return;
+  // Trigger the same drop logic by dispatching a synthetic drop event
+  const dt = new DataTransfer();
+  dt.setData("text/plain", selectedName);
+  const dropEvent = new DragEvent("drop", { dataTransfer: dt, bubbles: true });
+  panel.dispatchEvent(dropEvent);
+}
+
+/**
+ * Perform undo: restores the previous page state.
+ */
+export function undoPageState() {
+  if (!history.canUndo()) return;
+  const current = capturePagesFromDom();
+  const prev = history.undo(current);
+  if (prev) {
+    rebuildPagesUI(prev);
+    showSaveIndicator("Undone ✓", "#2196F3");
+  }
+  updateHistoryButtons();
+}
+
+/**
+ * Perform redo: restores the next page state.
+ */
+export function redoPageState() {
+  if (!history.canRedo()) return;
+  const current = capturePagesFromDom();
+  const next = history.redo(current);
+  if (next) {
+    rebuildPagesUI(next);
+    showSaveIndicator("Redone ✓", "#2196F3");
+  }
+  updateHistoryButtons();
+}
+
+/** Update enabled/disabled state of undo and redo buttons. */
+function updateHistoryButtons() {
+  if (dom.undoButton) dom.undoButton.disabled = !history.canUndo();
+  if (dom.redoButton) dom.redoButton.disabled = !history.canRedo();
+}
+
+/**
+ * Lock all pages.
+ */
+export function lockAllPages() {
+  history.push(capturePagesFromDom());
+  getPagesContainer().querySelectorAll(".page").forEach((p) => {
+    if (!p.classList.contains("is-locked")) setPageLocked(p, true);
+  });
+}
+
+/**
+ * Unlock all pages.
+ */
+export function unlockAllPages() {
+  history.push(capturePagesFromDom());
+  updateHistoryButtons();
+  getPagesContainer().querySelectorAll(".page").forEach((p) => {
+    if (p.classList.contains("is-locked")) setPageLocked(p, false);
+  });
+}
+
 export function initializePageModule(refs) {
   Object.assign(dom, refs);
 
@@ -1379,12 +1738,99 @@ export function initializePageModule(refs) {
   setupResetButton();
   setupStateImportExport();
 
+  // Initialize sync health indicator
+  createSyncHealthIndicator();
+
   if (dom.addPageButton) {
     dom.addPageButton.addEventListener("click", () => {
+      history.push(capturePagesFromDom());
+      updateHistoryButtons();
       createPage();
       savePagesState(true);
     });
   }
+
+  // Bulk lock/unlock buttons (optional DOM refs)
+  if (dom.lockAllButton) {
+    dom.lockAllButton.addEventListener("click", () => {
+      lockAllPages();
+      savePagesState(false);
+    });
+  }
+
+  if (dom.unlockAllButton) {
+    dom.unlockAllButton.addEventListener("click", () => {
+      unlockAllPages();
+      savePagesState(false);
+    });
+  }
+
+  // Undo/redo buttons (optional DOM refs)
+  if (dom.undoButton) {
+    dom.undoButton.addEventListener("click", () => {
+      undoPageState();
+      updateHistoryButtons();
+    });
+  }
+  if (dom.redoButton) {
+    dom.redoButton.addEventListener("click", () => {
+      redoPageState();
+      updateHistoryButtons();
+    });
+  }
+
+  // Global keyboard shortcuts
+  document.addEventListener("keydown", (e) => {
+    const tag = (e.target.tagName || "").toUpperCase();
+    const inInput = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" ||
+      (e.target.isContentEditable);
+
+    if ((e.ctrlKey || e.metaKey) && !inInput) {
+      if (e.key === "z" || e.key === "Z") {
+        if (e.shiftKey) {
+          e.preventDefault();
+          redoPageState();
+        } else {
+          e.preventDefault();
+          undoPageState();
+        }
+        updateHistoryButtons();
+        return;
+      }
+      if (e.key === "y" || e.key === "Y") {
+        e.preventDefault();
+        redoPageState();
+        updateHistoryButtons();
+        return;
+      }
+      // Ctrl+L: toggle lock on focused page
+      if (e.key === "l" || e.key === "L") {
+        e.preventDefault();
+        const focusedPage = document.activeElement && document.activeElement.closest(".page");
+        if (focusedPage) {
+          const btn = focusedPage.querySelector(".page-lock-btn");
+          if (btn) {
+            history.push(capturePagesFromDom());
+            updateHistoryButtons();
+            btn.click();
+          }
+        }
+        return;
+      }
+    }
+  });
+
+  // Persist local state before unload for "restore last session" feature
+  window.addEventListener("beforeunload", () => {
+    try {
+      const pages = capturePagesFromDom();
+      if (pages.length > 0) {
+        localStorage.setItem("v-comic-local-session", JSON.stringify(pages));
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  });
 }
 
 export function parseRadiusValue(value) {
@@ -1559,12 +2005,28 @@ export async function renderLayoutToCanvas(layout, scale = EXPORT_SCALE) {
   ctx.fillStyle = gutterColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  /** @type {string[]} Diagnostic messages collected during export */
+  const diagnostics = [];
+
   const images = Array.from(layout.querySelectorAll(".panel img"));
-  await Promise.all(images.map((img) => waitForImageLoad(img)));
+  await Promise.all(images.map(async (img) => {
+    try {
+      await waitForImageLoad(img);
+      if (!img.naturalWidth || !img.naturalHeight) {
+        diagnostics.push(`Image failed to load: ${img.dataset.name || img.src || "(unknown)"}`);
+      }
+    } catch {
+      diagnostics.push(`Error loading image: ${img.dataset.name || img.src || "(unknown)"}`);
+    }
+  }));
+
+  let zeroPanels = 0;
 
   layout.querySelectorAll(".panel").forEach((panel) => {
     const panelRect = panel.getBoundingClientRect();
     if (!panelRect.width || !panelRect.height) {
+      zeroPanels++;
+      diagnostics.push(`Panel slot ${panel.getAttribute("data-slot") || "?"} has zero size — skipped.`);
       return;
     }
 
@@ -1608,7 +2070,11 @@ export async function renderLayoutToCanvas(layout, scale = EXPORT_SCALE) {
 
       if (imgWidth > 0 && imgHeight > 0) {
         ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
+      } else {
+        diagnostics.push(`Image in slot ${panel.getAttribute("data-slot") || "?"} has zero render dimensions — skipped.`);
       }
+    } else if (img) {
+      diagnostics.push(`Image "${img.dataset.name || "(unnamed)"}" in slot ${panel.getAttribute("data-slot") || "?"} could not be drawn — skipped.`);
     }
 
     // Draw bubbles clipped to the panel
@@ -1704,7 +2170,52 @@ export async function renderLayoutToCanvas(layout, scale = EXPORT_SCALE) {
     ctx.restore();
   });
 
+  // Surface export diagnostics in the UI if any issues were found
+  if (diagnostics.length > 0) {
+    showExportDiagnostics(diagnostics);
+  }
+
   return canvas;
+}
+
+/**
+ * Show a non-blocking export diagnostics overlay listing skipped/failed items.
+ */
+function showExportDiagnostics(messages) {
+  // Remove any existing diagnostics overlay
+  const existing = document.getElementById("exportDiagnostics");
+  if (existing) existing.remove();
+
+  const overlay = document.createElement("div");
+  overlay.id = "exportDiagnostics";
+  overlay.className = "export-diagnostics";
+  overlay.setAttribute("role", "alert");
+  overlay.setAttribute("aria-label", "Export warnings");
+
+  const title = document.createElement("strong");
+  title.textContent = "⚠ Export warnings:";
+  overlay.appendChild(title);
+
+  const list = document.createElement("ul");
+  messages.forEach((msg) => {
+    const li = document.createElement("li");
+    li.textContent = msg;
+    list.appendChild(li);
+  });
+  overlay.appendChild(list);
+
+  const closeBtn = document.createElement("button");
+  closeBtn.type = "button";
+  closeBtn.className = "export-diagnostics-close";
+  closeBtn.setAttribute("aria-label", "Dismiss export warnings");
+  closeBtn.textContent = "✕";
+  closeBtn.addEventListener("click", () => overlay.remove());
+  overlay.appendChild(closeBtn);
+
+  document.body.appendChild(overlay);
+
+  // Auto-dismiss after 12 seconds
+  setTimeout(() => overlay.remove(), 12000);
 }
 
 export function initializeLifecycleHandlers() {

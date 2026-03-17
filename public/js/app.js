@@ -26,6 +26,10 @@ window.addEventListener("DOMContentLoaded", () => {
   const addPageButton = document.getElementById("addPage");
   const exportPdfButton = document.getElementById("exportPdf");
   const exportImagesButton = document.getElementById("exportImages");
+  const undoButton = document.getElementById("undoBtn");
+  const redoButton = document.getElementById("redoBtn");
+  const lockAllButton = document.getElementById("lockAllBtn");
+  const unlockAllButton = document.getElementById("unlockAllBtn");
 
   initializeImageLibrary({
     imageList,
@@ -46,6 +50,10 @@ window.addEventListener("DOMContentLoaded", () => {
     saveStateButton,
     loadStateButton,
     loadStateInput,
+    undoButton,
+    redoButton,
+    lockAllButton,
+    unlockAllButton,
   });
 
   setupExportButtons({ exportPdfButton, exportImagesButton });

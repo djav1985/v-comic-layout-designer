@@ -234,9 +234,97 @@ class ComicModel
 
     public function setPages(array $pages): void
     {
-        $this->state['pages'] = $pages;
-        $this->state['pageCount'] = count($pages);
+        $sanitized = [];
+        foreach ($pages as $page) {
+            if (is_array($page)) {
+                $sanitized[] = $this->sanitizePage($page);
+            }
+        }
+        $this->state['pages'] = $sanitized;
+        $this->state['pageCount'] = count($sanitized);
         $this->saveState();
+    }
+
+    /**
+     * Validate and repair a single page array at the schema boundary.
+     * Mirrors the JS sanitizePageData() logic so the PHP and JS layers
+     * apply the same rules when reading state from untrusted sources.
+     *
+     * Both array and stdClass values are accepted for 'slots', 'transforms',
+     * and 'bubbles' to accommodate data before a JSON DB round-trip (which
+     * would otherwise normalise everything to associative arrays).
+     */
+    public function sanitizePage(array $raw): array
+    {
+        // Validate layout name against the layouts available on disk.
+        $knownLayouts = array_keys($this->getLayouts());
+        $layout = $raw['layout'] ?? '';
+        if (!is_string($layout) || !in_array($layout, $knownLayouts, true)) {
+            if (empty($knownLayouts)) {
+                trigger_error(
+                    'ComicModel::sanitizePage(): no layouts found in layout directory; ' .
+                    'pages cannot be given a valid layout.',
+                    E_USER_WARNING
+                );
+                $layout = '';
+            } else {
+                $layout = $knownLayouts[0];
+            }
+        }
+
+        // Validate gutterColor as a 6-digit hex colour string.
+        $gutterColor = $raw['gutterColor'] ?? '';
+        if (!is_string($gutterColor) || !preg_match('/^#[0-9a-fA-F]{6}$/', $gutterColor)) {
+            $gutterColor = '#cccccc';
+        }
+
+        // Normalise slots to an associative array, keeping only non-empty strings.
+        $slotsRaw = isset($raw['slots']) ? (array)$raw['slots'] : [];
+        $slots = [];
+        foreach ($slotsRaw as $slot => $name) {
+            if (is_string($name) && $name !== '') {
+                $slots[(string)$slot] = $name;
+            }
+        }
+
+        // Normalise transforms; each entry must have finite numeric values.
+        $transformsRaw = isset($raw['transforms']) ? (array)$raw['transforms'] : [];
+        $transforms = [];
+        foreach ($transformsRaw as $slot => $t) {
+            $t = is_object($t) ? (array)$t : $t;
+            if (is_array($t)) {
+                $scale = isset($t['scale']) && is_numeric($t['scale']) && is_finite((float)$t['scale'])
+                    ? (float)$t['scale'] : 1.0;
+                $tx = isset($t['translateXPct']) && is_numeric($t['translateXPct']) && is_finite((float)$t['translateXPct'])
+                    ? (float)$t['translateXPct'] : 0.0;
+                $ty = isset($t['translateYPct']) && is_numeric($t['translateYPct']) && is_finite((float)$t['translateYPct'])
+                    ? (float)$t['translateYPct'] : 0.0;
+                $transforms[(string)$slot] = [
+                    'scale'         => $scale,
+                    'translateXPct' => $tx,
+                    'translateYPct' => $ty,
+                ];
+            }
+        }
+
+        // locked must be a boolean.
+        $locked = isset($raw['locked']) ? (bool)$raw['locked'] : false;
+
+        // bubbles: normalise stdClass → array so it serialises and round-trips correctly.
+        $bubblesRaw = $raw['bubbles'] ?? [];
+        if (is_object($bubblesRaw)) {
+            $bubblesRaw = json_decode(json_encode($bubblesRaw), true) ?? [];
+        }
+        $bubbles = is_array($bubblesRaw) ? $bubblesRaw : [];
+
+        return [
+            'layout'      => $layout,
+            'gutterColor' => $gutterColor,
+            'slots'       => $slots,
+            'transforms'  => $transforms,
+            'locked'      => $locked,
+            'bubbles'     => $bubbles,
+        ];
     }
 
     public function getLastModified(): int
