@@ -1612,7 +1612,23 @@ export async function renderLayoutToCanvas(layout, scale = EXPORT_SCALE) {
     }
 
     // Draw bubbles clipped to the panel
-    panel.querySelectorAll(".bubble").forEach((bubbleEl) => {
+    const bubbleEls = Array.from(panel.querySelectorAll(".bubble"));
+    const bubblesInPaintOrder = bubbleEls
+      .map((bubbleEl, index) => {
+        const computed = window.getComputedStyle(bubbleEl);
+        const parsedZ = parseFloat(computed.zIndex);
+        const zIndex = Number.isFinite(parsedZ) ? parsedZ : 0;
+        return { bubbleEl, index, zIndex };
+      })
+      .sort((a, b) => {
+        if (a.zIndex === b.zIndex) {
+          // Deterministic tie-breaker: DOM order
+          return a.index - b.index;
+        }
+        return a.zIndex - b.zIndex;
+      });
+
+    bubblesInPaintOrder.forEach(({ bubbleEl }) => {
       const bubbleRect = bubbleEl.getBoundingClientRect();
       if (!bubbleRect.width || !bubbleRect.height) return;
 
