@@ -94,6 +94,9 @@ function calculatePercentage(pixelValue, dimension, useFiniteCheck = false) {
   return (safePixelValue / dimension) * 100;
 }
 
+// Removes only the image element from a panel, leaving bubbles and other
+// overlay content intact. Called before placing a new image so that existing
+// bubbles survive image replacement.
 function clearPanel(panel) {
   const content = getPanelContent(panel);
   if (content) {
@@ -1623,16 +1626,19 @@ export async function renderLayoutToCanvas(layout, scale = EXPORT_SCALE) {
       ctx.setLineDash([]);
 
       // Draw wrapped text
+      const BUBBLE_MIN_FONT_PX = 10;
+      const BUBBLE_BASE_FONT_PX = 13;
+      const BUBBLE_TEXT_PADDING = 8;
       const textEl = bubbleEl.querySelector(".bubble-text");
       const text = textEl ? textEl.textContent.trim() : "";
       if (text) {
-        const fontSize = Math.max(10, Math.round(13 * unitScale));
+        const fontSize = Math.max(BUBBLE_MIN_FONT_PX, Math.round(BUBBLE_BASE_FONT_PX * unitScale));
         ctx.font = `${fontSize}px sans-serif`;
         ctx.fillStyle = "#222222";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
-        const padding = 8 * unitScale;
+        const padding = BUBBLE_TEXT_PADDING * unitScale;
         const maxWidth = bw - padding * 2;
         const lineHeight = fontSize * 1.4;
         const words = text.split(/\s+/);

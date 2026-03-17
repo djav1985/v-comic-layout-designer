@@ -813,6 +813,7 @@ body.image-library-open .mobile-image-bar {
     background: white;
     border: 2px solid #333;
     border-radius: 20px;
+    /* top padding reserves space for the delete/style overlay buttons */
     padding: 18px 8px 8px;
     cursor: move;
     box-sizing: border-box;
