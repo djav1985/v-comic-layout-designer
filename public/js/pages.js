@@ -10,6 +10,7 @@ import {
   setInitialImages,
 } from "./image-library.js";
 import { getCsrfHeaders } from "./csrf.js";
+import { initializePresets } from "./presets.js";
 
 export const PDF_PAGE_WIDTH = 792;
 export const PDF_PAGE_HEIGHT = 612;
@@ -160,18 +161,28 @@ function enableBubbleDrag(el, panel) {
     startLeftPx = (parseFloat(el.style.left) / 100) * rect.width;
     startTopPx = (parseFloat(el.style.top) / 100) * rect.height;
 
+    let dragRafId = null;
+    let pendingLeft = null;
+    let pendingTop = null;
+
     const onMouseMove = (moveEvent) => {
       const moveContent = getPanelContent(panel);
       const moveRect = moveContent.getBoundingClientRect();
       if (!moveRect.width || !moveRect.height) return;
-      const newLeft =
+      pendingLeft =
         ((startLeftPx + (moveEvent.clientX - startMouseX)) / moveRect.width) *
         100;
-      const newTop =
+      pendingTop =
         ((startTopPx + (moveEvent.clientY - startMouseY)) / moveRect.height) *
         100;
-      el.style.left = `${newLeft}%`;
-      el.style.top = `${newTop}%`;
+      if (dragRafId) return;
+      dragRafId = requestAnimationFrame(() => {
+        if (pendingLeft !== null) el.style.left = `${pendingLeft}%`;
+        if (pendingTop !== null) el.style.top = `${pendingTop}%`;
+        pendingLeft = null;
+        pendingTop = null;
+        dragRafId = null;
+      });
     };
 
     const onMouseUp = () => {
@@ -199,20 +210,32 @@ function enableBubbleResize(el, handle, panel) {
     startWidthPx = (parseFloat(el.style.width) / 100) * rect.width;
     startHeightPx = (parseFloat(el.style.height) / 100) * rect.height;
 
+    let resizeRafId = null;
+    let pendingWidth = null;
+    let pendingHeight = null;
+
     const onMouseMove = (moveEvent) => {
       const moveContent = getPanelContent(panel);
       const moveRect = moveContent.getBoundingClientRect();
       if (!moveRect.width || !moveRect.height) return;
-      const newWidth = Math.max(
+      pendingWidth = Math.max(
         60,
         startWidthPx + (moveEvent.clientX - startMouseX)
       );
-      const newHeight = Math.max(
+      pendingHeight = Math.max(
         30,
         startHeightPx + (moveEvent.clientY - startMouseY)
       );
-      el.style.width = `${(newWidth / moveRect.width) * 100}%`;
-      el.style.height = `${(newHeight / moveRect.height) * 100}%`;
+      if (resizeRafId) return;
+      resizeRafId = requestAnimationFrame(() => {
+        if (pendingWidth !== null)
+          el.style.width = `${(pendingWidth / moveRect.width) * 100}%`;
+        if (pendingHeight !== null)
+          el.style.height = `${(pendingHeight / moveRect.height) * 100}%`;
+        pendingWidth = null;
+        pendingHeight = null;
+        resizeRafId = null;
+      });
     };
 
     const onMouseUp = () => {
@@ -1022,10 +1045,14 @@ export function createPage(data, pagesContainer = getPagesContainer()) {
 /**
  * Validate and sanitize a single page data object.
  * Returns a clean page object with safe defaults, logging any repairs.
+ * @param {*} raw - Raw page data
+ * @param {string[]} [repairs] - Optional array to collect repair messages for UI display
  */
-export function sanitizePageData(raw) {
+export function sanitizePageData(raw, repairs) {
   if (!raw || typeof raw !== "object") {
+    const msg = "An invalid page object was replaced with a default page.";
     console.warn("[schema] Invalid page object replaced with default.");
+    if (Array.isArray(repairs)) repairs.push(msg);
     return { layout: layouts[0] || "1-panel", gutterColor: DEFAULT_GUTTER_COLOR, slots: {}, transforms: {}, locked: false, bubbles: {} };
   }
 
@@ -1035,13 +1062,21 @@ export function sanitizePageData(raw) {
       : (layouts[0] || "1-panel");
 
   if (layout !== raw.layout && raw.layout !== undefined) {
-    console.warn(`[schema] Unknown layout "${raw.layout}" replaced with "${layout}".`);
+    const msg = `Unknown layout "${raw.layout}" was replaced with "${layout}".`;
+    console.warn(`[schema] ${msg}`);
+    if (Array.isArray(repairs)) repairs.push(msg);
   }
 
   const gutterColor =
     typeof raw.gutterColor === "string" && /^#[0-9a-fA-F]{6}$/.test(raw.gutterColor)
       ? raw.gutterColor
       : DEFAULT_GUTTER_COLOR;
+
+  if (gutterColor !== raw.gutterColor && raw.gutterColor !== undefined) {
+    const msg = `Invalid gutter color "${raw.gutterColor}" was replaced with the default.`;
+    console.warn(`[schema] ${msg}`);
+    if (Array.isArray(repairs)) repairs.push(msg);
+  }
 
   const slots = {};
   const transforms = {};
@@ -1051,7 +1086,9 @@ export function sanitizePageData(raw) {
       if (typeof name === "string" && name.length > 0) {
         slots[slot] = name;
       } else {
-        console.warn(`[schema] Invalid slot value for slot "${slot}" discarded.`);
+        const msg = `Invalid slot value for slot "${slot}" was discarded.`;
+        console.warn(`[schema] ${msg}`);
+        if (Array.isArray(repairs)) repairs.push(msg);
       }
     }
   }
@@ -1204,19 +1241,109 @@ export function savePagesState(rebuildUI = true) {
 
 
 
+
 export function rebuildPagesUI(pages) {
   state.isUpdatingFromServer = true;
   const currentPagesDiv = getPagesContainer();
-  const newPagesDiv = document.createElement("div");
-  newPagesDiv.id = "pages";
   const prevCounter = state.pageCounter;
   state.pageCounter = 0;
 
   try {
     window.savedPages = pages;
     state.lastSyncedSignature = JSON.stringify(pages);
-    if (pages.length) {
-      pages.forEach((p) => createPage(p, newPagesDiv));
+
+    // Incremental update: when the count and layouts match, update individual
+    // page content in-place rather than replacing the entire container. This
+    // preserves scroll position and avoids unnecessary layout reflows.
+    const normalizedPages = pages.length ? pages : [undefined];
+    const existingPageEls = Array.from(
+      currentPagesDiv.querySelectorAll(":scope > .page"),
+    );
+
+    const canUpdateInPlace =
+      existingPageEls.length === normalizedPages.length &&
+      normalizedPages.every((p, i) => {
+        if (!p) return false;
+        const sel = existingPageEls[i]
+          ? existingPageEls[i].querySelector("select")
+          : null;
+        return sel && sel.value === p.layout;
+      });
+
+    if (canUpdateInPlace) {
+      // Layouts match — update individual page contents in-place.
+      // Restore pageCounter to its previous value since we are not creating pages.
+      state.pageCounter = prevCounter;
+
+      normalizedPages.forEach((pageData, i) => {
+        if (!pageData) return;
+        const pageEl = existingPageEls[i];
+        if (!pageEl) return;
+
+        // Extract existing page index from the select element's name attribute
+        // (format: "pages[N][layout]") so that hidden input names stay consistent.
+        const selectEl = pageEl.querySelector("select");
+        const indexMatch = selectEl && selectEl.name.match(/pages\[(\d+)\]/);
+        const existingIndex = indexMatch ? parseInt(indexMatch[1], 10) : i;
+
+        const container = pageEl.querySelector(".layout-container");
+        if (!container) return;
+
+        // Update gutter color
+        const gutterColorInput = pageEl.querySelector('input[type="color"]');
+        if (gutterColorInput && pageData.gutterColor) {
+          gutterColorInput.value = pageData.gutterColor;
+        }
+
+        // Update lock state without firing the button click handler
+        const locked = Boolean(pageData.locked);
+        const lockBtn = pageEl.querySelector(".page-lock-btn");
+        if (lockBtn) {
+          pageEl.classList.toggle("is-locked", locked);
+          lockBtn.classList.toggle("is-locked", locked);
+          lockBtn.innerHTML = locked
+            ? '<span aria-hidden="true">🔒</span><span class="lock-label">Locked</span>'
+            : '<span aria-hidden="true">🔓</span><span class="lock-label">Unlocked</span>';
+          lockBtn.setAttribute("aria-pressed", String(locked));
+          lockBtn.setAttribute(
+            "aria-label",
+            locked ? "Unlock page" : "Lock page",
+          );
+          lockBtn.title = locked
+            ? "Click to unlock page"
+            : "Click to lock page";
+        }
+
+        // Re-render layout contents (slots/transforms/bubbles) in-place.
+        // Remove panel images/inputs first, then call renderLayout which
+        // will re-attach all event listeners with the correct page index.
+        unobserveLayoutContainer(container);
+        container.querySelectorAll('input[type="hidden"]').forEach((el) => el.remove());
+        container.querySelectorAll(".panel").forEach((panel) => clearPanel(panel));
+        renderLayout(
+          container,
+          pageData.layout,
+          existingIndex,
+          pageData.slots || {},
+          pageData.transforms || {},
+          pageData.bubbles || {},
+        );
+        observeLayoutContainer(container);
+        reapplyNormalizedTransforms(container);
+      });
+
+      setTimeout(() => {
+        updateImages(typeof initialImages !== "undefined" ? initialImages : []);
+      }, 0);
+      return;
+    }
+
+    // Full rebuild: page count or layouts changed — replace the container.
+    const newPagesDiv = document.createElement("div");
+    newPagesDiv.id = "pages";
+
+    if (normalizedPages.length && normalizedPages[0] !== undefined) {
+      normalizedPages.forEach((p) => createPage(p, newPagesDiv));
     } else {
       createPage(undefined, newPagesDiv);
     }
@@ -1252,7 +1379,12 @@ export async function initializePages() {
       throw new Error("Response payload was missing a pages array");
     }
 
-    const serverPages = data.pages.map(sanitizePageData);
+    const repairs = [];
+    const serverPages = data.pages.map((p) => sanitizePageData(p, repairs));
+
+    if (repairs.length > 0) {
+      showSchemaRepairNotice(repairs);
+    }
 
     // "Restore last session" prompt: check if there are local unsaved changes
     const serverSignature = JSON.stringify(serverPages);
@@ -1260,7 +1392,7 @@ export async function initializePages() {
 
     if (savedLocal && savedLocal !== serverSignature && serverPages.length > 0) {
       try {
-        const localPages = JSON.parse(savedLocal).map(sanitizePageData);
+        const localPages = JSON.parse(savedLocal).map((p) => sanitizePageData(p, null));
         if (JSON.stringify(localPages) !== serverSignature) {
           const restore = window.confirm(
             "Unsaved local changes were found from your last session. Restore them?"
@@ -1448,9 +1580,8 @@ function parseFilenameFromDisposition(disposition) {
 }
 
 export function applyLoadedState(payload) {
-  const pages = sanitizePageData(
-    Array.isArray(payload && payload.pages) ? payload.pages : [],
-  );
+  const rawPages = Array.isArray(payload && payload.pages) ? payload.pages : [];
+  const pages = rawPages.map(sanitizePageData);
   const images = Array.isArray(payload && payload.images) ? payload.images : [];
 
   history.clear();
@@ -1740,6 +1871,64 @@ export function initializePageModule(refs) {
 
   // Initialize sync health indicator
   createSyncHealthIndicator();
+
+  // Initialize layout presets panel inside the builder section
+  const builderSection = document.getElementById("builder");
+  if (builderSection) {
+    initializePresets({
+      container: builderSection,
+      getCurrentPageData() {
+        // Return layout + gutter color from the first non-locked page, or the
+        // first page overall, so the user can save the page they're working on.
+        const pageEls = getPagesContainer().querySelectorAll(".page");
+        const candidate =
+          Array.from(pageEls).find((p) => !p.classList.contains("is-locked")) ||
+          pageEls[0];
+        if (!candidate) return null;
+        const select = candidate.querySelector("select");
+        const colorInput = candidate.querySelector('input[type="color"]');
+        return {
+          layout: select ? select.value : (layouts[0] || ""),
+          gutterColor: colorInput ? colorInput.value : DEFAULT_GUTTER_COLOR,
+        };
+      },
+      applyPreset({ layout, gutterColor }) {
+        // Apply the preset to the focused/first page
+        const pageEls = getPagesContainer().querySelectorAll(".page");
+        const target =
+          Array.from(pageEls).find((p) =>
+            p.contains(document.activeElement),
+          ) || pageEls[0];
+        if (!target || target.classList.contains("is-locked")) {
+          showSaveIndicator("Page is locked — preset not applied", "#f44336");
+          return;
+        }
+        history.push(capturePagesFromDom());
+        const select = target.querySelector("select");
+        const colorInput = target.querySelector('input[type="color"]');
+        const container = target.querySelector(".layout-container");
+        if (select && layout && layouts.includes(layout)) {
+          select.value = layout;
+          if (container) {
+            returnImagesFromPage(container);
+            renderLayout(
+              container,
+              layout,
+              parseInt((select.name.match(/pages\[(\d+)\]/) || [])[1] ?? "0", 10),
+            );
+          }
+        }
+        if (colorInput && gutterColor) {
+          colorInput.value = gutterColor;
+          const layoutDiv = target.querySelector(".layout");
+          if (layoutDiv) layoutDiv.style.background = gutterColor;
+        }
+        updateHistoryButtons();
+        savePagesState(true);
+        showSaveIndicator("Preset applied ✓");
+      },
+    });
+  }
 
   if (dom.addPageButton) {
     dom.addPageButton.addEventListener("click", () => {
@@ -2216,6 +2405,46 @@ function showExportDiagnostics(messages) {
 
   // Auto-dismiss after 12 seconds
   setTimeout(() => overlay.remove(), 12000);
+}
+
+/**
+ * Show a non-blocking notice when automatic schema normalization was applied
+ * to loaded page data (e.g. invalid layout name, bad gutter color).
+ */
+function showSchemaRepairNotice(repairs) {
+  const existing = document.getElementById("schemaRepairNotice");
+  if (existing) existing.remove();
+
+  const notice = document.createElement("div");
+  notice.id = "schemaRepairNotice";
+  notice.className = "schema-repair-notice";
+  notice.setAttribute("role", "status");
+  notice.setAttribute("aria-label", "Page data was automatically repaired");
+
+  const title = document.createElement("strong");
+  title.textContent = "🔧 Page data was automatically repaired:";
+  notice.appendChild(title);
+
+  const list = document.createElement("ul");
+  repairs.forEach((msg) => {
+    const li = document.createElement("li");
+    li.textContent = msg;
+    list.appendChild(li);
+  });
+  notice.appendChild(list);
+
+  const closeBtn = document.createElement("button");
+  closeBtn.type = "button";
+  closeBtn.className = "schema-repair-close";
+  closeBtn.setAttribute("aria-label", "Dismiss repair notice");
+  closeBtn.textContent = "✕";
+  closeBtn.addEventListener("click", () => notice.remove());
+  notice.appendChild(closeBtn);
+
+  document.body.appendChild(notice);
+
+  // Auto-dismiss after 10 seconds
+  setTimeout(() => notice.remove(), 10000);
 }
 
 export function initializeLifecycleHandlers() {
