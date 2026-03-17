@@ -1255,7 +1255,6 @@ export async function initializePages() {
     const serverPages = data.pages.map(sanitizePageData);
 
     // "Restore last session" prompt: check if there are local unsaved changes
-    const localSignature = JSON.stringify(capturePagesFromDom());
     const serverSignature = JSON.stringify(serverPages);
     const savedLocal = localStorage.getItem("v-comic-local-session");
 
