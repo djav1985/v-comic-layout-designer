@@ -1030,8 +1030,8 @@ export function sanitizePageData(raw) {
       ? raw.gutterColor
       : DEFAULT_GUTTER_COLOR;
 
-  const slots = raw.slots && typeof raw.slots === "object" ? {} : {};
-  const transforms = raw.transforms && typeof raw.transforms === "object" ? {} : {};
+  const slots = {};
+  const transforms = {};
 
   if (raw.slots && typeof raw.slots === "object") {
     for (const [slot, name] of Object.entries(raw.slots)) {
@@ -1184,8 +1184,7 @@ function tryPatchSinglePage(currentPages, incomingPages) {
   if (incoming.layout === current.layout &&
       JSON.stringify(incoming.slots) === JSON.stringify(current.slots) &&
       incoming.locked !== current.locked) {
-    const lockBtn = pageDiv.querySelector(".page-lock-btn");
-    if (lockBtn) lockBtn.click();
+    setPageLocked(pageDiv, incoming.locked);
     return true;
   }
 
@@ -1632,6 +1631,26 @@ function isPageLocked(pageEl) {
   return pageEl.classList.contains("is-locked");
 }
 
+/**
+ * Set the lock state of a page element directly, without triggering click events.
+ * Works by updating the page class, lock button, and image cursors.
+ */
+function setPageLocked(pageEl, locked) {
+  const lockBtn = pageEl.querySelector(".page-lock-btn");
+  if (!lockBtn) return;
+  pageEl.classList.toggle("is-locked", locked);
+  lockBtn.classList.toggle("is-locked", locked);
+  lockBtn.innerHTML = locked
+    ? '<span aria-hidden="true">🔒</span><span class="lock-label">Locked</span>'
+    : '<span aria-hidden="true">🔓</span><span class="lock-label">Unlocked</span>';
+  lockBtn.setAttribute("aria-pressed", String(locked));
+  lockBtn.setAttribute("aria-label", locked ? "Unlock page" : "Lock page");
+  lockBtn.title = locked ? "Click to unlock page" : "Click to lock page";
+  pageEl.querySelectorAll(".panel-image").forEach((img) => {
+    img.style.cursor = locked ? "not-allowed" : "move";
+  });
+}
+
 /** Place the currently selected image into a panel (keyboard accessibility helper). */
 function handleSelectedImagePlacement(panel, slot, container, index) {
   const selectedName = getSelectedImageName && getSelectedImageName();
@@ -1685,8 +1704,7 @@ function updateHistoryButtons() {
 export function lockAllPages() {
   history.push(capturePagesFromDom());
   getPagesContainer().querySelectorAll(".page").forEach((p) => {
-    const btn = p.querySelector(".page-lock-btn");
-    if (btn && !p.classList.contains("is-locked")) btn.click();
+    if (!p.classList.contains("is-locked")) setPageLocked(p, true);
   });
 }
 
@@ -1696,8 +1714,7 @@ export function lockAllPages() {
 export function unlockAllPages() {
   history.push(capturePagesFromDom());
   getPagesContainer().querySelectorAll(".page").forEach((p) => {
-    const btn = p.querySelector(".page-lock-btn");
-    if (btn && p.classList.contains("is-locked")) btn.click();
+    if (p.classList.contains("is-locked")) setPageLocked(p, false);
   });
 }
 
