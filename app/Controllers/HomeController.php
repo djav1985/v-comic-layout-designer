@@ -1,6 +1,7 @@
 <?php
 namespace App\Controllers;
 
+use App\Core\Router;
 use App\Models\ComicModel;
 
 class HomeController
@@ -19,6 +20,7 @@ class HomeController
         $templates = $this->model->getLayoutTemplates();
         $styles = $this->model->getLayoutStyles();
         $pages = $this->model->getPages();
+        $csrfToken = Router::getCsrfToken();
         include __DIR__ . '/../Views/index.php';
     }
 }

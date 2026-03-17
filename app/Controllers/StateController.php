@@ -89,6 +89,12 @@ class StateController
             return;
         }
 
+        if (!is_uploaded_file($_FILES['state']['tmp_name'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid upload.']);
+            return;
+        }
+
         $tmpPath = $_FILES['state']['tmp_name'];
         $zip = new \ZipArchive();
         if ($zip->open($tmpPath) !== true) {
@@ -97,8 +103,28 @@ class StateController
             return;
         }
 
+        // Validate every entry for path traversal (zip-slip) before extraction
+        $allowedEntryPattern = '/^[A-Za-z0-9_\-. \/]+$/';
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $entryName = $zip->getNameIndex($i);
+            if ($entryName === false) {
+                continue;
+            }
+            // Reject absolute paths, dot-dot segments, or entries with shell-special characters
+            if (
+                str_starts_with($entryName, '/') ||
+                preg_match('/(^|\/)\.\.(\/|$)/', $entryName) === 1 ||
+                !preg_match($allowedEntryPattern, $entryName)
+            ) {
+                $zip->close();
+                http_response_code(400);
+                echo json_encode(['error' => 'Archive contains unsafe file paths.']);
+                return;
+            }
+        }
+
         $extractDir = sys_get_temp_dir() . '/state_' . bin2hex(random_bytes(8));
-        if (!mkdir($extractDir, 0777, true) && !is_dir($extractDir)) {
+        if (!mkdir($extractDir, 0755, true) && !is_dir($extractDir)) {
             $zip->close();
             http_response_code(500);
             echo json_encode(['error' => 'Failed to create extraction directory.']);
@@ -119,13 +145,42 @@ class StateController
 
         $zip->close();
 
+        // After extraction verify no file escaped the temp directory (defense-in-depth)
+        $realExtractDir = realpath($extractDir);
+        if ($realExtractDir === false) {
+            $this->cleanupDirectory($extractDir);
+            http_response_code(500);
+            echo json_encode(['error' => 'Extraction directory could not be resolved.']);
+            return;
+        }
+
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($realExtractDir, \FilesystemIterator::SKIP_DOTS)
+        );
+        foreach ($iterator as $extractedFile) {
+            // Reject any symlinks – they can bypass path containment checks
+            if (is_link($extractedFile->getPathname())) {
+                $this->cleanupDirectory($extractDir);
+                http_response_code(400);
+                echo json_encode(['error' => 'Archive contains unsafe file paths.']);
+                return;
+            }
+            $realPath = realpath($extractedFile->getPathname());
+            if ($realPath === false || !str_starts_with($realPath, $realExtractDir . DIRECTORY_SEPARATOR)) {
+                $this->cleanupDirectory($extractDir);
+                http_response_code(400);
+                echo json_encode(['error' => 'Archive contains unsafe file paths.']);
+                return;
+            }
+        }
+
         try {
-            $dbPath = $this->findFileByName($extractDir, 'state.db');
+            $dbPath = $this->findFileByName($realExtractDir, 'state.db');
             if (!$dbPath) {
                 throw new \RuntimeException('Uploaded archive does not contain state.db.');
             }
 
-            $uploadsDir = $this->findDirectoryByName($extractDir, 'uploads');
+            $uploadsDir = $this->findDirectoryByName($realExtractDir, 'uploads');
 
             $this->model->importStateFromDatabase($dbPath);
             $this->model->replaceUploadsFromDirectory($uploadsDir ?: '');

@@ -52,6 +52,73 @@ function runPhpTest(testFile) {
   });
 }
 
+/**
+ * Run PHP lint check on all PHP source files under a directory.
+ * Returns a promise that resolves on success or rejects on syntax errors.
+ */
+function runPhpLint(sourceDir) {
+  return new Promise((resolve, reject) => {
+    console.log(`\n🔍 PHP lint check: ${sourceDir}`);
+
+    const phpFiles = [];
+    function collectPhpFiles(dir) {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          collectPhpFiles(full);
+        } else if (entry.isFile() && entry.name.endsWith('.php')) {
+          phpFiles.push(full);
+        }
+      }
+    }
+    collectPhpFiles(sourceDir);
+
+    if (phpFiles.length === 0) {
+      console.log('[lint] No PHP files found');
+      resolve();
+      return;
+    }
+
+    let lintErrors = 0;
+    let pending = phpFiles.length;
+
+    phpFiles.forEach((file) => {
+      const proc = spawn('php', ['-l', file]);
+      let stderr = '';
+      let stdout = '';
+      proc.stdout.on('data', (d) => { stdout += d.toString(); });
+      proc.stderr.on('data', (d) => { stderr += d.toString(); });
+      proc.on('close', (code) => {
+        if (code !== 0) {
+          lintErrors++;
+          console.error(`[lint] ❌ ${file}`);
+          const out = stdout.trim();
+          const err = stderr.trim();
+          if (out) console.error(`       ${out}`);
+          if (err) console.error(`       ${err}`);
+        }
+        pending--;
+        if (pending === 0) {
+          if (lintErrors === 0) {
+            console.log(`[lint] ✅ All ${phpFiles.length} PHP files passed syntax check`);
+            resolve();
+          } else {
+            reject(new Error(`PHP lint failed: ${lintErrors} file(s) have syntax errors`));
+          }
+        }
+      });
+      proc.on('error', (err) => {
+        pending--;
+        lintErrors++;
+        console.error(`[lint] Failed to run php -l on ${file}: ${err.message}`);
+        if (pending === 0) {
+          reject(new Error(`PHP lint failed`));
+        }
+      });
+    });
+  });
+}
+
 async function runAllTests() {
   const testsDir = path.join(__dirname, 'tests');
   
@@ -60,11 +127,19 @@ async function runAllTests() {
     process.exit(1);
   }
 
+  // PHP lint check first
+  try {
+    await runPhpLint(path.join(__dirname, 'app'));
+  } catch (lintError) {
+    console.error(`\n💥 PHP lint check failed: ${lintError.message}`);
+    process.exit(1);
+  }
+
   const testFiles = fs.readdirSync(testsDir)
     .filter(file => file.endsWith('.php'))
     .map(file => path.join(testsDir, file));
 
-  console.log(`Found ${testFiles.length} PHP test files`);
+  console.log(`\nFound ${testFiles.length} PHP test files`);
 
   let passed = 0;
   let failed = 0;
@@ -96,4 +171,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { runPhpTest, runAllTests };
+module.exports = { runPhpTest, runPhpLint, runAllTests };

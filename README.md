@@ -207,6 +207,12 @@ php tests/ImportStateFromDatabaseTest.php
 
 # Ensure session locks release before SSE streaming
 php tests/SessionLockTest.php
+
+# Security controls (CSRF, upload content inspection)
+php tests/SecurityTest.php
+
+# Health & readiness checks
+php tests/HealthReadinessTest.php
 ```
 
 ### Node.js Development Tools
@@ -216,13 +222,13 @@ For development convenience, a Node.js test runner is available:
 # Install Node.js dependencies
 npm install
 
-# Run all PHP tests through Node.js test runner
+# Run PHP lint check + all PHP tests through Node.js test runner
 npm test
 # or
 node run-tests.js
 ```
 
-The Node.js test runner properly handles PHP process stdout and stderr streams, converting buffer data to strings before trimming whitespace.
+The Node.js test runner runs a recursive `php -l` syntax check over every `.php` file in the `app/` directory tree before executing the test suite, so broken PHP syntax is caught before any test runs.
 
 All tests exit with status code `0` on success and emit a descriptive message on failure.
 
@@ -237,6 +243,66 @@ The workflow installs PHP and Node.js dependencies, runs the Electron packager v
 
 ---
 
+## 🚢 Production deployment
+
+### Server requirements
+
+| Requirement | Notes |
+| --- | --- |
+| **PHP 8.0+** | Extensions: `pdo`, `pdo_sqlite`, `zip`, `fileinfo` |
+| **Writable storage** | `public/uploads/` and `public/storage/` must be writable by the web server process |
+| **Web server** | Apache with `mod_rewrite` (`.htaccess`) or Nginx with `try_files` rewrites pointing to `public/index.php` |
+
+### Environment configuration
+
+The application reads no `.env` file and has no required environment variables. All paths are derived relative to the project root at runtime. Database and upload paths can be overridden by editing `app/Core/Database.php` and `app/Models/ComicModel.php` if a custom data directory is needed.
+
+### Permissions
+
+```bash
+# Ensure the web server user owns or can write to storage directories
+chown -R www-data:www-data public/uploads public/storage
+chmod -R 775 public/uploads public/storage
+```
+
+### Health probes
+
+Two lightweight endpoints are available for load-balancer and orchestrator probes:
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /health` | Liveness – returns `{"status":"ok"}` with HTTP 200 as long as PHP is alive |
+| `GET /ready` | Readiness – checks database accessibility and upload directory writability; returns HTTP 503 if either check fails |
+
+### Backup and restore
+
+Export the current state at any time through the UI **Save State** button or by archiving `public/storage/state.db` and `public/uploads/` together.
+
+To restore, use the **Load State** button and supply a previously exported ZIP. For disaster recovery, replace `state.db` and the `uploads/` directory directly on the filesystem and restart the PHP process.
+
+### Incident runbook
+
+| Symptom | Action |
+| --- | --- |
+| Uploads fail | Verify `public/uploads/` is writable and `php.ini` `upload_max_filesize` and `post_max_size` are at least 5 MB |
+| State import fails | Re-export a clean archive via the UI; check that the ZIP contains both `state.db` and the `uploads/` directory |
+| `/ready` returns 503 | Inspect the `checks` key in the JSON response for which sub-check failed, then fix permissions or recreate the database |
+| SSE stream disconnects | Ensure the reverse proxy does not buffer the response (`X-Accel-Buffering: no` is already emitted); increase proxy timeout to ≥ 35 s |
+
+### Release checklist
+
+Before tagging a production release, confirm the following:
+
+- [ ] All tests pass: `npm test`
+- [ ] PHP lint passes (included in `npm test`)
+- [ ] `GET /health` returns `{"status":"ok"}`
+- [ ] `GET /ready` returns `{"status":"ready","checks":{"database":"ok","uploads":"ok"}}`
+- [ ] Manual smoke test: upload an image, arrange a page, save, export PDF
+- [ ] State export and import round-trip produces the same page layout
+- [ ] Rollback plan: backup of `state.db` and `uploads/` is available before deployment
+
+---
+
 ## 🧱 Frontend architecture
 
 The browser code is organized as ES modules so individual concerns can evolve without navigating a 1,700-line script:
@@ -245,6 +311,7 @@ The browser code is organized as ES modules so individual concerns can evolve wi
 - `public/js/pages.js` owns layout rendering, persistence, state streaming, and shared constants.
 - `public/js/exporters.js` focuses on PDF/PNG export routines and keyboard shortcuts.
 - `public/js/save-indicator.js` and `public/js/state.js` keep UI feedback and shared flags centralized.
+- `public/js/csrf.js` exposes `getCsrfHeaders()` which reads the `<meta name="csrf-token">` tag and returns the header object used on every mutating `fetch()` call.
 - `public/js/app.js` wires the modules together on `DOMContentLoaded`.
 
 When contributing frontend features, choose the module that matches the responsibility above or create a new one for any major concern rather than expanding `app.js` again.

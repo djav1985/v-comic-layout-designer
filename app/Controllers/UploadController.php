@@ -5,6 +5,8 @@ use App\Models\ComicModel;
 
 class UploadController
 {
+    private const MAX_FILES_PER_REQUEST = 20;
+
     private ComicModel $model;
 
     public function __construct()
@@ -17,6 +19,12 @@ class UploadController
         header('Content-Type: application/json');
         try {
             if (!empty($_FILES['images']['tmp_name'])) {
+                $fileCount = count($_FILES['images']['tmp_name']);
+                if ($fileCount > self::MAX_FILES_PER_REQUEST) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Too many files in a single request.']);
+                    return;
+                }
                 foreach ($_FILES['images']['tmp_name'] as $i => $tmp) {
                     if ($_FILES['images']['error'][$i] === UPLOAD_ERR_OK) {
                         $file = [
