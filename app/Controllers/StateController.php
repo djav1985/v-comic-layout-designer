@@ -113,7 +113,7 @@ class StateController
             // Reject absolute paths, dot-dot segments, or entries with shell-special characters
             if (
                 str_starts_with($entryName, '/') ||
-                str_contains($entryName, '..') ||
+                preg_match('/(^|\/)\.\.(\/|$)/', $entryName) === 1 ||
                 !preg_match($allowedEntryPattern, $entryName)
             ) {
                 $zip->close();
