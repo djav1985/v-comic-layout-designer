@@ -139,7 +139,6 @@ function captureBubblesFromPanels(pageDiv) {
 }
 
 function enableBubbleDrag(el, panel) {
-  let dragging = false;
   let startMouseX, startMouseY, startLeftPx, startTopPx;
 
   el.addEventListener("mousedown", (e) => {
@@ -155,36 +154,37 @@ function enableBubbleDrag(el, panel) {
     e.stopPropagation();
     const content = getPanelContent(panel);
     const rect = content.getBoundingClientRect();
-    dragging = true;
     startMouseX = e.clientX;
     startMouseY = e.clientY;
     startLeftPx = (parseFloat(el.style.left) / 100) * rect.width;
     startTopPx = (parseFloat(el.style.top) / 100) * rect.height;
-  });
 
-  document.addEventListener("mousemove", (e) => {
-    if (!dragging) return;
-    const content = getPanelContent(panel);
-    const rect = content.getBoundingClientRect();
-    if (!rect.width || !rect.height) return;
-    const newLeft =
-      ((startLeftPx + (e.clientX - startMouseX)) / rect.width) * 100;
-    const newTop =
-      ((startTopPx + (e.clientY - startMouseY)) / rect.height) * 100;
-    el.style.left = `${newLeft}%`;
-    el.style.top = `${newTop}%`;
-  });
+    const onMouseMove = (moveEvent) => {
+      const moveContent = getPanelContent(panel);
+      const moveRect = moveContent.getBoundingClientRect();
+      if (!moveRect.width || !moveRect.height) return;
+      const newLeft =
+        ((startLeftPx + (moveEvent.clientX - startMouseX)) / moveRect.width) *
+        100;
+      const newTop =
+        ((startTopPx + (moveEvent.clientY - startMouseY)) / moveRect.height) *
+        100;
+      el.style.left = `${newLeft}%`;
+      el.style.top = `${newTop}%`;
+    };
 
-  document.addEventListener("mouseup", () => {
-    if (dragging) {
-      dragging = false;
+    const onMouseUp = () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
       debouncedSave();
-    }
+    };
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
   });
 }
 
 function enableBubbleResize(el, handle, panel) {
-  let resizing = false;
   let startMouseX, startMouseY, startWidthPx, startHeightPx;
 
   handle.addEventListener("mousedown", (e) => {
@@ -193,29 +193,35 @@ function enableBubbleResize(el, handle, panel) {
     e.stopPropagation();
     const content = getPanelContent(panel);
     const rect = content.getBoundingClientRect();
-    resizing = true;
     startMouseX = e.clientX;
     startMouseY = e.clientY;
     startWidthPx = (parseFloat(el.style.width) / 100) * rect.width;
     startHeightPx = (parseFloat(el.style.height) / 100) * rect.height;
-  });
 
-  document.addEventListener("mousemove", (e) => {
-    if (!resizing) return;
-    const content = getPanelContent(panel);
-    const rect = content.getBoundingClientRect();
-    if (!rect.width || !rect.height) return;
-    const newWidth = Math.max(60, startWidthPx + (e.clientX - startMouseX));
-    const newHeight = Math.max(30, startHeightPx + (e.clientY - startMouseY));
-    el.style.width = `${(newWidth / rect.width) * 100}%`;
-    el.style.height = `${(newHeight / rect.height) * 100}%`;
-  });
+    const onMouseMove = (moveEvent) => {
+      const moveContent = getPanelContent(panel);
+      const moveRect = moveContent.getBoundingClientRect();
+      if (!moveRect.width || !moveRect.height) return;
+      const newWidth = Math.max(
+        60,
+        startWidthPx + (moveEvent.clientX - startMouseX)
+      );
+      const newHeight = Math.max(
+        30,
+        startHeightPx + (moveEvent.clientY - startMouseY)
+      );
+      el.style.width = `${(newWidth / moveRect.width) * 100}%`;
+      el.style.height = `${(newHeight / moveRect.height) * 100}%`;
+    };
 
-  document.addEventListener("mouseup", () => {
-    if (resizing) {
-      resizing = false;
+    const onMouseUp = () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
       debouncedSave();
-    }
+    };
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
   });
 }
 
