@@ -245,7 +245,7 @@ function createBubbleElement(data, panel, container, pageIndex, slot) {
 
   const textEl = document.createElement("div");
   textEl.className = "bubble-text";
-  textEl.contentEditable = "true";
+  textEl.contentEditable = "plaintext-only";
   textEl.textContent = data.text || "";
   el.appendChild(textEl);
 
@@ -294,6 +294,19 @@ function createBubbleElement(data, panel, container, pageIndex, slot) {
   textEl.addEventListener("input", () => {
     if (isPageLocked(panel)) return;
     debouncedSave();
+  });
+
+  textEl.addEventListener("paste", (e) => {
+    e.preventDefault();
+    const clipboardData = e.clipboardData || window.clipboardData;
+    const text = clipboardData ? clipboardData.getData("text/plain") : "";
+    if (typeof document.execCommand === "function") {
+      document.execCommand("insertText", false, text);
+    } else {
+      // Fallback: replace the entire content with plain text
+      textEl.textContent =
+        textEl.textContent.slice(0, 0) + text + textEl.textContent.slice(0);
+    }
   });
 
   textEl.addEventListener("keydown", (e) => {
