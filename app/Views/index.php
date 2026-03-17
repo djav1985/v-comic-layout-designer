@@ -61,15 +61,23 @@
                     <p class="subtitle">Arrange layouts, fine-tune gutters, and drag assets into each panel.</p>
                 </div>
                 <div class="toolbar-actions">
+                    <button id="undoBtn" type="button" class="ghost" aria-label="Undo (Ctrl+Z)" title="Undo (Ctrl+Z)" disabled>↩ Undo</button>
+                    <button id="redoBtn" type="button" class="ghost" aria-label="Redo (Ctrl+Y)" title="Redo (Ctrl+Y)" disabled>↪ Redo</button>
+                    <button id="lockAllBtn" type="button" class="ghost" aria-label="Lock all pages" title="Lock all pages">🔒 Lock All</button>
+                    <button id="unlockAllBtn" type="button" class="ghost" aria-label="Unlock all pages" title="Unlock all pages">🔓 Unlock All</button>
                     <button id="addPage" type="button" class="primary">Add Page</button>
                     <button id="toggleShortcuts" type="button" class="ghost" aria-expanded="false" aria-controls="shortcutList">Show Shortcuts</button>
                 </div>
             </div>
             <ul id="shortcutList" class="shortcuts" aria-hidden="true">
+                <li><span>Ctrl + Z</span>Undo</li>
+                <li><span>Ctrl + Y</span>Redo</li>
                 <li><span>Ctrl + S</span>Quick save</li>
                 <li><span>Ctrl + N</span>New page</li>
                 <li><span>Ctrl + E</span>Export PDF</li>
                 <li><span>Ctrl + I</span>Export images</li>
+                <li><span>Ctrl + L</span>Toggle lock (focused page)</li>
+                <li><span>Enter / Space</span>Place image in focused panel</li>
                 <li><span>Scroll</span>Zoom artwork</li>
             </ul>
             <div id="pages"></div>
