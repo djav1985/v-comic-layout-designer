@@ -1647,7 +1647,7 @@ function setPageLocked(pageEl, locked) {
 }
 
 /** Place the currently selected image into a panel (keyboard accessibility helper). */
-function handleSelectedImagePlacement(panel, slot, container, index) {
+function handleSelectedImagePlacementFromKeyboard(panel, slot, container, index) {
   const selectedName = getSelectedImageName && getSelectedImageName();
   if (!selectedName) return;
   const pageEl = panel.closest(".page");
