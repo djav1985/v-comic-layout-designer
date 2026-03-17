@@ -85,7 +85,9 @@ class Router
             'message'    => $message,
             'route'      => $method . ' ' . $route,
             'request_id' => $requestId,
-        ] + $context), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        ] + $context, function ($value) {
+            return $value !== null;
+        }), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         error_log($entry);
     }
 
