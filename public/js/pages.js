@@ -1444,11 +1444,11 @@ function parseFilenameFromDisposition(disposition) {
 }
 
 export function applyLoadedState(payload) {
-  const pages = Array.isArray(payload && payload.pages) ? payload.pages : [];
+  const pages = sanitizePageData(
+    Array.isArray(payload && payload.pages) ? payload.pages : [],
+  );
   const images = Array.isArray(payload && payload.images) ? payload.images : [];
 
-  // Checkpoint before destructive state replacement
-  history.checkpoint(capturePagesFromDom());
   history.clear();
 
   setInitialImages(images);
