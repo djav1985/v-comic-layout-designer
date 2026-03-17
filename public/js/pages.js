@@ -94,12 +94,232 @@ function calculatePercentage(pixelValue, dimension, useFiniteCheck = false) {
   return (safePixelValue / dimension) * 100;
 }
 
+// Removes only the image element from a panel, leaving bubbles and other
+// overlay content intact. Called before placing a new image so that existing
+// bubbles survive image replacement.
 function clearPanel(panel) {
   const content = getPanelContent(panel);
   if (content) {
-    content.innerHTML = "";
+    content.querySelectorAll("img").forEach((img) => img.remove());
   }
 }
+
+// ---- Bubble helpers ----
+
+let bubbleIdCounter = 0;
+
+function generateBubbleId() {
+  return `bubble-${Date.now()}-${++bubbleIdCounter}`;
+}
+
+function captureBubblesFromPanels(pageDiv) {
+  const bubbles = {};
+  pageDiv.querySelectorAll(".panel").forEach((panel) => {
+    const slot = String(panel.getAttribute("data-slot"));
+    const panelBubbles = [];
+    panel.querySelectorAll(".bubble").forEach((el) => {
+      const textEl = el.querySelector(".bubble-text");
+      panelBubbles.push({
+        id: el.dataset.bubbleId || generateBubbleId(),
+        text: textEl ? textEl.textContent.trim() : "",
+        xPct: parseFloat(el.style.left) || 0,
+        yPct: parseFloat(el.style.top) || 0,
+        widthPct: parseFloat(el.style.width) || 40,
+        heightPct: parseFloat(el.style.height) || 20,
+        tail: el.dataset.tail || "none",
+        style: el.dataset.style || "speech",
+        zIndex: parseInt(el.style.zIndex, 10) || 10,
+      });
+    });
+    if (panelBubbles.length) {
+      bubbles[slot] = panelBubbles;
+    }
+  });
+  return bubbles;
+}
+
+function enableBubbleDrag(el, panel) {
+  let startMouseX, startMouseY, startLeftPx, startTopPx;
+
+  el.addEventListener("mousedown", (e) => {
+    if (isPageLocked(panel)) return;
+    if (
+      e.target.classList.contains("bubble-delete-btn") ||
+      e.target.classList.contains("bubble-style-btn") ||
+      e.target.classList.contains("bubble-resize-handle") ||
+      e.target.classList.contains("bubble-text")
+    )
+      return;
+    e.preventDefault();
+    e.stopPropagation();
+    const content = getPanelContent(panel);
+    const rect = content.getBoundingClientRect();
+    startMouseX = e.clientX;
+    startMouseY = e.clientY;
+    startLeftPx = (parseFloat(el.style.left) / 100) * rect.width;
+    startTopPx = (parseFloat(el.style.top) / 100) * rect.height;
+
+    const onMouseMove = (moveEvent) => {
+      const moveContent = getPanelContent(panel);
+      const moveRect = moveContent.getBoundingClientRect();
+      if (!moveRect.width || !moveRect.height) return;
+      const newLeft =
+        ((startLeftPx + (moveEvent.clientX - startMouseX)) / moveRect.width) *
+        100;
+      const newTop =
+        ((startTopPx + (moveEvent.clientY - startMouseY)) / moveRect.height) *
+        100;
+      el.style.left = `${newLeft}%`;
+      el.style.top = `${newTop}%`;
+    };
+
+    const onMouseUp = () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      debouncedSave();
+    };
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  });
+}
+
+function enableBubbleResize(el, handle, panel) {
+  let startMouseX, startMouseY, startWidthPx, startHeightPx;
+
+  handle.addEventListener("mousedown", (e) => {
+    if (isPageLocked(panel)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const content = getPanelContent(panel);
+    const rect = content.getBoundingClientRect();
+    startMouseX = e.clientX;
+    startMouseY = e.clientY;
+    startWidthPx = (parseFloat(el.style.width) / 100) * rect.width;
+    startHeightPx = (parseFloat(el.style.height) / 100) * rect.height;
+
+    const onMouseMove = (moveEvent) => {
+      const moveContent = getPanelContent(panel);
+      const moveRect = moveContent.getBoundingClientRect();
+      if (!moveRect.width || !moveRect.height) return;
+      const newWidth = Math.max(
+        60,
+        startWidthPx + (moveEvent.clientX - startMouseX)
+      );
+      const newHeight = Math.max(
+        30,
+        startHeightPx + (moveEvent.clientY - startMouseY)
+      );
+      el.style.width = `${(newWidth / moveRect.width) * 100}%`;
+      el.style.height = `${(newHeight / moveRect.height) * 100}%`;
+    };
+
+    const onMouseUp = () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      debouncedSave();
+    };
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  });
+}
+
+function createBubbleElement(data, panel, container, pageIndex, slot) {
+  const content = getPanelContent(panel);
+  if (!content) return null;
+
+  const BUBBLE_STYLES = ["speech", "thought", "narration"];
+  const bubbleStyle = BUBBLE_STYLES.includes(data.style) ? data.style : "speech";
+
+  const el = document.createElement("div");
+  el.className = `bubble bubble-${bubbleStyle}`;
+  el.dataset.bubbleId = data.id || generateBubbleId();
+  el.dataset.style = bubbleStyle;
+  el.dataset.tail = data.tail || "none";
+  el.style.left = `${data.xPct ?? 5}%`;
+  el.style.top = `${data.yPct ?? 5}%`;
+  el.style.width = `${data.widthPct ?? 40}%`;
+  el.style.height = `${data.heightPct ?? 20}%`;
+  el.style.zIndex = String(data.zIndex ?? 10);
+
+  const textEl = document.createElement("div");
+  textEl.className = "bubble-text";
+  textEl.contentEditable = "plaintext-only";
+  textEl.textContent = data.text || "";
+  el.appendChild(textEl);
+
+  const styleBtn = document.createElement("button");
+  styleBtn.type = "button";
+  styleBtn.className = "bubble-style-btn";
+  styleBtn.setAttribute("aria-label", "Change bubble style");
+  styleBtn.title = "Cycle style: speech → thought → narration";
+  styleBtn.textContent = "◉";
+  el.appendChild(styleBtn);
+
+  const deleteBtn = document.createElement("button");
+  deleteBtn.type = "button";
+  deleteBtn.className = "bubble-delete-btn";
+  deleteBtn.setAttribute("aria-label", "Delete bubble");
+  deleteBtn.title = "Delete bubble";
+  deleteBtn.textContent = "✕";
+  el.appendChild(deleteBtn);
+
+  const resizeHandle = document.createElement("div");
+  resizeHandle.className = "bubble-resize-handle";
+  resizeHandle.setAttribute("aria-hidden", "true");
+  el.appendChild(resizeHandle);
+
+  content.appendChild(el);
+
+  deleteBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (isPageLocked(panel)) return;
+    el.remove();
+    debouncedSave();
+  });
+
+  styleBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (isPageLocked(panel)) return;
+    const current = el.dataset.style || "speech";
+    const next =
+      BUBBLE_STYLES[(BUBBLE_STYLES.indexOf(current) + 1) % BUBBLE_STYLES.length];
+    BUBBLE_STYLES.forEach((s) => el.classList.remove(`bubble-${s}`));
+    el.classList.add(`bubble-${next}`);
+    el.dataset.style = next;
+    debouncedSave();
+  });
+
+  textEl.addEventListener("input", () => {
+    if (isPageLocked(panel)) return;
+    debouncedSave();
+  });
+
+  textEl.addEventListener("paste", (e) => {
+    e.preventDefault();
+    const clipboardData = e.clipboardData || window.clipboardData;
+    const text = clipboardData ? clipboardData.getData("text/plain") : "";
+    if (typeof document.execCommand === "function") {
+      document.execCommand("insertText", false, text);
+    } else {
+      // Fallback: replace the entire content with plain text
+      textEl.textContent =
+        textEl.textContent.slice(0, 0) + text + textEl.textContent.slice(0);
+    }
+  });
+
+  textEl.addEventListener("keydown", (e) => {
+    e.stopPropagation();
+  });
+
+  enableBubbleDrag(el, panel);
+  enableBubbleResize(el, resizeHandle, panel);
+
+  return el;
+}
+
+// ---- End bubble helpers ----
 
 function ensureWindowLayoutResizeListener() {
   if (typeof window === "undefined" || typeof document === "undefined") return;
@@ -447,6 +667,7 @@ function renderLayout(
   pageIndex,
   slots = {},
   transforms = {},
+  bubbles = {},
 ) {
   if (!layoutTemplates[layoutName]) {
     container.innerHTML = `<div style='color:red'>Layout template not found: ${layoutName}</div>`;
@@ -557,6 +778,47 @@ function renderLayout(
       }
       handleSelectedImagePlacement(panel, slot, container, pageIndex);
     });
+
+    // Add Bubble button (preserved through image placements since clearPanel only removes img)
+    const panelContent = getPanelContent(panel);
+    if (panelContent) {
+      const addBubbleBtn = document.createElement("button");
+      addBubbleBtn.type = "button";
+      addBubbleBtn.className = "add-bubble-btn";
+      addBubbleBtn.textContent = "+ Bubble";
+      addBubbleBtn.setAttribute("aria-label", "Add speech bubble to panel");
+      // Append as a sibling of the panel content so .panel-inner can be truly empty
+      panel.appendChild(addBubbleBtn);
+
+      addBubbleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (isPageLocked(panel)) return;
+        createBubbleElement(
+          {
+            id: generateBubbleId(),
+            text: "Edit text…",
+            xPct: 5,
+            yPct: 5,
+            widthPct: 45,
+            heightPct: 22,
+            tail: "none",
+            style: "speech",
+            zIndex: 10,
+          },
+          panel,
+          container,
+          pageIndex,
+          slot,
+        );
+        debouncedSave();
+      });
+    }
+
+    // Restore bubbles for this slot
+    const slotBubbles = Array.isArray(bubbles[slot]) ? bubbles[slot] : [];
+    slotBubbles.forEach((bubbleData) => {
+      createBubbleElement(bubbleData, panel, container, pageIndex, slot);
+    });
   });
 }
 
@@ -654,6 +916,7 @@ export function createPage(data, pagesContainer = getPagesContainer()) {
     index,
     data ? data.slots : {},
     data ? data.transforms : {},
+    data ? (data.bubbles || {}) : {},
   );
 
   if (!data) {
@@ -735,7 +998,8 @@ export function capturePagesFromDom() {
       }
     });
     const locked = pageDiv.classList.contains("is-locked");
-    pages.push({ layout, gutterColor, slots, transforms, locked });
+    const bubbles = captureBubblesFromPanels(pageDiv);
+    pages.push({ layout, gutterColor, slots, transforms, locked, bubbles });
   });
   return pages;
 }
@@ -1346,6 +1610,96 @@ export async function renderLayoutToCanvas(layout, scale = EXPORT_SCALE) {
         ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
       }
     }
+
+    // Draw bubbles clipped to the panel
+    const bubbleEls = Array.from(panel.querySelectorAll(".bubble"));
+    const bubblesInPaintOrder = bubbleEls
+      .map((bubbleEl, index) => {
+        const computed = window.getComputedStyle(bubbleEl);
+        const parsedZ = parseFloat(computed.zIndex);
+        const zIndex = Number.isFinite(parsedZ) ? parsedZ : 0;
+        return { bubbleEl, index, zIndex };
+      })
+      .sort((a, b) => {
+        if (a.zIndex === b.zIndex) {
+          // Deterministic tie-breaker: DOM order
+          return a.index - b.index;
+        }
+        return a.zIndex - b.zIndex;
+      });
+
+    bubblesInPaintOrder.forEach(({ bubbleEl }) => {
+      const bubbleRect = bubbleEl.getBoundingClientRect();
+      if (!bubbleRect.width || !bubbleRect.height) return;
+
+      const bx = (bubbleRect.left - layoutRect.left) * scaleX;
+      const by = (bubbleRect.top - layoutRect.top) * scaleY;
+      const bw = bubbleRect.width * scaleX;
+      const bh = bubbleRect.height * scaleY;
+      const bubStyle = bubbleEl.dataset.style || "speech";
+      const unitScale = Math.min(scaleX, scaleY);
+
+      const fillColor =
+        bubStyle === "narration" ? "rgba(255, 255, 200, 0.92)" : "white";
+      const rawRadius = bubStyle === "narration" ? 4 : 20;
+      const scaledR = rawRadius * unitScale;
+      const cornerRadius = { x: scaledR, y: scaledR };
+
+      ctx.fillStyle = fillColor;
+      ctx.strokeStyle = "#333333";
+      ctx.lineWidth = 2 * unitScale;
+      buildRoundedRectPath(ctx, bx, by, bw, bh, [
+        cornerRadius,
+        cornerRadius,
+        cornerRadius,
+        cornerRadius,
+      ]);
+      ctx.fill();
+      if (bubStyle === "thought") {
+        ctx.setLineDash([5 * unitScale, 3 * unitScale]);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Draw wrapped text
+      const BUBBLE_MIN_FONT_PX = 10;
+      const BUBBLE_BASE_FONT_PX = 13;
+      const BUBBLE_TEXT_PADDING = 8;
+      const textEl = bubbleEl.querySelector(".bubble-text");
+      const text = textEl ? textEl.textContent.trim() : "";
+      if (text) {
+        const fontSize = Math.max(BUBBLE_MIN_FONT_PX, Math.round(BUBBLE_BASE_FONT_PX * unitScale));
+        ctx.font = `${fontSize}px sans-serif`;
+        ctx.fillStyle = "#222222";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        const padding = BUBBLE_TEXT_PADDING * unitScale;
+        const maxWidth = bw - padding * 2;
+        const lineHeight = fontSize * 1.4;
+        const words = text.split(/\s+/);
+        const lines = [];
+        let cur = "";
+
+        for (const word of words) {
+          const test = cur ? `${cur} ${word}` : word;
+          if (ctx.measureText(test).width > maxWidth && cur) {
+            lines.push(cur);
+            cur = word;
+          } else {
+            cur = test;
+          }
+        }
+        if (cur) lines.push(cur);
+
+        const totalH = lines.length * lineHeight;
+        let ty = by + bh / 2 - totalH / 2 + lineHeight / 2;
+        for (const line of lines) {
+          ctx.fillText(line, bx + bw / 2, ty, maxWidth);
+          ty += lineHeight;
+        }
+      }
+    });
 
     ctx.restore();
   });

@@ -34,6 +34,13 @@ class PageController
                 }
                 $page['transforms'] = $transforms;
             }
+            if (isset($page['bubbles']) && is_array($page['bubbles'])) {
+                $bubbles = new \stdClass();
+                foreach ($page['bubbles'] as $k => $v) {
+                    $bubbles->{(string)$k} = $v;
+                }
+                $page['bubbles'] = $bubbles;
+            }
         }
         unset($page);
         

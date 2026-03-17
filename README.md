@@ -318,6 +318,65 @@ When contributing frontend features, choose the module that matches the responsi
 
 ---
 
+## 💬 Chat Bubbles
+
+Each panel inside a page can hold any number of **speech bubbles** — overlays for dialogue, captions, and thought balloons.
+
+### Adding and editing a bubble
+1. Hover over a panel to reveal the **+ Bubble** button at the bottom of the panel.
+2. Click **+ Bubble** to insert a new speech bubble.
+3. Click the bubble text to edit it in place (the `bubble-text` element is `contenteditable`).
+4. Drag the bubble by its body to reposition it.
+5. Drag the resize handle (bottom-right corner) to change its dimensions.
+6. Click **◉** (top-left) to cycle through styles: *speech → thought → narration*.
+7. Click **✕** (top-right) to delete the bubble.
+
+> All interactions are blocked when a page is **locked**.
+
+### Bubble styles
+| Style | Appearance |
+| --- | --- |
+| `speech` | White rounded rect, solid border |
+| `thought` | Rounded rect, dashed border |
+| `narration` | Square cornered, yellow-tinted background |
+
+### State schema
+
+Bubble data lives inside the `bubbles` field of each persisted page object. The shape is:
+
+```json
+{
+  "layout": "two-horizontal",
+  "gutterColor": "#cccccc",
+  "slots": {},
+  "transforms": {},
+  "locked": false,
+  "bubbles": {
+    "1": [
+      {
+        "id": "bubble-1700000000000-1",
+        "text": "Hello!",
+        "xPct": 5,
+        "yPct": 5,
+        "widthPct": 45,
+        "heightPct": 22,
+        "tail": "none",
+        "style": "speech",
+        "zIndex": 10
+      }
+    ]
+  }
+}
+```
+
+Keys in `bubbles` correspond to panel slot numbers (same keys used by `slots` and `transforms`). Each slot holds an ordered array of bubble objects. The ordering is stable across save/load cycles. All `*Pct` fields are expressed as percentages of the panel's dimensions, ensuring bubbles remain correctly positioned across responsive layout changes.
+
+### Export
+
+When you export a page to PNG/PDF via **renderLayoutToCanvas()**, bubbles are drawn after the panel image using the same panel clip region. Text is wrapped to fit the bubble width, and the style (speech/thought/narration) is reflected in fill colour and border style. Stacking order follows `zIndex`.
+
+---
+
 ## 🛠️ Troubleshooting
 | Symptom | Fix |
 | --- | --- |
