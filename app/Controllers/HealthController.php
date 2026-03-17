@@ -33,7 +33,8 @@ class HealthController
             $dbPath = $db->getDbPath();
             $checks['database'] = is_file($dbPath) && is_readable($dbPath) ? 'ok' : 'unreachable';
         } catch (\Throwable $e) {
-            $checks['database'] = 'error: ' . $e->getMessage();
+            error_log('Database readiness check failed: ' . $e->getMessage());
+            $checks['database'] = 'error';
         }
 
         if ($checks['database'] !== 'ok') {
